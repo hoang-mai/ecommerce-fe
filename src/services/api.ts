@@ -1,0 +1,11 @@
+export const AUTH= "/api/v1/auth";
+export const LOGIN= AUTH + "/login";
+export const LOGOUT= AUTH + "/logout";
+export const REGISTER = "/api/v1/user";
+export const CATEGORY= "/api/v1/category";
+export const USER = "/api/v1/user";
+export const ADDRESS= "/api/v1/address";
+export const USER_VERIFICATION = "/api/v1/user-verification";
+export const SHOP = "/api/v1/shop";
+export const PRODUCTION = "/api/v1/product";
+export const USER_VIEW = "/api/v1/user-view";
