@@ -1,19 +1,24 @@
-import {patch} from "@/services/axios";
+import {patch, post} from "@/services/axios";
 import {AccountStatus, AlertType} from "@/enum";
 import Modal from "@/libs/Modal";
 import useSWRMutation from "swr/mutation";
-import {AUTH} from "@/services/api";
+import {AUTH, LOGOUT} from "@/services/api";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
+import {useRouter} from "next/navigation";
+import {clearAllLocalStorage} from "@/services/localStorage";
 
 type Props = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 const fetcher = (url: string) => patch<BaseResponse<never>>(url, {accountStatus: AccountStatus.INACTIVE}).then(res => res.data);
+const fetcherLogout = (url: string) => post<BaseResponse<never>>(url, {}, {withCredentials: true}).then(res => res.data);
 
 export default function DisableAccount({isOpen, setIsOpen}: Props) {
+  const router = useRouter();
   const {trigger, isMutating} = useSWRMutation(AUTH, fetcher);
+  const {trigger: triggerLogout} = useSWRMutation(LOGOUT, fetcherLogout);
   const dispatch = useDispatch();
   const onSubmit = () => {
     trigger().then((res) => {
@@ -24,7 +29,10 @@ export default function DisableAccount({isOpen, setIsOpen}: Props) {
         title: "Vô hiệu hóa tài khoản thành công"
       }
       dispatch(openAlert(alert));
-      // setIsOpen(false);
+      triggerLogout().finally(() => {
+        clearAllLocalStorage();
+        router.replace('/login');
+      });
     }).catch((error: ErrorResponse) => {
       const alert: AlertState = {
         isOpen: true,

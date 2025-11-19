@@ -5,7 +5,7 @@ import {formatDateTime} from "@/util/FnCommon";
 import useSWR from "swr";
 import {CATEGORY} from "@/services/api";
 import {get} from "@/services/axios";
-import {ReactNode, useEffect} from "react";
+import {useEffect} from "react";
 import Table, {Column} from "@/libs/Table";
 import CategoryRoundedIcon from '@mui/icons-material/CategoryRounded';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
@@ -15,6 +15,7 @@ import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
+import {InfoRow} from "@/libs/InfoRow";
 
 interface ResCategoryDTO {
   categoryId: number;
@@ -37,7 +38,7 @@ type Props = {
 const fetcher = (url: string) => get<BaseResponse<ResCategoryDTO>>(url).then(res => res.data.data);
 
 export default function DetailCategoryModal({isOpen, setIsOpen, categoryId}: Props) {
-  const {data: category, isLoading,error} = useSWR(
+  const {data: category, isLoading, error} = useSWR(
     isOpen && categoryId ? `${CATEGORY}/${categoryId}` : null,
     fetcher,
     {
@@ -46,8 +47,8 @@ export default function DetailCategoryModal({isOpen, setIsOpen, categoryId}: Pro
   );
   const dispatch = useDispatch();
   useEffect(() => {
-    if(error){
-      const alert : AlertState = {
+    if (error) {
+      const alert: AlertState = {
         isOpen: true,
         message: error.message || "Đã có lỗi xảy ra",
         type: AlertType.ERROR,
@@ -55,7 +56,7 @@ export default function DetailCategoryModal({isOpen, setIsOpen, categoryId}: Pro
       }
       dispatch(openAlert(alert));
     }
-  },[dispatch, error]);
+  }, [dispatch, error]);
   const getStatusLabel = (status: CategoryStatus) => {
     switch (status) {
       case CategoryStatus.ACTIVE:
@@ -119,7 +120,7 @@ export default function DetailCategoryModal({isOpen, setIsOpen, categoryId}: Pro
       maxWidth="3xl"
     >
       {isLoading && <Loading/>}
-      { category ? (
+      {category ? (
         <div>
           {/* Thông tin danh mục */}
           <div className="mb-6">
@@ -225,13 +226,3 @@ export default function DetailCategoryModal({isOpen, setIsOpen, categoryId}: Pro
     </Modal>
   );
 }
-
-const InfoRow = ({icon, label, value}: { icon?: ReactNode; label: string; value?: string | ReactNode | null }) => (
-  <div className="flex items-start gap-3 py-3 border-b border-grey-c200">
-    {icon && <div className="text-primary-c600 mt-0.5">{icon}</div>}
-    <div className="flex-1">
-      <span className="text-sm font-semibold text-grey-c600 block mb-1">{label}</span>
-      <span className="text-base text-grey-c800">{value || 'Chưa cập nhật'}</span>
-    </div>
-  </div>
-);

@@ -38,7 +38,7 @@ interface ChipProps {
 
 export default function Chip({
   label,
-  variant = ChipVariant.FILLED,
+  variant = ChipVariant.SOFT,
   color = ChipColor.PRIMARY,
   size = ChipSize.MEDIUM,
   icon,

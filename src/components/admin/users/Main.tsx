@@ -19,6 +19,8 @@ import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import ChangeCircleRoundedIcon from "@mui/icons-material/ChangeCircleRounded";
 import Image from "next/image";
+import ChangeAccountStatusModal from "@/components/admin/users/ChangeAccountStatusModal";
+import DetailUserModal from "@/components/admin/users/DetailUserModal";
 
 interface UserViewDto {
   userId: number;
@@ -45,6 +47,7 @@ export default function Main() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isChangeStatusModalOpen, setIsChangeStatusModalOpen] = useState(false);
   const [selectedData, setSelectedData] = useState<UserViewDto | null>(null);
   const debouncedKeyword = useDebounce(keyword, 500);
   const buildUrl = useCallback(() => {
@@ -200,7 +203,7 @@ export default function Main() {
       label: "Họ và tên",
       sortable: true,
       render: (row) => (
-        <>
+        <div className={"flex items-center flex-row gap-2"}>
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-c200 bg-white flex-shrink-0">
             <Image
               src={row.avatarUrl || "/avatar_hoat_hinh_db4e0e9cf4.webp"}
@@ -213,7 +216,7 @@ export default function Main() {
           <div className="text-sm font-semibold text-grey-c900">
             {highlightText(`${row.firstName} ${row.middleName} ${row.lastName}`.trim(), keyword)}
           </div>
-        </>
+        </div>
 
       ),
     },
@@ -275,6 +278,10 @@ export default function Main() {
           <button
             className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Đổi trang thái"
+            onClick={() => {
+              setSelectedData(row);
+              setIsChangeStatusModalOpen(true);
+            }}
           >
             <ChangeCircleRoundedIcon/>
           </button>
@@ -291,7 +298,7 @@ export default function Main() {
   return (
     <div>
       {isLoading && <Loading/>}
-      <Title title={"Đăng ký người bán"} isDivide={true}/>
+      <Title title={"Tài khoản"} isDivide={true}/>
 
       {/* Filters */}
       <div className="flex gap-4 mb-6 flex-wrap items-center">
@@ -299,7 +306,7 @@ export default function Main() {
           <TextField
             value={keyword}
             onChange={(e) => setKeyword(e)}
-            placeholder="Tìm kiếm theo tên, email, CCCD, ngân hàng..."
+            placeholder="Tìm kiếm theo tên, email..."
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 setPageNo(0);
@@ -369,6 +376,21 @@ export default function Main() {
             : "Không có yêu cầu nào"
         }
       />
+      {isChangeStatusModalOpen && selectedData && (
+        <ChangeAccountStatusModal
+          isOpen={isChangeStatusModalOpen}
+          setIsOpen={setIsChangeStatusModalOpen}
+          reload={mutate}
+          userId={selectedData.userId}
+          currentStatus={selectedData.accountStatus}
+          />
+      )}
+      {isDetailModalOpen && selectedData && (
+        <DetailUserModal
+          isOpen={isDetailModalOpen}
+          setIsOpen={setIsDetailModalOpen}
+          user={selectedData}/>
+      )}
 
     </div>
   );

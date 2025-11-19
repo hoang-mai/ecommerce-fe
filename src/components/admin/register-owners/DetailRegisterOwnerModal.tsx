@@ -1,7 +1,7 @@
 "use client";
 import Modal from "@/libs/Modal";
 import {AlertType, UserVerificationStatus, UserVerificationStatusLabel , ColorButton} from "@/enum";
-import {ReactNode, useState} from "react";
+import {useState} from "react";
 import ImagePreview from "@/libs/ImagePreview";
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import EmailRoundedIcon from '@mui/icons-material/EmailRounded';
@@ -19,6 +19,7 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import RejectReasonModal from "./RejectReasonModal";
 import Loading from "@/components/modals/Loading";
+import {InfoRow} from "@/libs/InfoRow";
 
 interface ResUserVerificationDTO {
   userVerificationId: number;
@@ -44,15 +45,6 @@ interface DetailModalProps {
   reload: () => void;
 }
 
-const InfoRow = ({icon, label, value}: { icon?: ReactNode; label: string; value?: string | null }) => (
-  <div className="flex items-start gap-3 py-3 border-b border-grey-c200">
-    {icon && <div className="text-primary-c600 mt-0.5">{icon}</div>}
-    <div className="flex-1">
-      <span className="text-sm font-semibold text-grey-c600 block mb-1">{label}</span>
-      <span className="text-base text-grey-c800">{value || 'Chưa cập nhật'}</span>
-    </div>
-  </div>
-);
 
 const approveFetcher = (url: string) => patch<BaseResponse<void>>(url).then(res => res.data);
 

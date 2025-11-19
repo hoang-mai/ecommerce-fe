@@ -19,6 +19,7 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import DisableAccount from "@/components/user/layout/header/DisableAccount";
 import {useCartRef} from "@/components/context/cartContext";
+import {clearAllLocalStorage} from "@/services/localStorage";
 
 const fetcher = (url: string) => post<BaseResponse<never>>(url, {}, {withCredentials: true}).then(res => res.data);
 
@@ -70,14 +71,8 @@ export default function Information() {
       }
       dispatch(openAlert(alert))
     }).finally(() => {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('expiresIn');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('refreshExpiresIn');
-      localStorage.removeItem('tokenType');
-      localStorage.removeItem('sessionState');
-      localStorage.removeItem('scope');
-      router.push('/login');
+      clearAllLocalStorage();
+      router.replace('/login');
     });
   };
 
