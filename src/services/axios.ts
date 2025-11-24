@@ -1,4 +1,5 @@
 import axios, {AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig} from 'axios';
+import {LOGIN, REFRESH, REGISTER} from "@/services/api";
 
 // Create axios instance with default config
 const axiosInstance: AxiosInstance = axios.create({
@@ -31,9 +32,9 @@ axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('accessToken');
     const isAuthRoute =
-      config.url==='/api/v1/auth/login' ||
-      (config.url ==='/api/v1/user' && config.method ==='POST' ) ||
-      config.url==='/api/v1/auth/refresh';
+      config.url===LOGIN ||
+      config.url ===REGISTER  ||
+      config.url===REFRESH;
     if (token && !isAuthRoute) {
       config.headers.Authorization = `Bearer ${token}`;
     }

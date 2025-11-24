@@ -1,7 +1,7 @@
 import Modal from "@/libs/Modal";
 import {ProductStatus} from "@/enum";
 import useSWRMutation from "swr/mutation";
-import {PRODUCTION} from "@/services/api";
+import {PRODUCT} from "@/services/api";
 import {patch} from "@/services/axios";
 import {useDispatch} from "react-redux";
 import {AlertType} from "@/enum";
@@ -36,7 +36,7 @@ export default function UpdateStatusProductModal({
   const dispatch = useDispatch();
 
   const {trigger, isMutating} = useSWRMutation(
-    `${PRODUCTION}/${productId}/status`,
+    `${PRODUCT}/${productId}/product-status`,
     fetcher,
     {
       revalidate: false,
@@ -53,8 +53,6 @@ export default function UpdateStatusProductModal({
         return "Đang bán";
       case ProductStatus.INACTIVE:
         return "Ngừng bán";
-      case ProductStatus.OUT_OF_STOCK:
-        return "Hết hàng";
       default:
         return status;
     }
@@ -66,8 +64,6 @@ export default function UpdateStatusProductModal({
         return ChipColor.SUCCESS;
       case ProductStatus.INACTIVE:
         return ChipColor.SECONDARY;
-      case ProductStatus.OUT_OF_STOCK:
-        return ChipColor.WARNING;
       default:
         return ChipColor.SECONDARY;
     }

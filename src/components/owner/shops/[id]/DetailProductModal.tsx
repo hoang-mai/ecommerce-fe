@@ -33,6 +33,7 @@ interface ProductVariantDTO {
   productVariantId: number;
   price: number;
   stockQuantity: number;
+  sold: number;
   isDefault: boolean;
   attributeValues: Record<string, string>;
 }
@@ -45,6 +46,7 @@ interface DetailProductModalProps {
     shopId: number;
     name: string;
     description: string;
+    totalSold: number;
     productStatus: ProductStatus;
     categoryName: string;
     productImages: ProductImageDTO[];
@@ -62,8 +64,6 @@ export default function DetailProductModal({isOpen, onClose, productData}: Detai
         return ChipColor.SUCCESS;
       case ProductStatus.INACTIVE:
         return ChipColor.SECONDARY;
-      case ProductStatus.OUT_OF_STOCK:
-        return ChipColor.ERROR;
       default:
         return ChipColor.SECONDARY;
     }
@@ -75,8 +75,6 @@ export default function DetailProductModal({isOpen, onClose, productData}: Detai
         return "Đang bán";
       case ProductStatus.INACTIVE:
         return "Ngừng bán";
-      case ProductStatus.OUT_OF_STOCK:
-        return "Hết hàng";
       default:
         return status;
     }
@@ -107,23 +105,28 @@ export default function DetailProductModal({isOpen, onClose, productData}: Detai
           </h3>
           <div className="bg-grey-c50 rounded-lg p-4 space-y-3">
             <InfoRow
-              icon={<InventoryRoundedIcon />}
+              icon={<InventoryRoundedIcon/>}
               label="Tên sản phẩm"
               value={productData.name}
             />
             <InfoRow
-              icon={<CategoryRoundedIcon />}
+              icon={<CategoryRoundedIcon/>}
               label="Danh mục"
               value={productData.categoryName}
             />
             <InfoRow
-              icon={<DescriptionRoundedIcon />}
+              icon={<DescriptionRoundedIcon/>}
               label="Mô tả"
               value={productData.description}
             />
+            <InfoRow
+              icon={<LocalOfferRoundedIcon/>}
+              label="Tổng sản phẩm đã bán"
+              value={`${productData.totalSold} sản phẩm`}
+            />
             <div className="flex items-start gap-3 py-3 border-b border-grey-c200">
               <div className="text-primary-c600 mt-0.5">
-                <StyleRoundedIcon />
+                <StyleRoundedIcon/>
               </div>
               <div className="flex-1">
                 <span className="text-sm font-semibold text-grey-c600 block mb-1">Trạng thái</span>
@@ -147,7 +150,7 @@ export default function DetailProductModal({isOpen, onClose, productData}: Detai
           <div className="bg-grey-c50 rounded-lg p-4">
             <div className="flex items-start gap-3 py-3">
               <div className="text-primary-c600 mt-0.5">
-                <ImageRoundedIcon />
+                <ImageRoundedIcon/>
               </div>
               <div className="flex-1">
                 <span className="text-sm font-semibold text-grey-c600 block mb-3">
@@ -169,7 +172,8 @@ export default function DetailProductModal({isOpen, onClose, productData}: Detai
                           />
                         </div>
                         {index === 0 && (
-                          <div className="absolute top-2 left-2 bg-primary-c700 text-white text-xs px-2 py-1 rounded-md font-semibold">
+                          <div
+                            className="absolute top-2 left-2 bg-primary-c700 text-white text-xs px-2 py-1 rounded-md font-semibold">
                             Ảnh chính
                           </div>
                         )}
@@ -193,9 +197,10 @@ export default function DetailProductModal({isOpen, onClose, productData}: Detai
             </h3>
             <div className="bg-grey-c50 rounded-lg p-4 space-y-4">
               {productData.productAttributes.map((attr) => (
-                <div key={attr.productAttributeId} className="flex items-start gap-3 py-3 border-b border-grey-c200 last:border-b-0">
+                <div key={attr.productAttributeId}
+                     className="flex items-start gap-3 py-3 border-b border-grey-c200 last:border-b-0">
                   <div className="text-primary-c600 mt-0.5">
-                    <StyleRoundedIcon />
+                    <StyleRoundedIcon/>
                   </div>
                   <div className="flex-1">
                     <span className="text-sm font-semibold text-grey-c600 block mb-2">
@@ -248,24 +253,29 @@ export default function DetailProductModal({isOpen, onClose, productData}: Detai
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <InfoRow
-                      icon={<LocalOfferRoundedIcon />}
+                      icon={<LocalOfferRoundedIcon/>}
                       label="Giá bán"
                       value={formatPrice(variant.price)}
                     />
                     <InfoRow
-                      icon={<InventoryRoundedIcon />}
+                      icon={<InventoryRoundedIcon/>}
                       label="Số lượng tồn kho"
                       value={
                         <span className={`font-bold ${
-                          variant.stockQuantity === 0 
-                            ? 'text-support-c900' 
-                            : variant.stockQuantity < 20 
-                              ? 'text-yellow-c900' 
+                          variant.stockQuantity === 0
+                            ? 'text-support-c900'
+                            : variant.stockQuantity < 20
+                              ? 'text-yellow-c900'
                               : 'text-success-c900'
                         }`}>
                           {variant.stockQuantity} sản phẩm
                         </span>
                       }
+                    />
+                    <InfoRow
+                      icon={<InventoryRoundedIcon/>}
+                      label="Đã bán"
+                      value={`${variant.sold} sản phẩm`}
                     />
                   </div>
 
@@ -302,12 +312,12 @@ export default function DetailProductModal({isOpen, onClose, productData}: Detai
           <div className="bg-grey-c50 rounded-lg p-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InfoRow
-                icon={<CalendarTodayRoundedIcon />}
+                icon={<CalendarTodayRoundedIcon/>}
                 label="Ngày tạo"
                 value={formatDateTime(productData.createdAt)}
               />
               <InfoRow
-                icon={<CalendarTodayRoundedIcon />}
+                icon={<CalendarTodayRoundedIcon/>}
                 label="Cập nhật lần cuối"
                 value={formatDateTime(productData.updatedAt)}
               />

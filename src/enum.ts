@@ -1,4 +1,4 @@
-export enum Role{
+export enum Role {
   ADMIN = 'ADMIN',
   OWNER = 'OWNER',
   EMPLOYEE = 'EMPLOYEE',
@@ -12,10 +12,10 @@ export enum AccountStatus {
 }
 
 export enum AlertType {
-  ERROR = 'error',
-  SUCCESS = 'success',
-  INFO = 'info',
-  WARNING = 'warning',
+  ERROR = 'ERROR',
+  SUCCESS = 'SUCCESS',
+  INFO = 'INFO',
+  WARNING = 'WARNING',
 }
 
 export enum Gender {
@@ -39,7 +39,7 @@ export enum ColorButton {
   SUCCESS = 'success',
 }
 
-export enum SortDir{
+export enum SortDir {
   ASC = 'asc',
   DESC = 'desc',
 }
@@ -70,5 +70,10 @@ export enum CategoryStatus {
 export enum ProductStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
-  OUT_OF_STOCK = "OUT_OF_STOCK",
+}
+
+export enum ProductVariantStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  OUT_OF_STOCK = "OUT_OF_STOCK"
 }

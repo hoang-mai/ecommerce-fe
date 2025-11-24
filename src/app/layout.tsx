@@ -3,6 +3,7 @@ import "./globals.css";
 import {ReactNode} from "react";
 import ReduxProvider from "@/app/ReduxProvider";
 import Alert from "@/components/modals/Alert";
+import WebSocketProvider from "@/app/WebSocketProvider";
 
 
 export const metadata: Metadata = {
@@ -18,10 +19,14 @@ export default function RootLayout({
   return (
     <html lang="en">
     <body className="font-sans max-w-[2560px] mx-auto min-h-screen bg-grey-c50">
+
     <ReduxProvider>
       <Alert/>
-      {children}
+      <WebSocketProvider>
+        {children}
+      </WebSocketProvider>
     </ReduxProvider>
+
     </body>
     </html>
   );

@@ -1,4 +1,4 @@
-import { AlertType } from "@/enum";
+import {AlertType} from "@/enum";
 
 declare global {
   type ErrorResponse = {
@@ -15,7 +15,7 @@ declare global {
   type BaseResponse<T> = {
     statusCode: number;
     message: string;
-    data: T;
+    data?: T;
   };
 
   type PageResponse<T> = {
@@ -35,8 +35,16 @@ declare global {
     type: AlertType;
   }
 
-  type LoadingState = {
-    isLoading: boolean;
+  type NotificationState = {
+    notificationId :string;
+    userId :number;
+    title: string;
+    message: string;
+    notificationType :AlertType
+    isRead :boolean;
+    sentRealtime :boolean;
+    createdAt: string;
+    updatedAt: string;
   }
 
 }

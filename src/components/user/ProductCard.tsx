@@ -1,39 +1,74 @@
-import React, { useRef } from "react";
+import React, {useRef, useState} from "react";
 import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRounded";
-import StarIcon from "@mui/icons-material/Star";
-import StarBorderIcon from "@mui/icons-material/StarBorder";
 import {formatPrice} from "@/util/FnCommon";
 import Button from "@/libs/Button";
-import {ColorButton} from "@/enum";
-import {useCartRef} from "@/components/context/cartContext";
+import {AlertType, ColorButton} from "@/enum";
+import {useCartData, useCartRef} from "@/components/context/cartContext";
 import Image from "next/image";
-interface Product {
-  id: number;
-  name: string;
-  image: string;
-  price: number;
-  originalPrice: number;
-  discount: number;
-  rating: number;
-  sold: number;
-}
+import SelectProductVariantModal from "@/components/user/SelectProductVariantModal";
+import useSWRMutation from "swr/mutation";
+import {CART} from "@/services/api";
+import {post} from "@/services/axios";
+import {openAlert} from "@/redux/slice/alertSlice";
+import {useDispatch} from "react-redux";
+import {useRouter} from "next/navigation";
+import {ProductViewDTO} from "@/components/user/layout/header/Cart";
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductViewDTO;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const cardRef = useRef<HTMLDivElement | null>(null);
+export interface ReqAddToCartDTO {
+  productId: string;
+  productVariantId: string;
+  quantity: number;
+}
+
+
+const fetcher = (url: string, {arg}: { arg: ReqAddToCartDTO }) =>
+  post<BaseResponse<never>>(url, arg, {}).then(res => res.data);
+
+export default function ProductCard({product}: ProductCardProps) {
+  const [isOpenProductSelectVariant, setOpenProductSelectVariant] = useState(false);
+  const {mutate} = useCartData();
+  const defaultVariant = product.productVariants.find(v => v.isDefault) ?? product.productVariants[0];
+  const imageRef = useRef<HTMLImageElement | null>(null);
   const cartRef = useCartRef();
-  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const img = cardRef.current?.querySelector("img") as HTMLImageElement | null;
-    if (!img || !cartRef.current) return;
+  const {trigger, isMutating} = useSWRMutation(`${CART}`, fetcher);
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const handleAddToCart = () => {
+    if (product.productVariants.length > 1) {
+      setOpenProductSelectVariant(true);
+    } else {
+      animationAddToCart();
+      trigger({
+        productId: product.productId,
+        productVariantId: defaultVariant.productVariantId,
+        quantity: 1,
+      }).then(() => {
+        mutate();
+      }).catch((err: ErrorResponse) => {
+        const alert: AlertState = {
+          isOpen: true,
+          title: "Thất bại",
+          message: err.message || "Thêm vào giỏ hàng thất bại",
+          type: AlertType.ERROR,
+        }
+        dispatch(openAlert(alert));
+      })
+    }
 
-    // Lấy vị trí ban đầu và kết thúc
+  };
+
+  const animationAddToCart = () => {
+    const img = imageRef.current;
+    const cart = cartRef.current;
+    if (!img || !cart) return;
+
     const imgRect = img.getBoundingClientRect();
-    const cartRect = cartRef.current.getBoundingClientRect();
+    const cartRect = cart.getBoundingClientRect();
 
-    // Clone ảnh
     const clone = img.cloneNode(true) as HTMLImageElement;
     clone.style.position = "fixed";
     clone.style.left = `${imgRect.left}px`;
@@ -73,78 +108,81 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         "transitionend",
         () => {
           clone.remove();
-          cartRef.current?.classList.add("animate-cart-bump");
-          setTimeout(() => cartRef.current?.classList.remove("animate-cart-bump"), 300);
+          cart?.classList.add("animate-cart-bump");
+          setTimeout(() => cart?.classList.remove("animate-cart-bump"), 300);
         },
-        { once: true }
+        {once: true}
       );
     }, 350);
 
-  };
+  }
 
   return (
-    <div
-      ref={cardRef}
-      key={product.id}
-      className="bg-white rounded-lg shadow hover:shadow-xl transition group overflow-hidden"
-    >
-      <div className="relative overflow-hidden">
-        <Image
-          src={product.image}
-          alt={product.name}
-          width={400}
-          height={400}
-          className="w-full h-48 object-cover group-hover:scale-110 transition duration-300"
-        />
-        {product.discount > 0 && (
-          <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
-            -{product.discount}%
-          </div>
-        )}
-      </div>
+    <>
+      <div
+        key={product.productId}
+        className="bg-white rounded-lg shadow hover:shadow-xl transition group overflow-hidden"
+        onClick={() => router.push(`/products/${product.productId}`)}
+      >
+        <div className="relative overflow-hidden">
+          <Image
+            ref={imageRef}
+            src={product.productImages[0]?.url || "/placeholder.png"}
+            alt={product.name}
+            width={400}
+            height={400}
+            className="w-full h-48 object-cover group-hover:scale-110 transition duration-300"
+          />
+          {Number(product.discount) > 0 && (
+            <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+              -{product.discount}%
+            </div>
+          )}
+        </div>
 
-      <div className="p-4">
-        <h3 className="font-semibold text-lg mb-1 truncate h-10">{product.name}</h3>
+        <div className="p-4">
+          <h3 className="font-semibold text-lg mb-1 truncate h-10">{product.name}</h3>
 
-        <div className="flex items-center gap-1 mb-2">
-          <div className="flex">
-            {[...Array(5)].map((_, i) =>
-              i < Math.floor(product.rating) ? (
-                <StarIcon key={i} sx={{ fontSize: 14, color: "#facc15" }} />
-              ) : (
-                <StarBorderIcon key={i} sx={{ fontSize: 14, color: "#d1d5db" }} />
-              )
-            )}
-          </div>
-          <span className="text-xs text-gray-600">
-            ({product.rating}) | Đã bán {product.sold}
+          <div className="flex items-center gap-1 mb-2">
+
+          <span className="text-sm text-grey-c600">
+            Đã bán <span className={"font-semibold"}>{product.totalSold || 0}</span>
           </span>
-        </div>
-
-        <div className="mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-primary-c900 font-bold text-lg">
-              {formatPrice(product.price)}
-            </span>
-            {product.originalPrice > product.price && (
-              <span className="text-gray-400 text-sm line-through">
-                {formatPrice(product.originalPrice)}
-              </span>
-            )}
           </div>
+
+          <div className="mb-3">
+            <div className="flex items-center gap-2">
+            <span className="text-primary-c900 font-bold text-lg">
+              {formatPrice(defaultVariant.price * (100 + (product.discount || 0)) / 100)}
+            </span>
+              {Number(product.discount) > 0 &&
+                  <span className="text-gray-400 text-sm line-through">
+                {formatPrice(defaultVariant.price * (100 + (product.discount || 0)) / 100)}
+                    {formatPrice(defaultVariant.price)}
+              </span>
+              }
+            </div>
+          </div>
+
+          <Button
+            title="Thêm vào giỏ"
+            color={ColorButton.PRIMARY}
+            fullWidth
+            startIcon={<AddShoppingCartRoundedIcon/>}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToCart();
+            }}
+            disabled={isMutating}
+          >
+            Thêm vào giỏ
+          </Button>
         </div>
-
-        <Button
-          title="Thêm vào giỏ"
-          color={ColorButton.PRIMARY}
-          fullWidth
-          startIcon={<AddShoppingCartRoundedIcon />}
-          onClick={handleAddToCart}
-        >
-          Thêm vào giỏ
-        </Button>
       </div>
-
-    </div>
+      {isOpenProductSelectVariant &&
+          <SelectProductVariantModal isOpen={isOpenProductSelectVariant} product={product}
+                                     setIsOpen={setOpenProductSelectVariant}/>
+      }
+    </>
   );
 };

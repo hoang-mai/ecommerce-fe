@@ -7,7 +7,7 @@ import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import LockRoundedIcon from '@mui/icons-material/LockRounded';
 import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import {useState} from "react";
+import {ReactNode, useState} from "react";
 import DropdownMenu from "@/libs/DropdownMenu";
 import {useRouter} from "next/navigation";
 import ChangePassword from "@/components/user/layout/header/ChangePassword";
@@ -18,13 +18,14 @@ import {AlertType} from "@/enum";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import DisableAccount from "@/components/user/layout/header/DisableAccount";
-import {useCartRef} from "@/components/context/cartContext";
+import {useCartData, useCartRef} from "@/components/context/cartContext";
 import {clearAllLocalStorage} from "@/services/localStorage";
+import {Cart} from "@/components/user/layout/header/Cart";
 
 const fetcher = (url: string) => post<BaseResponse<never>>(url, {}, {withCredentials: true}).then(res => res.data);
 
 interface IconButtonProps {
-  icon: React.ReactNode;
+  icon: ReactNode;
   badge?: number;
   onClick?: () => void;
   label: string;
@@ -34,20 +35,20 @@ function IconButton({icon, badge, onClick, label}: IconButtonProps) {
   return (
     <button
       onClick={onClick}
-      className="relative p-2.5 bg-white hover:bg-primary-c50 rounded-full transition-all duration-200
+      className="cursor-pointer relative p-2.5 bg-white hover:bg-primary-c50 rounded-full transition-all duration-200
                  border-2 border-transparent hover:border-primary-c300 group"
       aria-label={label}
     >
       <div className="text-grey-c700 group-hover:text-primary-c700 transition-colors">
         {icon}
       </div>
-      {badge && badge > 0 && (
+      {Number(badge) > 0 && (
         <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5
                        bg-gradient-to-r from-support-c900 to-support-c800
                        text-white text-xs font-semibold rounded-full
                        flex items-center justify-center shadow-md
                        animate-pulse">
-          {badge > 99 ? '99+' : badge}
+          {Number(badge) > 99 ? '99+' : badge}
         </span>
       )}
     </button>
@@ -55,10 +56,12 @@ function IconButton({icon, badge, onClick, label}: IconButtonProps) {
 }
 
 export default function Information() {
+  const {data} = useCartData();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isOpenDisableAccount, setIsOpenDisableAccount] = useState<boolean>(false);
   const router = useRouter();
   const {trigger} = useSWRMutation(LOGOUT, fetcher);
+  const [isOpenCart, setIsOpenCart] = useState<boolean>(false);
   const dispatch = useDispatch();
 
   const handleLogout = () => {
@@ -72,6 +75,7 @@ export default function Information() {
       dispatch(openAlert(alert))
     }).finally(() => {
       clearAllLocalStorage();
+      window.dispatchEvent(new Event('authChanged'));
       router.replace('/login');
     });
   };
@@ -124,9 +128,9 @@ export default function Information() {
       >
         <IconButton
           icon={<ShoppingCartRoundedIcon/>}
-          badge={3}
+          badge={data}
           label="Giỏ hàng"
-          onClick={() => router.push('/cart')}
+          onClick={() => setIsOpenCart(true)}
         />
       </div>
 
@@ -136,7 +140,7 @@ export default function Information() {
         <DropdownMenu
           label="Tài khoản"
           trigger={
-            <button className="flex items-center gap-2 px-3 py-2 rounded-full
+            <button className="cursor-pointer flex items-center gap-2 px-3 py-2 rounded-full
                              hover:bg-primary-c50 transition-all duration-200 group">
               <AccountCircleRoundedIcon className="text-primary-c700 !text-4xl"/>
               <div className="hidden lg:flex flex-col items-start">
@@ -196,6 +200,7 @@ export default function Information() {
 
       {isOpen && <ChangePassword isOpen={isOpen} setIsOpen={setIsOpen}/>}
       {isOpenDisableAccount && <DisableAccount isOpen={isOpenDisableAccount} setIsOpen={setIsOpenDisableAccount}/>}
+      {isOpenCart && <Cart isOpen={isOpenCart} setIsOpen={setIsOpenCart}/>}
     </div>
   );
 }

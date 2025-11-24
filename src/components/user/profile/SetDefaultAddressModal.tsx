@@ -24,17 +24,17 @@ type Props = {
   setIsOpen: () => void;
   mutate: () => void;
   addressData: AddressData;
+  mutateParent?: () => void;
 }
 
 const fetcher = (url: string) =>
   patch<BaseResponse<undefined>>(url).then(res => res.data);
 
-export default function SetDefaultAddressModal({isOpen, setIsOpen, mutate, addressData}: Props) {
+export default function SetDefaultAddressModal({isOpen, setIsOpen, mutate, addressData,mutateParent}: Props) {
   const dispatch = useDispatch();
   const {trigger, isMutating} = useSWRMutation(`${ADDRESS}/${addressData.addressId}/default`, fetcher, {
     revalidate: false,
   });
-  const {getProvinceName, getWardName} = useAddressMapping();
 
   const handleSetDefault = () => {
     trigger().then(res => {
@@ -46,6 +46,9 @@ export default function SetDefaultAddressModal({isOpen, setIsOpen, mutate, addre
       }
       dispatch(openAlert(alertState));
       mutate();
+      if (mutateParent) {
+        mutateParent();
+      }
       setIsOpen();
     }).catch((err: ErrorResponse) => {
       const alertState: AlertState = {

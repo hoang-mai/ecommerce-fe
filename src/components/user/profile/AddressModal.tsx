@@ -16,7 +16,7 @@ import DeleteAddressModal from "@/components/user/profile/DeleteAddressModal";
 import SetDefaultAddressModal from "@/components/user/profile/SetDefaultAddressModal";
 import {useAddressMapping} from "@/hooks/useAddressMapping";
 
-interface ResInfoAddressDTO {
+export  interface ResInfoAddressDTO {
   addressId: number;
   userId: number;
   receiverName: string;
@@ -30,14 +30,15 @@ interface ResInfoAddressDTO {
 type Props = {
   isOpen: boolean;
   setIsOpen: () => void;
+  mutateParent: () => void;
 }
 
 const fetcher = (url: string) => get<BaseResponse<ResInfoAddressDTO[]>>(url).then(res => res.data.data);
 
-export default function AddressModal({isOpen, setIsOpen}: Props) {
+export default function AddressModal({isOpen, setIsOpen, mutateParent}: Props) {
   const [isOpenAddress, setIsOpenAddress] = useState<boolean[]>([false, false, false, false]);
   const [selectedAddress, setSelectedAddress] = useState<ResInfoAddressDTO | null>(null);
-  const {data, isLoading, error, mutate} = useSWR<ResInfoAddressDTO[]>(ADDRESS, fetcher, {
+  const {data, isLoading, error, mutate} = useSWR(ADDRESS, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   })
@@ -173,6 +174,7 @@ export default function AddressModal({isOpen, setIsOpen}: Props) {
         })
       }}
       mutate={mutate}
+      mutateParent={mutateParent}
     />}
 
     {/* Update Address Modal */}
@@ -187,6 +189,7 @@ export default function AddressModal({isOpen, setIsOpen}: Props) {
         setSelectedAddress(null);
       }}
       mutate={mutate}
+      mutateParent={mutateParent}
       addressData={selectedAddress}
     />}
 
@@ -217,6 +220,7 @@ export default function AddressModal({isOpen, setIsOpen}: Props) {
         setSelectedAddress(null);
       }}
       mutate={mutate}
+      mutateParent={mutateParent}
       addressData={selectedAddress}
     />}
   </Modal>;

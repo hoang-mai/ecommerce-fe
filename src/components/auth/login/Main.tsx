@@ -46,7 +46,7 @@ const fetcher = (url: string, {arg}: {
   arg: LoginFormData
 }) => post<BaseResponse<LoginResponse>>(url, arg, {withCredentials: true}).then(res => res.data);
 
-export default function Main() {
+export function Main() {
   const [checked, setChecked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
@@ -65,8 +65,6 @@ export default function Main() {
     },
   });
   const onSubmit = (data: LoginFormData) => {
-
-
     trigger({username: data.username, password: data.password}).then(res => {
       localStorage.setItem('accessToken', res.data.accessToken);
       localStorage.setItem('expiresIn', String(res.data.expiresIn));
@@ -75,7 +73,8 @@ export default function Main() {
       localStorage.setItem('tokenType', res.data.tokenType);
       localStorage.setItem('sessionState', res.data.sessionState);
       localStorage.setItem('scope', res.data.scope);
-      switch (getRoleFromJwtToken(res.data.accessToken)){
+      window.dispatchEvent(new Event('authChanged'));
+      switch (getRoleFromJwtToken(res.data.accessToken)) {
         case Role.ADMIN:
           router.replace('/admin/dashboard');
           break;

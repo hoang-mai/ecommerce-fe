@@ -1,11 +1,16 @@
 export const AUTH= "/api/v1/auth";
 export const LOGIN= AUTH + "/login";
 export const LOGOUT= AUTH + "/logout";
+export const REFRESH = AUTH + "/refresh";
 export const REGISTER = "/api/v1/saga/register";
 export const CATEGORY= "/api/v1/category";
 export const USER = "/api/v1/user";
 export const ADDRESS= "/api/v1/address";
 export const USER_VERIFICATION = "/api/v1/user-verification";
 export const SHOP = "/api/v1/shop";
-export const PRODUCTION = "/api/v1/product";
+export const PRODUCT = "/api/v1/product";
 export const USER_VIEW = "/api/v1/user-view";
+export const CART = "/api/v1/cart";
+export const ORDER = "/api/v1/order";
+export const CART_VIEW = "/api/v1/cart-view";
+export const PRODUCT_VIEW = "/api/v1/product-view";

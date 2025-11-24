@@ -32,6 +32,7 @@ type Props = {
   setIsOpen: () => void;
   mutate: () => void;
   addressData: AddressData;
+  mutateParent?: () => void;
 }
 
 const addressSchema = z.object({
@@ -54,7 +55,7 @@ type AddressFormData = z.infer<typeof addressSchema>;
 const fetcher = (url: string, {arg}: { arg: AddressFormData }) =>
   patch<BaseResponse<undefined>>(url, arg).then(res => res.data);
 
-export default function UpdateAddressModal({isOpen, setIsOpen, mutate, addressData}: Props) {
+export default function UpdateAddressModal({isOpen, setIsOpen, mutate, addressData, mutateParent}: Props) {
   const [selectedProvince, setSelectedProvince] = useState<string>(addressData.province);
   const dispatch = useDispatch();
   const {provinceOptions, wardOptions} = useAddressMapping(selectedProvince);
@@ -89,6 +90,9 @@ export default function UpdateAddressModal({isOpen, setIsOpen, mutate, addressDa
       }
       dispatch(openAlert(alertState));
       mutate();
+      if (mutateParent) {
+        mutateParent();
+      }
       setIsOpen();
     }).catch((err: ErrorResponse) => {
       const alertState: AlertState = {

@@ -11,6 +11,8 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  childrenHeader?: ReactNode;
+  childrenFooter?: ReactNode;
   onSave?: () => void;
   onCancel?: () => void;
   saveButtonText?: string;
@@ -29,7 +31,9 @@ export default function Modal({
                                 isOpen,
                                 onClose,
                                 title,
+                                childrenHeader,
                                 children,
+                                childrenFooter,
                                 onSave,
                                 onCancel,
                                 saveButtonText = 'Lưu',
@@ -103,7 +107,7 @@ export default function Modal({
             <CloseRoundedIcon/>
           </button>
         </div>
-
+        {childrenHeader}
         {onSave ? (
           <form onSubmit={(e) => {
             e.preventDefault();
@@ -113,7 +117,7 @@ export default function Modal({
             <div className="overflow-y-auto p-4">
               {children}
             </div>
-
+            {childrenFooter}
             {/* Divider before footer */}
             <div className="border-t-2 border-grey-c200"></div>
 
@@ -154,6 +158,7 @@ export default function Modal({
             {/* Footer with buttons */}
             {(showSaveButton || showCancelButton) && (
               <>
+                {childrenFooter}
                 <div className="border-t-2 border-grey-c200"></div>
                 <div className="px-6 py-4 flex gap-4 justify-end">
                   {showSaveButton && (

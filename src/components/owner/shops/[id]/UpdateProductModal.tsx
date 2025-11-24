@@ -10,7 +10,7 @@ import {Controller, useFieldArray, useForm, useWatch} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import useSWRMutation from "swr/mutation";
 import {patch} from "@/services/axios";
-import {CATEGORY, PRODUCTION} from "@/services/api";
+import {CATEGORY, PRODUCT} from "@/services/api";
 import {useDispatch} from "react-redux";
 import {AlertType, ColorButton} from "@/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -159,7 +159,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
     label: cat.categoryName,
   }));
 
-  const {trigger, isMutating} = useSWRMutation(`${PRODUCTION}/${productData.productId}`, fetcher);
+  const {trigger, isMutating} = useSWRMutation(`${PRODUCT}/${productData.productId}`, fetcher);
 
   const {
     control,

@@ -10,14 +10,14 @@ import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import ChangeCircleRoundedIcon from '@mui/icons-material/ChangeCircleRounded';
-import {formatDateTime} from "@/util/FnCommon";
+import {formatDateTime, formatPrice} from "@/util/FnCommon";
 import CreateProductModal from "./CreateProductModal";
 import UpdateProductModal from "./UpdateProductModal";
 import UpdateStatusProductModal from "./UpdateStatusProductModal";
 import DetailProductModal from "./DetailProductModal";
 import useSWR from "swr";
 import {get} from "@/services/axios";
-import {PRODUCTION} from "@/services/api";
+import {PRODUCT} from "@/services/api";
 import TextField from "@/libs/TextField";
 import DropdownSelect from "@/libs/DropdownSelect";
 import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
@@ -51,6 +51,7 @@ interface ResProductVariantDTO {
   productVariantId: number;
   price: number;
   stockQuantity: number;
+  sold:number;
   isDefault: boolean;
   attributeValues: Record<string, string>;
 }
@@ -60,6 +61,7 @@ interface ResProductDTO {
   shopId: number;
   name: string;
   description: string;
+  totalSold:number;
   productStatus: ProductStatus;
   category: ResCategoryDTO;
   productImages: ResProductImageDTO[];
@@ -111,7 +113,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
       params.append("sortBy", sortBy);
       params.append("sortDir", sortDir);
     }
-    return `${PRODUCTION}/search?${params.toString()}`;
+    return `${PRODUCT}/search?${params.toString()}`;
   }, [shopId, selectedStatus, debouncedKeyword, pageNo, pageSize, sortBy, sortDir]);
 
   // Fetch products using useSWR
@@ -140,7 +142,6 @@ export default function ProductTable({shopId}: ProductTableProps) {
     {id: "", label: "Tất cả trạng thái"},
     {id: ProductStatus.ACTIVE, label: "Đang bán"},
     {id: ProductStatus.INACTIVE, label: "Ngừng bán"},
-    {id: ProductStatus.OUT_OF_STOCK, label: "Hết hàng"},
   ];
 
   const getStatusColor = (status: ProductStatus): ChipColor => {
@@ -149,8 +150,6 @@ export default function ProductTable({shopId}: ProductTableProps) {
         return ChipColor.SUCCESS;
       case ProductStatus.INACTIVE:
         return ChipColor.SECONDARY;
-      case ProductStatus.OUT_OF_STOCK:
-        return ChipColor.ERROR;
       default:
         return ChipColor.SECONDARY;
     }
@@ -162,18 +161,9 @@ export default function ProductTable({shopId}: ProductTableProps) {
         return "Đang bán";
       case ProductStatus.INACTIVE:
         return "Ngừng bán";
-      case ProductStatus.OUT_OF_STOCK:
-        return "Hết hàng";
       default:
         return status;
     }
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price);
   };
 
   const highlightText = useCallback((text: string, keyword: string) => {
@@ -311,12 +301,9 @@ export default function ProductTable({shopId}: ProductTableProps) {
       key: "stock",
       label: "Tồn kho",
       render: (row) => {
-        console.log(row);
-        // Tìm biến thể mặc định
         const defaultVariant = row.productVariants.find(v => v.isDefault);
         const variant = defaultVariant || row.productVariants[0];
         const stock = variant.stockQuantity;
-        console.log("Stock:", stock);
         const stockColor = stock === 0
           ? "text-support-c900"
           : stock < 20
@@ -329,6 +316,15 @@ export default function ProductTable({shopId}: ProductTableProps) {
           </span>
         );
       },
+    },
+    {
+      key: "totalSold",
+      label: "Đã bán",
+      render: (row) => (
+        <span className="text-sm font-bold text-grey-c900">
+          {row.totalSold}
+        </span>
+      ),
     },
     {
       key: "productStatus",

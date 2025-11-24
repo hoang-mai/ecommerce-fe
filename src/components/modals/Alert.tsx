@@ -41,7 +41,6 @@ export default function Alert() {
   const alertData = useSelector((state: RootState) => state.alert);
   const dispatch = useDispatch();
   const [isVisible, setIsVisible] = useState(false);
-
   useEffect(() => {
     if (alertData.isOpen) {
 
