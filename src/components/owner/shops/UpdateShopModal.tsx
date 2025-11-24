@@ -8,7 +8,7 @@ import {z} from "zod";
 import {Controller, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import useSWRMutation from "swr/mutation";
-import {patch} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {SHOP} from "@/services/api";
 import {useDispatch} from "react-redux";
 import {AlertType} from "@/enum";
@@ -67,14 +67,6 @@ interface UpdateShopModalProps {
   shopData: ShopData;
 }
 
-const fetcher = (url: string, {arg}: {
-  arg: FormData
-}) => patch<BaseResponse<never>>(url, arg, {
-  headers: {
-    'Content-Type': 'multipart/form-data',
-  },
-}).then(res => res.data);
-
 export default function UpdateShopModal({
                                           isOpen,
                                           onClose,
@@ -83,6 +75,7 @@ export default function UpdateShopModal({
                                         }: UpdateShopModalProps) {
   const [selectedProvince, setSelectedProvince] = useState<string>(shopData.province);
   const dispatch = useDispatch();
+  const { patch } = useAxiosContext();
 
   const {provinceOptions, wardOptions} = useAddressMapping(selectedProvince);
 
@@ -105,6 +98,13 @@ export default function UpdateShopModal({
       phoneNumber: shopData.phoneNumber,
     },
   });
+
+  const fetcher = (url: string, {arg}: { arg: FormData }) =>
+    patch<BaseResponse<never>>(url, arg, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
 
   const {trigger, isMutating} = useSWRMutation(`${SHOP}/${shopData.shopId}`, fetcher, {
     revalidate: false,

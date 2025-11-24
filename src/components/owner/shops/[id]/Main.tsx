@@ -16,7 +16,7 @@ import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
 import {formatDateTime} from "@/util/FnCommon";
 import {useRouter} from "next/navigation";
 import ProductTable from "./ProductTable";
-import {get} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {SHOP} from "@/services/api";
 import Loading from "@/components/modals/Loading";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -49,10 +49,12 @@ type Props = {
   id: string;
 }
 
-const fetcher = (url: string) =>
-  get<BaseResponse<ResShopDTO>>(url).then(res => res.data.data);
-
 export default function Main({id}: Props) {
+  const { get } = useAxiosContext();
+
+  const fetcher = (url: string) =>
+    get<BaseResponse<ResShopDTO>>(url).then(res => res.data.data);
+
   const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const router = useRouter();

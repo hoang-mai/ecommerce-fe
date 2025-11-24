@@ -7,7 +7,7 @@ import DropdownSelect from "@/libs/DropdownSelect";
 import {useState} from "react";
 import useSWRMutation from "swr/mutation";
 import {ADDRESS} from "@/services/api";
-import {post} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType} from "@/enum";
@@ -40,12 +40,12 @@ const addressSchema = z.object({
 
 type AddressFormData = z.infer<typeof addressSchema>;
 
-const fetcher = (url: string, {arg}: { arg: AddressFormData }) =>
-  post<BaseResponse<undefined>>(url, arg).then(res => res.data);
-
 export default function CreateAddressModal({isOpen, setIsOpen, mutate, mutateParent}: Props) {
   const [selectedProvince, setSelectedProvince] = useState<string>('');
   const dispatch = useDispatch();
+  const { post } = useAxiosContext();
+  const fetcher = (url: string, {arg}: { arg: AddressFormData }) =>
+    post<BaseResponse<undefined>>(url, arg).then(res => res.data);
   const {trigger, isMutating} = useSWRMutation(ADDRESS, fetcher,{
     revalidate: false,
   });

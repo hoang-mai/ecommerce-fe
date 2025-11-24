@@ -19,7 +19,7 @@ import {formatDateTime} from "@/util/FnCommon";
 import CreateShopModal from "./CreateShopModal";
 import UpdateShopModal from "./UpdateShopModal";
 import UpdateStatusShopModal from "./UpdateStatusShopModal";
-import {get} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {SHOP} from "@/services/api";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -46,10 +46,11 @@ interface Shop {
   updatedAt: string;
 }
 
-const fetcher = (url: string) =>
-  get<BaseResponse<PageResponse<Shop>>>(url).then(res => res.data);
-
 export default function Main() {
+  const { get } = useAxiosContext();
+  const fetcher = (url: string) =>
+    get<BaseResponse<PageResponse<Shop>>>(url).then(res => res.data);
+
   const [status, setStatus] = useState<string>("");
   const [keyword, setKeyword] = useState("");
   const [currentPage, setCurrentPage] = useState(0);

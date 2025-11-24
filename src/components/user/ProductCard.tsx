@@ -3,12 +3,12 @@ import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRound
 import {formatPrice} from "@/util/FnCommon";
 import Button from "@/libs/Button";
 import {AlertType, ColorButton} from "@/enum";
-import {useCartData, useCartRef} from "@/components/context/cartContext";
+import {useCartData, useCartRef} from "@/components/provider/CartProvider";
 import Image from "next/image";
 import SelectProductVariantModal from "@/components/user/SelectProductVariantModal";
 import useSWRMutation from "swr/mutation";
 import {CART} from "@/services/api";
-import {post} from "@/services/axios";
+import {useAxiosContext} from '@/components/provider/AxiosProvider';
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useDispatch} from "react-redux";
 import {useRouter} from "next/navigation";
@@ -24,19 +24,19 @@ export interface ReqAddToCartDTO {
   quantity: number;
 }
 
-
-const fetcher = (url: string, {arg}: { arg: ReqAddToCartDTO }) =>
-  post<BaseResponse<never>>(url, arg, {}).then(res => res.data);
-
 export default function ProductCard({product}: ProductCardProps) {
   const [isOpenProductSelectVariant, setOpenProductSelectVariant] = useState(false);
   const {mutate} = useCartData();
   const defaultVariant = product.productVariants.find(v => v.isDefault) ?? product.productVariants[0];
   const imageRef = useRef<HTMLImageElement | null>(null);
   const cartRef = useCartRef();
-  const {trigger, isMutating} = useSWRMutation(`${CART}`, fetcher);
+
   const router = useRouter();
   const dispatch = useDispatch();
+  const { post } = useAxiosContext();
+  const fetcher = (url: string, {arg}: { arg: ReqAddToCartDTO }) =>
+    post<BaseResponse<never>>(url, arg, {}).then(res => res.data);
+  const {trigger, isMutating} = useSWRMutation(`${CART}`, fetcher);
   const handleAddToCart = () => {
     if (product.productVariants.length > 1) {
       setOpenProductSelectVariant(true);
@@ -131,6 +131,7 @@ export default function ProductCard({product}: ProductCardProps) {
             alt={product.name}
             width={400}
             height={400}
+            loading="eager"
             className="w-full h-48 object-cover group-hover:scale-110 transition duration-300"
           />
           {Number(product.discount) > 0 && (
@@ -165,7 +166,7 @@ export default function ProductCard({product}: ProductCardProps) {
           </div>
 
           <Button
-            title="Thêm vào giỏ"
+            title="Thêm v��o giỏ"
             color={ColorButton.PRIMARY}
             fullWidth
             startIcon={<AddShoppingCartRoundedIcon/>}

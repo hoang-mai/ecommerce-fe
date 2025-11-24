@@ -2,7 +2,7 @@ import Modal from "@/libs/Modal";
 import {ProductStatus} from "@/enum";
 import useSWRMutation from "swr/mutation";
 import {PRODUCT} from "@/services/api";
-import {patch} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useDispatch} from "react-redux";
 import {AlertType} from "@/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -22,9 +22,6 @@ type Props = {
   productName: string;
 }
 
-const fetcher = (url: string, {arg}: { arg: ReqUpdateProductStatusDTO }) =>
-  patch<BaseResponse<never>>(url, arg).then(res => res.data);
-
 export default function UpdateStatusProductModal({
   isOpen,
   setIsOpen,
@@ -34,6 +31,9 @@ export default function UpdateStatusProductModal({
   productName
 }: Props) {
   const dispatch = useDispatch();
+  const { patch } = useAxiosContext();
+  const fetcher = (url: string, {arg}: { arg: ReqUpdateProductStatusDTO }) =>
+    patch<BaseResponse<never>>(url, arg).then(res => res.data);
 
   const {trigger, isMutating} = useSWRMutation(
     `${PRODUCT}/${productId}/product-status`,
@@ -145,4 +145,3 @@ export default function UpdateStatusProductModal({
     </Modal>
   );
 }
-

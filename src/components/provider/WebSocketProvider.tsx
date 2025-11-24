@@ -86,6 +86,6 @@ export default function WebSocketProvider({children}: WebSocketProviderProps) {
       dispatch(openAlert(alert));
       router.push("/");
     }
-  }, [dispatch, notification]);
+  }, [dispatch, notification, router]);
   return <>{children}</>;
 }

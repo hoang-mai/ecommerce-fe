@@ -3,7 +3,7 @@ import Table, {Column} from "@/libs/Table";
 import {useCallback, useEffect, useState} from "react";
 import useSWR from "swr";
 import {USER_VERIFICATION} from "@/services/api";
-import {get} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {AlertType, UserVerificationStatus, UserVerificationStatusLabel} from "@/enum";
 import {formatDateTime} from "@/util/FnCommon";
 import DropdownSelect from "@/libs/DropdownSelect";
@@ -49,9 +49,10 @@ const statusOptions: Option[] = [
   {id: UserVerificationStatus.REJECTED, label: UserVerificationStatusLabel[UserVerificationStatus.REJECTED]},
 ];
 
-const fetcher = (url: string) => get<BaseResponse<PageResponse<ResUserVerificationDTO>>>(url).then(res => res.data);
-
 export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
+  const { get } = useAxiosContext();
+  const fetcher = (url: string) => get<BaseResponse<PageResponse<ResUserVerificationDTO>>>(url).then(res => res.data);
+
   const [pageNo, setPageNo] = useState(0);
   const [pageSize, setPageSize] = useState("10");
   const [sortBy, setSortBy] = useState("createdAt");

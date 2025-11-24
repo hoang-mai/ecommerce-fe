@@ -1,7 +1,7 @@
 import Modal from "@/libs/Modal";
 import useSWRMutation from "swr/mutation";
 import {ADDRESS} from "@/services/api";
-import {patch} from "@/services/axios";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType} from "@/enum";
@@ -27,11 +27,10 @@ type Props = {
   mutateParent?: () => void;
 }
 
-const fetcher = (url: string) =>
-  patch<BaseResponse<undefined>>(url).then(res => res.data);
-
 export default function SetDefaultAddressModal({isOpen, setIsOpen, mutate, addressData,mutateParent}: Props) {
   const dispatch = useDispatch();
+  const { patch } = useAxiosContext();
+  const fetcher = (url: string) => patch<BaseResponse<undefined>>(url).then(res => res.data);
   const {trigger, isMutating} = useSWRMutation(`${ADDRESS}/${addressData.addressId}/default`, fetcher, {
     revalidate: false,
   });

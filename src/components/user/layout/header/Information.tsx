@@ -11,51 +11,28 @@ import {ReactNode, useState} from "react";
 import DropdownMenu from "@/libs/DropdownMenu";
 import {useRouter} from "next/navigation";
 import ChangePassword from "@/components/user/layout/header/ChangePassword";
-import {LOGOUT} from "@/services/api";
-import {post} from "@/services/axios";
+import {LOGOUT, USER} from "@/services/api";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import useSWRMutation from "swr/mutation";
 import {AlertType} from "@/enum";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import DisableAccount from "@/components/user/layout/header/DisableAccount";
-import {useCartData, useCartRef} from "@/components/context/cartContext";
+import {useCartData, useCartRef} from "@/components/provider/CartProvider";
 import {clearAllLocalStorage} from "@/services/localStorage";
 import {Cart} from "@/components/user/layout/header/Cart";
-
-const fetcher = (url: string) => post<BaseResponse<never>>(url, {}, {withCredentials: true}).then(res => res.data);
-
-interface IconButtonProps {
-  icon: ReactNode;
-  badge?: number;
-  onClick?: () => void;
-  label: string;
-}
-
-function IconButton({icon, badge, onClick, label}: IconButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      className="cursor-pointer relative p-2.5 bg-white hover:bg-primary-c50 rounded-full transition-all duration-200
-                 border-2 border-transparent hover:border-primary-c300 group"
-      aria-label={label}
-    >
-      <div className="text-grey-c700 group-hover:text-primary-c700 transition-colors">
-        {icon}
-      </div>
-      {Number(badge) > 0 && (
-        <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5
-                       bg-gradient-to-r from-support-c900 to-support-c800
-                       text-white text-xs font-semibold rounded-full
-                       flex items-center justify-center shadow-md
-                       animate-pulse">
-          {Number(badge) > 99 ? '99+' : badge}
-        </span>
-      )}
-    </button>
-  );
-}
+import useSWR from "swr";
+import {ProfileData} from "@/components/user/profile/Main";
+import Image from "next/image";
 
 export default function Information() {
+  const { get, post } = useAxiosContext();
+  const fetcher = (url: string) => post<BaseResponse<never>>(url, {}, {withCredentials: true}).then(res => res.data);
+  const fetcherUser = (url: string) => get<BaseResponse<ProfileData>>(url).then(res => res.data.data);
+  const {data: dataUser} = useSWR(USER, fetcherUser, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
   const {data} = useCartData();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isOpenDisableAccount, setIsOpenDisableAccount] = useState<boolean>(false);
@@ -142,11 +119,20 @@ export default function Information() {
           trigger={
             <button className="cursor-pointer flex items-center gap-2 px-3 py-2 rounded-full
                              hover:bg-primary-c50 transition-all duration-200 group">
-              <AccountCircleRoundedIcon className="text-primary-c700 !text-4xl"/>
+              {dataUser?.avatarUrl
+                ? <Image
+                  width={32}
+                  height={32}
+                  src={dataUser?.avatarUrl}
+                  alt="User Avatar"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                : <AccountCircleRoundedIcon className="text-primary-c700 !text-4xl"/>
+              }
               <div className="hidden lg:flex flex-col items-start">
                 <span className="text-xs text-grey-c600">Tài khoản</span>
-                <span className="text-sm font-semibold text-grey-c800 group-hover:text-primary-c700">
-                  Người dùng
+                <span className="text-sm font-semibold text-grey-c800 group-hover:text-primary-c700 truncate max-w-[100px]">
+                  {`${dataUser?.firstName || ''} ${dataUser?.middleName || ''} ${dataUser?.lastName || ''}`.trim() || 'Người dùng'}
                 </span>
               </div>
             </button>
@@ -202,5 +188,36 @@ export default function Information() {
       {isOpenDisableAccount && <DisableAccount isOpen={isOpenDisableAccount} setIsOpen={setIsOpenDisableAccount}/>}
       {isOpenCart && <Cart isOpen={isOpenCart} setIsOpen={setIsOpenCart}/>}
     </div>
+  );
+}
+
+interface IconButtonProps {
+  icon: ReactNode;
+  badge?: number;
+  onClick?: () => void;
+  label: string;
+}
+
+function IconButton({icon, badge, onClick, label}: IconButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className="cursor-pointer relative p-2.5 bg-white hover:bg-primary-c50 rounded-full transition-all duration-200
+                 border-2 border-transparent hover:border-primary-c300 group"
+      aria-label={label}
+    >
+      <div className="text-grey-c700 group-hover:text-primary-c700 transition-colors">
+        {icon}
+      </div>
+      {Number(badge) > 0 && (
+        <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5
+                       bg-gradient-to-r from-support-c900 to-support-c800
+                       text-white text-xs font-semibold rounded-full
+                       flex items-center justify-center shadow-md
+                       animate-pulse">
+          {Number(badge) > 99 ? '99+' : badge}
+        </span>
+      )}
+    </button>
   );
 }

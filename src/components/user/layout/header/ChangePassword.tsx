@@ -6,7 +6,7 @@ import Modal from "@/libs/Modal";
 import TextField from "@/libs/TextField";
 import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
-import {patch} from "@/services/axios";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import useSWRMutation from "swr/mutation";
 import {AUTH} from "@/services/api";
 import { AlertType } from "@/enum";
@@ -31,11 +31,10 @@ type Props = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
-const fetcher = (url: string, {arg}: {
-  arg: ChangePasswordFormData
-}) => patch<BaseResponse<never>>(url, arg).then(res => res.data);
-
 export default function ChangePassword({isOpen, setIsOpen}: Props) {
+  const { patch } = useAxiosContext();
+  const fetcher = (url: string, {arg}: { arg: ChangePasswordFormData }) =>
+    patch<BaseResponse<never>>(url, arg).then(res => res.data);
   const {
     control,
     handleSubmit,

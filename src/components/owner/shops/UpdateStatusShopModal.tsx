@@ -2,7 +2,7 @@ import Modal from "@/libs/Modal";
 import {ShopStatus} from "@/enum";
 import useSWRMutation from "swr/mutation";
 import {SHOP} from "@/services/api";
-import {patch} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useDispatch} from "react-redux";
 import {AlertType} from "@/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -22,9 +22,6 @@ type Props = {
   shopName: string;
 }
 
-const fetcher = (url: string, {arg}: { arg: ReqUpdateShopStatusDTO }) =>
-  patch<BaseResponse<never>>(url, arg).then(res => res.data);
-
 export default function UpdateStatusShopModal({
   isOpen,
   setIsOpen,
@@ -34,6 +31,9 @@ export default function UpdateStatusShopModal({
   shopName
 }: Props) {
   const dispatch = useDispatch();
+  const { patch } = useAxiosContext();
+  const fetcher = (url: string, {arg}: { arg: ReqUpdateShopStatusDTO }) =>
+    patch<BaseResponse<never>>(url, arg).then(res => res.data);
 
   const {trigger, isMutating} = useSWRMutation(
     `${SHOP}/${shopId}/status`,
@@ -149,4 +149,3 @@ export default function UpdateStatusShopModal({
     </Modal>
   );
 }
-

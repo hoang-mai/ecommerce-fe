@@ -2,12 +2,12 @@ import Modal from "@/libs/Modal";
 import {CategoryStatus} from "@/enum";
 import useSWRMutation from "swr/mutation";
 import {CATEGORY} from "@/services/api";
-import {patch} from "@/services/axios";
 import {useDispatch} from "react-redux";
 import {AlertType} from "@/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
 import Loading from "@/components/modals/Loading";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 
 interface ReqUpdateCategoryStatusDTO {
   categoryStatus: CategoryStatus;
@@ -22,8 +22,6 @@ type Props = {
   categoryName: string;
 }
 
-const fetcher = (url: string, {arg}: { arg: ReqUpdateCategoryStatusDTO }) =>
-  patch<BaseResponse<never>>(url, arg).then(res => res.data);
 
 export default function UpdateStatusCategoryModal({
   isOpen,
@@ -33,7 +31,10 @@ export default function UpdateStatusCategoryModal({
   currentStatus,
   categoryName
 }: Props) {
+  const { patch } = useAxiosContext();
   const dispatch = useDispatch();
+  const fetcher = (url: string, {arg}: { arg: ReqUpdateCategoryStatusDTO }) =>
+    patch<BaseResponse<never>>(url, arg).then(res => res.data);
 
   const {trigger, isMutating} = useSWRMutation(
     `${CATEGORY}/${categoryId}/status`,

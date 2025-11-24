@@ -1,4 +1,4 @@
-import {patch, post} from "@/services/axios";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import {AccountStatus, AlertType} from "@/enum";
 import Modal from "@/libs/Modal";
 import useSWRMutation from "swr/mutation";
@@ -12,11 +12,11 @@ type Props = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
-const fetcher = (url: string) => patch<BaseResponse<never>>(url, {accountStatus: AccountStatus.INACTIVE}).then(res => res.data);
-const fetcherLogout = (url: string) => post<BaseResponse<never>>(url, {}, {withCredentials: true}).then(res => res.data);
-
 export default function DisableAccount({isOpen, setIsOpen}: Props) {
   const router = useRouter();
+  const { patch, post } = useAxiosContext();
+  const fetcher = (url: string) => patch<BaseResponse<never>>(url, {accountStatus: AccountStatus.INACTIVE}).then(res => res.data);
+  const fetcherLogout = (url: string) => post<BaseResponse<never>>(url, {}, {withCredentials: true}).then(res => res.data);
   const {trigger, isMutating} = useSWRMutation(AUTH, fetcher);
   const {trigger: triggerLogout} = useSWRMutation(LOGOUT, fetcherLogout);
   const dispatch = useDispatch();

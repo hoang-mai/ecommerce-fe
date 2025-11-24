@@ -1,9 +1,37 @@
+'use client';
 import Image from "next/image";
 import SearchInput from "@/components/user/layout/header/SearchInput";
 import Information from "@/components/user/layout/header/Information";
 import Link from "next/link";
+import {getRoleFromJwtToken} from "@/util/FnCommon";
+import {Role} from "@/enum";
+import {useRouter} from "next/navigation";
+import {useEffect, useState} from "react";
+
 
 export default function Header() {
+  const [isOwner, setIsOwner] = useState(false);
+  const router = useRouter();
+  const handleOnClickSeller = () => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+      return;
+    }
+    if (getRoleFromJwtToken(accessToken) === Role.OWNER) {
+      router.push('/owner/dashboard');
+    }
+  }
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+      return;
+    }
+    if (getRoleFromJwtToken(accessToken) === Role.OWNER) {
+      setTimeout(()=>{
+        setIsOwner(true);
+      },0);
+    }
+  }, []);
   return (
     <header className="sticky top-0 z-header bg-white shadow-md">
       {/* Top Bar */}
@@ -16,10 +44,14 @@ export default function Header() {
               <span className="hidden lg:block">📧 support@evoway.com</span>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/seller" className="hover:text-primary-c100 transition-colors">
-                Kênh người bán
-              </Link>
-              <span className="hidden md:block">|</span>
+              {isOwner && (
+                <>
+                  <button className="hover:text-primary-c100 transition-colors cursor-pointer"
+                          onClick={handleOnClickSeller}>
+                    Kênh người bán
+                  </button>
+                  <span className="hidden md:block">|</span></>
+              )}
               <Link href="/help" className="hidden md:block hover:text-primary-c100 transition-colors">
                 Trợ giúp
               </Link>
@@ -47,12 +79,12 @@ export default function Header() {
 
           {/* Search */}
           <div className="col-span-12 md:col-span-6 lg:col-span-7">
-            <SearchInput />
+            <SearchInput/>
           </div>
 
           {/* User Info */}
           <div className="col-span-12 md:col-span-3 lg:col-span-3 flex justify-end">
-            <Information />
+            <Information/>
           </div>
         </div>
       </div>
@@ -61,22 +93,28 @@ export default function Header() {
       <div className="border-t border-grey-c200 bg-grey-c50">
         <div className="container mx-auto px-4">
           <nav className="flex items-center gap-8 h-12 overflow-x-auto scrollbar-hide">
-            <Link href="/categories/electronics" className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
+            <Link href="/categories/electronics"
+                  className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
               Điện tử
             </Link>
-            <Link href="/categories/fashion" className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
+            <Link href="/categories/fashion"
+                  className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
               Thời trang
             </Link>
-            <Link href="/categories/beauty" className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
+            <Link href="/categories/beauty"
+                  className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
               Làm đẹp
             </Link>
-            <Link href="/categories/home" className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
+            <Link href="/categories/home"
+                  className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
               Nhà cửa
             </Link>
-            <Link href="/categories/sports" className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
+            <Link href="/categories/sports"
+                  className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
               Thể thao
             </Link>
-            <Link href="/deals" className="text-support-c900 hover:text-support-c800 whitespace-nowrap font-semibold transition-colors">
+            <Link href="/deals"
+                  className="text-support-c900 hover:text-support-c800 whitespace-nowrap font-semibold transition-colors">
               🔥 Khuyến mãi hot
             </Link>
           </nav>

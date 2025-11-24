@@ -1,7 +1,7 @@
 import Modal from "@/libs/Modal";
 import useSWRMutation from "swr/mutation";
 import {ADDRESS} from "@/services/api";
-import {del} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType} from "@/enum";
@@ -26,11 +26,10 @@ type Props = {
   addressData: AddressData;
 }
 
-const fetcher = (url: string) =>
-  del<BaseResponse<undefined>>(url).then(res => res.data);
-
 export default function DeleteAddressModal({isOpen, setIsOpen, mutate, addressData}: Props) {
   const dispatch = useDispatch();
+  const { del } = useAxiosContext();
+  const fetcher = (url: string) => del<BaseResponse<undefined>>(url).then(res => res.data);
   const {trigger, isMutating} = useSWRMutation(`${ADDRESS}/${addressData.addressId}`, fetcher, {
     revalidate: false,
   });

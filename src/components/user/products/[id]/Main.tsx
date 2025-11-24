@@ -3,11 +3,11 @@ import React, {useEffect, useMemo, useState} from "react";
 import Image from "next/image";
 import useSWR from "swr";
 import {PRODUCT_VIEW, CART} from "@/services/api";
-import {get, post} from "@/services/axios";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import Loading from "@/components/modals/Loading";
 import {ReqAddToCartDTO} from "@/components/user/ProductCard";
 import useSWRMutation from "swr/mutation";
-import {useCartData} from "@/components/context/cartContext";
+import {useCartData} from "@/components/provider/CartProvider";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType} from "@/enum";
@@ -47,12 +47,13 @@ type Props = {
   id: string
 }
 
-const fetcher = (url: string) => get<BaseResponse<ProductViewDTO>>(url).then(res => res.data);
-const addToCartFetcher = (url: string, {arg}: {
-  arg: ReqAddToCartDTO
-}) => post<BaseResponse<never>>(url, arg).then(res => res.data);
-
 export default function Main({id}: Props) {
+  const { get, post } = useAxiosContext();
+  const fetcher = (url: string) => get<BaseResponse<ProductViewDTO>>(url).then(res => res.data);
+  const addToCartFetcher = (url: string, {arg}: {
+    arg: ReqAddToCartDTO
+  }) => post<BaseResponse<never>>(url, arg).then(res => res.data);
+
   const {data, isLoading, error} = useSWR(`${PRODUCT_VIEW}/${id}`, fetcher, {
     revalidateOnFocus: false,
     refreshInterval: 0

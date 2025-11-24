@@ -13,7 +13,7 @@ import {formatDateTime} from "@/util/FnCommon";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
 import Image from "next/image";
 import {USER_VERIFICATION} from "@/services/api";
-import {patch} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import useSWRMutation from "swr/mutation";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -45,9 +45,6 @@ interface DetailModalProps {
   reload: () => void;
 }
 
-
-const approveFetcher = (url: string) => patch<BaseResponse<void>>(url).then(res => res.data);
-
 export default function DetailRegisterOwnerModal({
                                                    isOpen,
                                                    onClose,
@@ -57,6 +54,8 @@ export default function DetailRegisterOwnerModal({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const dispatch = useDispatch();
+  const { patch } = useAxiosContext();
+  const approveFetcher = (url: string) => patch<BaseResponse<void>>(url).then(res => res.data);
 
   const {trigger: approveRequest, isMutating: isApproving} = useSWRMutation(
     `${USER_VERIFICATION}/${data.userVerificationId}/approve`,

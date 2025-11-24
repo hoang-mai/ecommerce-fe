@@ -5,7 +5,7 @@ import {formatDate, formatPrice} from "@/util/FnCommon";
 import Button from "@/libs/Button";
 import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
 import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
-import {del, get, patch} from "@/services/axios";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import {CART, CART_VIEW} from "@/services/api";
 import useSWR from "swr";
 import {useDispatch} from "react-redux";
@@ -16,7 +16,7 @@ import Chip, {ChipColor} from "@/libs/Chip";
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import useSWRMutation from "swr/mutation";
 import CountdownTimer from "@/libs/CountDownTime";
-import {useCartData} from "@/components/context/cartContext";
+import {useCartData} from "@/components/provider/CartProvider";
 import {useRouter} from "next/navigation";
 
 export interface ProductImageDTO {
@@ -84,17 +84,6 @@ export interface CartViewDTO {
   cartId: string;
   cartItems: CartItemViewDTO[];
 }
-
-
-const fetcher = (url: string) => get<BaseResponse<CartViewDTO>>(url).then(res => res.data);
-const fetcherDeleteCartItem = (url: string, {arg}: { arg: { cartItemId: string } }) =>
-  del<BaseResponse<never>>(`${url}/${arg.cartItemId}`).then(res => res.data);
-const fetcherDeleteAll = (url: string) =>
-  del<BaseResponse<never>>(url).then(res => res.data);
-const fetcherUpdateProductCartItemQuantity = (url: string, {arg}: {
-  arg: { productCartItemId: string, quantity: number }
-}) =>
-  patch<BaseResponse<never>>(`${url}/${arg.productCartItemId}`, {quantity: arg.quantity}).then(res => res.data);
 type Props = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -102,6 +91,17 @@ type Props = {
 
 export function Cart({isOpen, setIsOpen}: Props) {
   const router = useRouter();
+  const { get, del, patch } = useAxiosContext();
+  const fetcher = (url: string) => get<BaseResponse<CartViewDTO>>(url).then(res => res.data);
+  const fetcherDeleteCartItem = (url: string, {arg}: { arg: { cartItemId: string } }) =>
+    del<BaseResponse<never>>(`${url}/${arg.cartItemId}`).then(res => res.data);
+  const fetcherDeleteAll = (url: string) =>
+    del<BaseResponse<never>>(url).then(res => res.data);
+  const fetcherUpdateProductCartItemQuantity = (url: string, {arg}: {
+    arg: { productCartItemId: string, quantity: number }
+  }) =>
+    patch<BaseResponse<never>>(`${url}/${arg.productCartItemId}`, {quantity: arg.quantity}).then(res => res.data);
+
   const {data, isLoading, error, mutate: mutateCartView} = useSWR(CART_VIEW, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,

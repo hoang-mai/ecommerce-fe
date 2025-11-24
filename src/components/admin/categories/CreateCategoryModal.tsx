@@ -7,12 +7,12 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {CATEGORY} from "@/services/api";
 import useSWRMutation from "swr/mutation";
 import useSWR from "swr";
-import {get, post} from "@/services/axios";
 import {useDispatch} from "react-redux";
 import {AlertType} from "@/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useCallback, useEffect, useState} from "react";
 import Loading from "@/components/modals/Loading";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 
 const createCategorySchema = z.object({
   categoryName: z.string().min(1, "Tên loại mặt hàng không được để trống"),
@@ -28,11 +28,6 @@ type Props = {
   reload: () => void;
 }
 
-const fetcher = (url: string, {arg}: {
-  arg: CreateCategoryFormData
-}) => post<BaseResponse<never>>(url, arg).then(res => res.data);
-
-const categoriesFetcher = (url: string) => get<BaseResponse<PageResponse<ResCategorySearchDTO>>>(url).then(res => res.data.data);
 
 interface ResCategorySearchDTO {
   categoryId: number;
@@ -42,6 +37,13 @@ interface ResCategorySearchDTO {
 }
 
 export default function CreateCategoryModal({isOpen, setIsOpen, reload}: Props) {
+  const {get , post} = useAxiosContext();
+  const fetcher = (url: string, {arg}: {
+    arg: CreateCategoryFormData
+  }) => post<BaseResponse<never>>(url, arg).then(res => res.data);
+
+  const categoriesFetcher = (url: string) => get<BaseResponse<PageResponse<ResCategorySearchDTO>>>(url).then(res => res.data.data);
+
   const [searchKeyword, setSearchKeyword] = useState("");
   const [pageNo, setPageNo] = useState(0);
   const [allCategories, setAllCategories] = useState<ResCategorySearchDTO[]>([]);

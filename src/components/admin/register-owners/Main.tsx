@@ -12,7 +12,7 @@ import Title from "@/libs/Title";
 import {formatDateTime} from "@/util/FnCommon";
 import useSWR from "swr";
 import {USER_VERIFICATION} from "@/services/api";
-import {get, patch} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
 import {useDebounce} from "@/hooks/useDebounce";
 import {useDispatch} from "react-redux";
@@ -42,9 +42,12 @@ interface ResUserVerificationDTO {
   updatedAt: string;
 }
 
-const fetcher = (url: string) => get<BaseResponse<PageResponse<ResUserVerificationDTO>>>(url).then(res => res.data);
-
 export default function Main() {
+  const { get, patch } = useAxiosContext();
+  const fetcher = (url: string) => get<BaseResponse<PageResponse<ResUserVerificationDTO>>>(url).then(res => res.data);
+
+  const approveFetcher = (url: string) => patch<BaseResponse<void>>(url).then(res => res.data);
+
   const [status, setStatus] = useState<string>("");
   const [keyword, setKeyword] = useState("");
   const [pageNo, setPageNo] = useState(0);
@@ -78,7 +81,6 @@ export default function Main() {
 
   const dispatch = useDispatch();
 
-  const approveFetcher = (url: string) => patch<BaseResponse<void>>(url).then(res => res.data);
 
   const {trigger: approveRequest, isMutating: isApproving} = useSWRMutation(
     approvingId ? `${USER_VERIFICATION}/${approvingId}/approve` : null,

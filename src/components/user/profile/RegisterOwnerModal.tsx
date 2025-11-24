@@ -5,7 +5,7 @@ import {z} from "zod";
 import {Controller, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {USER_VERIFICATION} from "@/services/api";
-import {post} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import useSWRMutation from "swr/mutation";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -41,29 +41,30 @@ type Props = {
   reload: () => void;
 }
 
-const registerOwnerFetcher = (url: string, {arg}: { arg: RegisterOwnerFormData }) => {
-  const formData = new FormData();
-
-  formData.append('frontImage', arg.frontImage);
-  formData.append('backImage', arg.backImage);
-  formData.append('avatar', arg.avatar);
-
-  const dataBlob = new Blob([JSON.stringify({
-    verificationCode: arg.verificationCode,
-    accountNumber: arg.accountNumber,
-    bankName: arg.bankName
-  })], { type: 'application/json' });
-
-  formData.append('data', dataBlob);
-
-  return post<BaseResponse<void>>(url, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  }).then(res => res.data);
-};
-
 export default function RegisterOwnerModal({isOpen, setIsOpen,reload}: Props) {
+  const { post } = useAxiosContext();
+  const registerOwnerFetcher = (url: string, {arg}: { arg: RegisterOwnerFormData }) => {
+    const formData = new FormData();
+
+    formData.append('frontImage', arg.frontImage);
+    formData.append('backImage', arg.backImage);
+    formData.append('avatar', arg.avatar);
+
+    const dataBlob = new Blob([JSON.stringify({
+      verificationCode: arg.verificationCode,
+      accountNumber: arg.accountNumber,
+      bankName: arg.bankName
+    })], { type: 'application/json' });
+
+    formData.append('data', dataBlob);
+
+    return post<BaseResponse<void>>(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
+  };
+
   const {trigger, isMutating} = useSWRMutation(USER_VERIFICATION, registerOwnerFetcher);
   const dispatch = useDispatch();
 

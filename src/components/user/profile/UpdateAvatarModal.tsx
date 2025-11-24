@@ -7,7 +7,7 @@ import Button from "@/libs/Button";
 import {AlertType, ColorButton} from "@/enum";
 import Image from "next/image";
 import {USER} from "@/services/api";
-import {patch, post} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import useSWRMutation from "swr/mutation";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -37,32 +37,33 @@ const avatarSchema = z.object({
 
 type AvatarFormData = z.infer<typeof avatarSchema>;
 
-const uploadAvatarFetcher = (url: string, {arg}: { arg: AvatarFormData }) => {
-  const formData = new FormData();
-
-  if (arg.avatar === null) {
-    formData.append('isDelete', 'true');
-  }
-
-
-  if (arg.avatar && arg.avatar instanceof File) {
-    formData.append('file', arg.avatar);
-  }
-
-
-  return post<BaseResponse<void>>(url, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  }).then(res => res.data);
-};
-
 export default function UpdateAvatarModal({
                                             isOpen,
                                             setIsOpen,
                                             currentAvatarUrl,
                                             reload
                                           }: UpdateAvatarModalProps) {
+  const { post } = useAxiosContext();
+  const uploadAvatarFetcher = (url: string, {arg}: { arg: AvatarFormData }) => {
+    const formData = new FormData();
+
+    if (arg.avatar === null) {
+      formData.append('isDelete', 'true');
+    }
+
+
+    if (arg.avatar && arg.avatar instanceof File) {
+      formData.append('file', arg.avatar);
+    }
+
+
+    return post<BaseResponse<void>>(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
+  };
+
   const {trigger, isMutating} = useSWRMutation(`${USER}/avatar`, uploadAvatarFetcher);
   const dispatch = useDispatch();
 

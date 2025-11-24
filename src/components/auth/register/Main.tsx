@@ -12,7 +12,7 @@ import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
 import {REGISTER} from "@/services/api";
 import useSWRMutation from "swr/mutation";
-import {post} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useRouter} from "next/navigation";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -80,17 +80,14 @@ const registerSchema = z.object({
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-
-const fetcher = (url: string, {arg}: {
-  arg: RegisterFormData
-}) => post<BaseResponse<undefined>>(url, arg).then(res => res.data);
-
 export default function Main() {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedProvince, setSelectedProvince] = useState<string>('');
   const router = useRouter();
   const dispatch = useDispatch();
   const {provinceOptions, wardOptions} = useAddressMapping(selectedProvince);
+  const { post } = useAxiosContext();
+  const fetcher = (url: string, {arg}: { arg: RegisterFormData }) => post<BaseResponse<undefined>>(url, arg).then(res => res.data);
   const {trigger, isMutating} = useSWRMutation(REGISTER, fetcher);
   const {
     control,

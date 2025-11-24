@@ -9,7 +9,6 @@ import {z} from "zod";
 import {Controller, useFieldArray, useForm, useWatch} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import useSWRMutation from "swr/mutation";
-import {post} from "@/services/axios";
 import { CATEGORY, PRODUCT} from "@/services/api";
 import {useDispatch} from "react-redux";
 import {AlertType, ColorButton} from "@/enum";
@@ -17,7 +16,7 @@ import {openAlert} from "@/redux/slice/alertSlice";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import useSWR from "swr";
-import {get} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import DropdownSelect from "@/libs/DropdownSelect";
 import Loading from "@/components/modals/Loading";
 import CheckBox from "@/libs/CheckBox";
@@ -57,19 +56,9 @@ interface CreateProductModalProps {
   shopId: string;
 }
 
-const fetcher = (url: string, {arg}: { arg: FormData }) =>
-  post<BaseResponse<never>>(url, arg, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    }
-  }).then(res => res.data);
-
-const categoryFetcher = (url: string) =>
-  get<BaseResponse<PageResponse<{ categoryId: number; categoryName: string }>>>(url)
-    .then(res => res.data.data);
-
 export default function CreateProductModal({isOpen, onClose, reload, shopId}: CreateProductModalProps) {
   const dispatch = useDispatch();
+  const { post, get } = useAxiosContext();
   const [tempAttributeValue, setTempAttributeValue] = useState<{ [key: number]: string }>({});
   const [searchKeyword, setSearchKeyword] = useState("");
   const [pageNo, setPageNo] = useState(0);
@@ -77,6 +66,17 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
   const [hasMore, setHasMore] = useState(false);
   // State to manage variant attribute values locally
   const [variantAttributeValues, setVariantAttributeValues] = useState<{[variantIndex: number]: {[attrName: string]: string}}>({});
+
+  const fetcher = (url: string, {arg}: { arg: FormData }) =>
+    post<BaseResponse<never>>(url, arg, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    }).then(res => res.data);
+
+  const categoryFetcher = (url: string) =>
+    get<BaseResponse<PageResponse<{ categoryId: number; categoryName: string }>>>(url)
+      .then(res => res.data.data);
 
   const {data: categoriesData, isLoading: isLoadingCategories} = useSWR(
     isOpen ? `${CATEGORY}/search?keyword=${searchKeyword}&pageNo=${pageNo}&pageSize=10` : null,

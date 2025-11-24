@@ -9,13 +9,13 @@ import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftR
 import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import useSWRMutation from "swr/mutation";
 import {CART} from "@/services/api";
-import {post} from "@/services/axios";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import {AlertType} from "@/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useDispatch} from "react-redux";
 import Loading from "@/components/modals/Loading";
 import {ProductViewDTO, ProductVariantDTO} from "@/components/user/layout/header/Cart";
-import {useCartData} from "@/components/context/cartContext";
+import {useCartData} from "@/components/provider/CartProvider";
 
 type Props = {
   isOpen: boolean;
@@ -23,10 +23,11 @@ type Props = {
   product: ProductViewDTO
 }
 
-const fetcher = (url: string, {arg}: { arg: ReqAddToCartDTO }) =>
-  post<BaseResponse<never>>(url, arg, {}).then(res => res.data);
-
 export default function SelectProductVariantModal({isOpen, setIsOpen, product}: Props) {
+  const { post } = useAxiosContext();
+  const fetcher = (url: string, {arg}: { arg: ReqAddToCartDTO }) =>
+    post<BaseResponse<never>>(url, arg, {}).then(res => res.data);
+
   const {mutate} = useCartData();
   const defaultVariant = useMemo(() => product.productVariants.find(v => v.isDefault) ?? product.productVariants[0], [product.productVariants]);
   const dispatch = useDispatch();

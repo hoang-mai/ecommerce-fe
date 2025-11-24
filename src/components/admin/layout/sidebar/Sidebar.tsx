@@ -16,7 +16,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import useSWRMutation from "swr/mutation";
 import {LOGOUT} from "@/services/api";
 import {useDispatch} from "react-redux";
-import {post} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {openAlert} from "@/redux/slice/alertSlice";
 
 interface MenuItem {
@@ -24,10 +24,10 @@ interface MenuItem {
   link: string;
   icon: SvgIconComponent;
 }
-const fetcher = (url: string) => post<BaseResponse<never>>(url, {}, {withCredentials: true}).then(res => res.data);
-
 export default function Sidebar() {
   const pathname = usePathname();
+  const { post } = useAxiosContext();
+  const fetcher = (url: string) => post<BaseResponse<never>>(url, {}, {withCredentials: true}).then(res => res.data);
   const menuItems: MenuItem[] = [
     {name: "Tổng quan", link: "/admin/dashboard", icon: DashboardIcon},
     {name: "Người dùng", link: "/admin/users", icon: PeopleIcon},

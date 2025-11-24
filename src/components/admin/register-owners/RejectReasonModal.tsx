@@ -6,7 +6,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {z} from "zod";
 import {AlertType, ColorButton} from "@/enum";
 import Loading from "@/components/modals/Loading";
-import {patch} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import useSWRMutation from "swr/mutation";
 import {USER_VERIFICATION} from "@/services/api";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -30,9 +30,6 @@ interface RejectReasonModalProps {
   onParentClose: () => void;
 }
 
-const rejectFetcher = (url: string, {arg}: { arg:RejectReasonFormData }) =>
-  patch<BaseResponse<void>>(url, arg).then(res => res.data);
-
 export default function RejectReasonModal({
                                             isOpen,
                                             onClose,
@@ -52,9 +49,12 @@ export default function RejectReasonModal({
       reason: "",
     },
   });
+  const { patch } = useAxiosContext();
+  const actualFetcher = (url: string, {arg}: { arg:RejectReasonFormData }) =>
+    patch<BaseResponse<void>>(url, arg).then(res => res.data);
   const {trigger: rejectRequest, isMutating: isRejecting} = useSWRMutation(
     `${USER_VERIFICATION}/${userVerificationId}/reject`,
-    rejectFetcher
+    actualFetcher
   );
   const dispatch = useDispatch();
   const onSubmit = (reason: RejectReasonFormData) => {

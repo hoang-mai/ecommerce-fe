@@ -9,7 +9,7 @@ import {z} from "zod";
 import {Controller, useFieldArray, useForm, useWatch} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import useSWRMutation from "swr/mutation";
-import {patch} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {CATEGORY, PRODUCT} from "@/services/api";
 import {useDispatch} from "react-redux";
 import {AlertType, ColorButton} from "@/enum";
@@ -17,7 +17,6 @@ import {openAlert} from "@/redux/slice/alertSlice";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import useSWR from "swr";
-import {get} from "@/services/axios";
 import DropdownSelect from "@/libs/DropdownSelect";
 import Loading from "@/components/modals/Loading";
 import CheckBox from "@/libs/CheckBox";
@@ -98,19 +97,21 @@ interface UpdateProductModalProps {
   };
 }
 
-const fetcher = (url: string, {arg}: { arg: FormData }) =>
-  patch<BaseResponse<never>>(url, arg, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    }
-  }).then(res => res.data);
-
-const categoryFetcher = (url: string) =>
-  get<BaseResponse<PageResponse<{ categoryId: number; categoryName: string }>>>(url)
-    .then(res => res.data.data);
-
 export default function UpdateProductModal({isOpen, onClose, reload, productData}: UpdateProductModalProps) {
   const dispatch = useDispatch();
+  const { patch, get } = useAxiosContext();
+
+  const fetcher = (url: string, {arg}: { arg: FormData }) =>
+    patch<BaseResponse<never>>(url, arg, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    }).then(res => res.data);
+
+  const categoryFetcher = (url: string) =>
+    get<BaseResponse<PageResponse<{ categoryId: number; categoryName: string }>>>(url)
+      .then(res => res.data.data);
+
   const [tempAttributeValue, setTempAttributeValue] = useState<{ [key: number]: string }>({});
   const [searchKeyword, setSearchKeyword] = useState("");
   const [pageNo, setPageNo] = useState(0);

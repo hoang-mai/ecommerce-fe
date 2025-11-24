@@ -5,7 +5,7 @@ import {AlertType, ColorButton} from "@/enum";
 import Modal from "@/libs/Modal";
 import useSWR from "swr";
 import {ADDRESS} from "@/services/api";
-import {get} from "@/services/axios";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import React, {useEffect, useState} from "react";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -30,18 +30,18 @@ export  interface ResInfoAddressDTO {
 type Props = {
   isOpen: boolean;
   setIsOpen: () => void;
-  mutateParent: () => void;
+  mutateParent?: () => void;
 }
-
-const fetcher = (url: string) => get<BaseResponse<ResInfoAddressDTO[]>>(url).then(res => res.data.data);
 
 export default function AddressModal({isOpen, setIsOpen, mutateParent}: Props) {
   const [isOpenAddress, setIsOpenAddress] = useState<boolean[]>([false, false, false, false]);
   const [selectedAddress, setSelectedAddress] = useState<ResInfoAddressDTO | null>(null);
-  const {data, isLoading, error, mutate} = useSWR(ADDRESS, fetcher, {
+  const { get } = useAxiosContext();
+  const fetcher = (url: string) => get<BaseResponse<ResInfoAddressDTO[]>>(url).then(res => res.data.data);
+  const {data, isLoading, error, mutate} = useSWR(`${ADDRESS}`, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
-  })
+  });
   const dispatch = useDispatch();
   const {getProvinceName, getWardName} = useAddressMapping();
 

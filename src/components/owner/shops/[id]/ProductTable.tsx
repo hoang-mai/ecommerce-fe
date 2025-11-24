@@ -16,7 +16,7 @@ import UpdateProductModal from "./UpdateProductModal";
 import UpdateStatusProductModal from "./UpdateStatusProductModal";
 import DetailProductModal from "./DetailProductModal";
 import useSWR from "swr";
-import {get} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {PRODUCT} from "@/services/api";
 import TextField from "@/libs/TextField";
 import DropdownSelect from "@/libs/DropdownSelect";
@@ -75,10 +75,11 @@ interface ProductTableProps {
   shopId: string;
 }
 
-const productFetcher = (url: string) =>
-  get<BaseResponse<PageResponse<ResProductDTO>>>(url).then((res) => res.data);
-
 export default function ProductTable({shopId}: ProductTableProps) {
+  const { get } = useAxiosContext();
+  const productFetcher = (url: string) =>
+    get<BaseResponse<PageResponse<ResProductDTO>>>(url).then((res) => res.data);
+
   const [pageNo, setPageNo] = useState(0);
   const [pageSize, setPageSize] = useState("10");
   const [sortBy, setSortBy] = useState("");
@@ -541,6 +542,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
             productId: productToView.productId,
             shopId: productToView.shopId,
             name: productToView.name,
+            totalSold: productToView.totalSold,
             description: productToView.description,
             productStatus: productToView.productStatus,
             categoryName: productToView.category.categoryName,

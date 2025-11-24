@@ -1,9 +1,10 @@
 import type {Metadata} from "next";
 import "./globals.css";
 import {ReactNode} from "react";
-import ReduxProvider from "@/app/ReduxProvider";
+import ReduxProvider from "@/components/provider/ReduxProvider";
 import Alert from "@/components/modals/Alert";
-import WebSocketProvider from "@/app/WebSocketProvider";
+import WebSocketProvider from "@/components/provider/WebSocketProvider";
+import {AxiosProvider} from "@/components/provider/AxiosProvider";
 
 
 export const metadata: Metadata = {
@@ -22,9 +23,11 @@ export default function RootLayout({
 
     <ReduxProvider>
       <Alert/>
-      <WebSocketProvider>
-        {children}
-      </WebSocketProvider>
+      <AxiosProvider>
+        <WebSocketProvider>
+          {children}
+        </WebSocketProvider>
+      </AxiosProvider>
     </ReduxProvider>
 
     </body>

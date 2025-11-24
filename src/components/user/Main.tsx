@@ -2,18 +2,17 @@
 import ProductCard from "@/components/user/ProductCard";
 import {PRODUCT_VIEW} from "@/services/api";
 import useSWR from "swr";
-import {get} from "@/services/axios";
 import {useCallback, useEffect, useState} from "react";
 import Loading from "@/components/modals/Loading";
 import {AlertType} from "@/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useDispatch} from "react-redux";
 import {ProductViewDTO} from "@/components/user/layout/header/Cart";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 
-const productFetcher = (url: string) =>
-  get<BaseResponse<PageResponse<ProductViewDTO>>>(url).then((res) => res.data);
 
 export default function Main() {
+  const {get} = useAxiosContext();
   const [pageNo, setPageNo] = useState(0);
   const [pageSize, setPageSize] = useState("10");
   const [sortBy, setSortBy] = useState("createdAt");
@@ -28,6 +27,8 @@ export default function Main() {
 
     return `${PRODUCT_VIEW}?${params.toString()}`;
   }, [pageNo, pageSize, sortBy, sortDir]);
+  const productFetcher = (url: string) =>
+    get<BaseResponse<PageResponse<ProductViewDTO>>>(url).then((res) => res.data);
 
   const {data, error, isLoading} = useSWR(buildUrl(), productFetcher, {
     refreshInterval: 0,
@@ -52,7 +53,7 @@ export default function Main() {
       {isLoading && <Loading/>}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {data && data.data && data.data.data.map((product) => (
-          <ProductCard product={product} key={product.productId} />
+          <ProductCard product={product} key={product.productId}/>
         ))}
       </div>
     </div>

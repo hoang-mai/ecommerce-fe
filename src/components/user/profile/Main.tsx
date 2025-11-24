@@ -1,6 +1,6 @@
 'use client';
 
-import {ReactNode, useEffect, useState} from 'react';
+import { useEffect, useState} from 'react';
 import Image from 'next/image';
 import Button from "@/libs/Button";
 import {AlertType, ColorButton, Gender, GenderLabel, Role} from "@/enum";
@@ -17,7 +17,7 @@ import HistoryEduRoundedIcon from '@mui/icons-material/HistoryEduRounded';
 import {formatDate, formatDateTime} from "@/util/FnCommon";
 import useSWR from "swr";
 import {USER} from "@/services/api";
-import {get} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import Loading from "@/components/modals/Loading";
 import CalendarTodayRoundedIcon from "@mui/icons-material/CalendarTodayRounded";
 import {useDispatch} from "react-redux";
@@ -29,7 +29,7 @@ import RegisterOwnerModal from "@/components/user/profile/RegisterOwnerModal";
 import HistoryRegisterOwnerModal from "@/components/user/profile/HistoryRegisterOwnerModal";
 import {InfoRow} from "@/libs/InfoRow";
 
-interface ProfileData {
+export interface ProfileData {
   userId: number;
   email: string | null;
   description: string | null;
@@ -46,10 +46,10 @@ interface ProfileData {
   updatedAt: string;
 }
 
-const fetcher = (url: string) => get<BaseResponse<ProfileData>>(url).then(res => res.data.data);
-
-
 export default function Main() {
+  const { get } = useAxiosContext();
+  const fetcher = (url: string) => get<BaseResponse<ProfileData>>(url).then(res => res.data.data);
+
   const [isOpen, setIsOpen] = useState<boolean[]>([false, false, false, false, false]);
   const {data, error, isLoading, mutate} = useSWR(USER, fetcher, {
     refreshInterval: 0,
@@ -108,7 +108,7 @@ export default function Main() {
             </button>
           </div>
           <div className={"text-2xl font-semibold text-grey-c800"}>
-            {data?.firstName} {data?.middleName ? data.middleName + ' ' : ''}{data?.lastName}
+            {`${data?.firstName || ''} ${data?.middleName || ''} ${data?.lastName || ''}`.trim() || 'Người dùng'}
           </div>
           <div className="text-grey-c600">{data?.role}</div>
           <div className="text-grey-c600">{data?.email}</div>
@@ -195,7 +195,7 @@ export default function Main() {
                 <InfoRow
                   icon={<PersonRoundedIcon/>}
                   label="Họ và tên"
-                  value={data?.lastName ? `${data?.firstName || ''} ${data?.middleName || ''} ${data?.lastName}`.trim() : null}
+                  value={`${data?.firstName || ''} ${data?.middleName || ''} ${data?.lastName || ''}`.trim() || 'Người dùng'}
                 />
                 <InfoRow
                   icon={<WcRoundedIcon/>}

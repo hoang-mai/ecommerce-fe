@@ -8,7 +8,7 @@ import {z} from "zod";
 import {Controller, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import useSWRMutation from "swr/mutation";
-import {post} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {SHOP} from "@/services/api";
 import {useDispatch} from "react-redux";
 import {AlertType} from "@/enum";
@@ -44,19 +44,20 @@ interface CreateShopModalProps {
   reload: () => void;
 }
 
-const fetcher = (url: string, {arg}: {
-  arg: FormData
-}) => post<BaseResponse<never>>(url, arg, {
-  headers: {
-    'Content-Type': 'multipart/form-data',
-  },
-}).then(res => res.data);
-
 export default function CreateShopModal({
                                           isOpen,
                                           onClose,
                                           reload,
                                         }: CreateShopModalProps) {
+  const { post } = useAxiosContext();
+
+  const fetcher = (url: string, {arg}: { arg: FormData }) =>
+    post<BaseResponse<never>>(url, arg, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
+
   const [selectedProvince, setSelectedProvince] = useState<string>('');
   const dispatch = useDispatch();
 

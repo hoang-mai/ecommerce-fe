@@ -13,7 +13,7 @@ import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import {LOGIN} from "@/services/api";
 import useSWRMutation from "swr/mutation";
-import {post} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useRouter} from "next/navigation";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -42,11 +42,11 @@ type LoginResponse = {
   sessionState: string;
   scope: string;
 }
-const fetcher = (url: string, {arg}: {
-  arg: LoginFormData
-}) => post<BaseResponse<LoginResponse>>(url, arg, {withCredentials: true}).then(res => res.data);
 
 export function Main() {
+  const { post } = useAxiosContext();
+  const fetcher = (url: string, {arg}: { arg: LoginFormData }) =>
+    post<BaseResponse<LoginResponse>>(url, arg, {withCredentials: true}).then(res => res.data);
   const [checked, setChecked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
@@ -66,29 +66,31 @@ export function Main() {
   });
   const onSubmit = (data: LoginFormData) => {
     trigger({username: data.username, password: data.password}).then(res => {
-      localStorage.setItem('accessToken', res.data.accessToken);
-      localStorage.setItem('expiresIn', String(res.data.expiresIn));
-      localStorage.setItem('refreshToken', res.data.refreshToken);
-      localStorage.setItem('refreshExpiresIn', String(res.data.refreshExpiresIn));
-      localStorage.setItem('tokenType', res.data.tokenType);
-      localStorage.setItem('sessionState', res.data.sessionState);
-      localStorage.setItem('scope', res.data.scope);
-      window.dispatchEvent(new Event('authChanged'));
-      switch (getRoleFromJwtToken(res.data.accessToken)) {
-        case Role.ADMIN:
-          router.replace('/admin/dashboard');
-          break;
-        case Role.OWNER:
-          router.replace('/owner/dashboard');
-          break;
-        case Role.EMPLOYEE:
-          router.replace('/employee/dashboard');
-          break;
-        case Role.USER:
-          router.replace('/');
-          break;
-        default:
-          router.replace('/');
+      if(res.data) {
+        localStorage.setItem('accessToken', res.data.accessToken);
+        localStorage.setItem('expiresIn', String(res.data.expiresIn));
+        localStorage.setItem('refreshToken', res.data.refreshToken);
+        localStorage.setItem('refreshExpiresIn', String(res.data.refreshExpiresIn));
+        localStorage.setItem('tokenType', res.data.tokenType);
+        localStorage.setItem('sessionState', res.data.sessionState);
+        localStorage.setItem('scope', res.data.scope);
+        window.dispatchEvent(new Event('authChanged'));
+        switch (getRoleFromJwtToken(res.data.accessToken)) {
+          case Role.ADMIN:
+            router.replace('/admin/dashboard');
+            break;
+          case Role.OWNER:
+            router.replace('/owner/dashboard');
+            break;
+          case Role.EMPLOYEE:
+            router.replace('/employee/dashboard');
+            break;
+          case Role.USER:
+            router.replace('/');
+            break;
+          default:
+            router.replace('/');
+        }
       }
     }).catch((err: ErrorResponse) => {
       const alertState: AlertState = {

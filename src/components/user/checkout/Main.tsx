@@ -2,7 +2,7 @@
 import Title from "@/libs/Title"
 import useSWR from "swr";
 import {ADDRESS, CART_VIEW, ORDER} from "@/services/api";
-import {get, post} from "@/services/axios";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import {CartViewDTO} from "@/components/user/layout/header/Cart";
 import {useDispatch} from "react-redux";
 import React, {useEffect, useMemo, useState} from "react";
@@ -38,10 +38,12 @@ interface ResCreateOrderDTO {
   phoneNumber: string;
   items: ResCreateOrderItemDTO[];
 }
-const fetcherCreateOrder = (url: string, {arg}:{arg:ResCreateOrderDTO}) => post<BaseResponse<never>>(url,arg).then(res=>res.data);
-const fetcher = (url: string) => get<BaseResponse<CartViewDTO>>(url).then(res => res.data);
-const fetcherAddress = (url: string) => get<BaseResponse<ResInfoAddressDTO>>(url).then(res => res.data);
 export default function Main() {
+  const { get, post } = useAxiosContext();
+  const fetcherCreateOrder = (url: string, {arg}:{arg:ResCreateOrderDTO}) => post<BaseResponse<never>>(url,arg).then(res=>res.data);
+  const fetcher = (url: string) => get<BaseResponse<CartViewDTO>>(url).then(res => res.data);
+  const fetcherAddress = (url: string) => get<BaseResponse<ResInfoAddressDTO>>(url).then(res => res.data);
+
   const {data, isLoading, error} = useSWR(CART_VIEW, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,

@@ -18,13 +18,13 @@ import UpdateCategoryModal from "@/components/admin/categories/UpdateCategoryMod
 import UpdateStatusCategoryModal from "@/components/admin/categories/UpdateStatusCategoryModal";
 import useSWR from "swr";
 import {CATEGORY} from "@/services/api";
-import {get} from "@/services/axios";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
 import {useDebounce} from "@/hooks/useDebounce";
 import {formatDateTime} from "@/util/FnCommon";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 
 
 interface ResCategorySearchDTO {
@@ -38,6 +38,7 @@ interface ResCategorySearchDTO {
 }
 
 export default function Main() {
+  const {get} = useAxiosContext();
   const [isOpen, setIsOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);

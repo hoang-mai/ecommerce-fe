@@ -2,7 +2,7 @@ import Modal from "@/libs/Modal";
 import {AccountStatus} from "@/enum";
 import useSWRMutation from "swr/mutation";
 import {AUTH} from "@/services/api";
-import {patch} from "@/services/axios";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import {useDispatch} from "react-redux";
 import {AlertType} from "@/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -21,9 +21,6 @@ type Props = {
   currentStatus: AccountStatus;
 }
 
-const fetcher = (url: string, {arg}: { arg: ReqUpdateAccountStatusDTO }) =>
-  patch<BaseResponse<never>>(url, arg).then(res => res.data);
-
 export default function ChangeAccountStatusModal({
                                                    isOpen,
                                                    setIsOpen,
@@ -31,6 +28,9 @@ export default function ChangeAccountStatusModal({
                                                    userId,
                                                    currentStatus,
                                                  }: Props) {
+  const { patch } = useAxiosContext();
+  const fetcher = (url: string, {arg}: { arg: ReqUpdateAccountStatusDTO }) =>
+    patch<BaseResponse<never>>(url, arg).then(res => res.data);
   const dispatch = useDispatch();
 
   const {trigger, isMutating} = useSWRMutation(
@@ -145,4 +145,3 @@ export default function ChangeAccountStatusModal({
     </Modal>
   );
 }
-

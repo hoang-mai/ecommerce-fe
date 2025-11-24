@@ -7,7 +7,7 @@ import DropdownSelect from "@/libs/DropdownSelect";
 import {useEffect, useState} from "react";
 import useSWRMutation from "swr/mutation";
 import {ADDRESS} from "@/services/api";
-import {patch} from "@/services/axios";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType} from "@/enum";
@@ -52,179 +52,180 @@ const addressSchema = z.object({
 
 type AddressFormData = z.infer<typeof addressSchema>;
 
-const fetcher = (url: string, {arg}: { arg: AddressFormData }) =>
-  patch<BaseResponse<undefined>>(url, arg).then(res => res.data);
-
 export default function UpdateAddressModal({isOpen, setIsOpen, mutate, addressData, mutateParent}: Props) {
-  const [selectedProvince, setSelectedProvince] = useState<string>(addressData.province);
-  const dispatch = useDispatch();
+  const { patch } = useAxiosContext();
+  const fetcher = (url: string, {arg}: { arg: AddressFormData }) =>
+    patch<BaseResponse<undefined>>(url, arg).then(res => res.data);
+
+   const [selectedProvince, setSelectedProvince] = useState<string>(addressData.province);
+   const dispatch = useDispatch();
   const {provinceOptions, wardOptions} = useAddressMapping(selectedProvince);
   const {trigger, isMutating} = useSWRMutation(`${ADDRESS}/${addressData.addressId}`, fetcher, {
     revalidate: false,
   });
 
-  const {
-    control,
-    handleSubmit,
-    formState: {errors, isDirty},
-    setValue,
-  } = useForm<AddressFormData>({
-    resolver: zodResolver(addressSchema),
-    defaultValues: {
-      receiverName: addressData.receiverName,
-      province: addressData.province,
-      ward: addressData.ward,
-      detail: addressData.detail,
-      phoneNumber: addressData.phoneNumber,
-      isDefault: addressData.isDefault,
-    },
-  });
+   const {
+     control,
+     handleSubmit,
+     formState: {errors, isDirty},
+     setValue,
+   } = useForm<AddressFormData>({
+     resolver: zodResolver(addressSchema),
+     defaultValues: {
+       receiverName: addressData.receiverName,
+       province: addressData.province,
+       ward: addressData.ward,
+       detail: addressData.detail,
+       phoneNumber: addressData.phoneNumber,
+       isDefault: addressData.isDefault,
+     },
+   });
 
-  const onSubmit = (data: AddressFormData) => {
-    trigger(data).then(res => {
-      const alertState: AlertState = {
-        isOpen: true,
-        title: 'Thành công',
-        message: res.message,
-        type: AlertType.SUCCESS,
-      }
-      dispatch(openAlert(alertState));
-      mutate();
-      if (mutateParent) {
-        mutateParent();
-      }
-      setIsOpen();
-    }).catch((err: ErrorResponse) => {
-      const alertState: AlertState = {
-        isOpen: true,
-        title: 'Thất bại',
-        message: err.message,
-        type: AlertType.ERROR,
-      }
-      dispatch(openAlert(alertState));
-    });
-  };
+   const onSubmit = (data: AddressFormData) => {
+     trigger(data).then(res => {
+       const alertState: AlertState = {
+         isOpen: true,
+         title: 'Thành công',
+         message: res.message,
+         type: AlertType.SUCCESS,
+       }
+       dispatch(openAlert(alertState));
+       mutate();
+       if (mutateParent) {
+         mutateParent();
+       }
+       setIsOpen();
+     }).catch((err: ErrorResponse) => {
+       const alertState: AlertState = {
+         isOpen: true,
+         title: 'Thất bại',
+         message: err.message,
+         type: AlertType.ERROR,
+       }
+       dispatch(openAlert(alertState));
+     });
+   };
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={setIsOpen}
-      title="Chỉnh sửa địa chỉ"
-      onSave={handleSubmit(onSubmit)}
-      saveButtonText="Cập nhật"
-      isLoading={isMutating}
-      disableSave={!isDirty}
-      maxWidth="2xl"
-    >
-      {isMutating && <Loading/>}
-      <div className="space-y-4">
-        {/* Receiver Name and Phone Number */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Controller
-            control={control}
-            name="receiverName"
-            render={({field}) => (
-              <TextField
-                htmlFor="receiverName"
-                id="receiverName"
-                label="Tên người nhận"
-                placeholder="Nhập tên người nhận"
-                disabled={isMutating}
-                error={errors.receiverName?.message}
-                required={true}
-                value={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
+   return (
+     <Modal
+       isOpen={isOpen}
+       onClose={setIsOpen}
+       title="Chỉnh sửa địa chỉ"
+       onSave={handleSubmit(onSubmit)}
+       saveButtonText="Cập nhật"
+       isLoading={isMutating}
+       disableSave={!isDirty}
+       maxWidth="2xl"
+     >
+       {isMutating && <Loading/>}
+       <div className="space-y-4">
+         {/* Receiver Name and Phone Number */}
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           <Controller
+             control={control}
+             name="receiverName"
+             render={({field}) => (
+               <TextField
+                 htmlFor="receiverName"
+                 id="receiverName"
+                 label="Tên người nhận"
+                 placeholder="Nhập tên người nhận"
+                 disabled={isMutating}
+                 error={errors.receiverName?.message}
+                 required={true}
+                 value={field.value}
+                 onChange={field.onChange}
+               />
+             )}
+           />
 
-          <Controller
-            control={control}
-            name="phoneNumber"
-            render={({field}) => (
-              <TextField
-                htmlFor="phoneNumber"
-                id="phoneNumber"
-                label="Số điện thoại"
-                placeholder="Nhập số điện thoại"
-                disabled={isMutating}
-                error={errors.phoneNumber?.message}
-                required={true}
-                value={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-        </div>
+           <Controller
+             control={control}
+             name="phoneNumber"
+             render={({field}) => (
+               <TextField
+                 htmlFor="phoneNumber"
+                 id="phoneNumber"
+                 label="Số điện thoại"
+                 placeholder="Nhập số điện thoại"
+                 disabled={isMutating}
+                 error={errors.phoneNumber?.message}
+                 required={true}
+                 value={field.value}
+                 onChange={field.onChange}
+               />
+             )}
+           />
+         </div>
 
-        {/* Province and Ward */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Controller
-            control={control}
-            name="province"
-            render={({field}) => (
-              <DropdownSelect
-                htmlFor="province"
-                id="province"
-                label="Tỉnh/Thành phố"
-                placeholder="Chọn tỉnh/thành phố"
-                disabled={isMutating}
-                error={errors.province?.message}
-                required={true}
-                value={field.value}
-                onChange={(value) => {
-                  field.onChange(value);
-                  setSelectedProvince(value);
-                  setValue('ward', '');
-                }}
-                options={provinceOptions}
-                enableSearch={true}
-                searchPlaceholder="Tìm tỉnh/thành phố..."
-              />
-            )}
-          />
+         {/* Province and Ward */}
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           <Controller
+             control={control}
+             name="province"
+             render={({field}) => (
+               <DropdownSelect
+                 htmlFor="province"
+                 id="province"
+                 label="Tỉnh/Thành phố"
+                 placeholder="Chọn tỉnh/thành phố"
+                 disabled={isMutating}
+                 error={errors.province?.message}
+                 required={true}
+                 value={field.value}
+                 onChange={(value) => {
+                   field.onChange(value);
+                   setSelectedProvince(value);
+                   setValue('ward', '');
+                 }}
+                 options={provinceOptions}
+                 enableSearch={true}
+                 searchPlaceholder="Tìm tỉnh/thành phố..."
+               />
+             )}
+           />
 
-          <Controller
-            control={control}
-            name="ward"
-            render={({field}) => (
-              <DropdownSelect
-                htmlFor="ward"
-                id="ward"
-                label="Phường/Xã"
-                placeholder="Chọn phường/xã"
-                disabled={isMutating || !selectedProvince}
-                error={errors.ward?.message}
-                required={true}
-                value={field.value}
-                onChange={field.onChange}
-                options={wardOptions}
-                enableSearch={true}
-                searchPlaceholder="Tìm phường/xã..."
-              />
-            )}
-          />
-        </div>
+           <Controller
+             control={control}
+             name="ward"
+             render={({field}) => (
+               <DropdownSelect
+                 htmlFor="ward"
+                 id="ward"
+                 label="Phường/Xã"
+                 placeholder="Chọn phường/xã"
+                 disabled={isMutating || !selectedProvince}
+                 error={errors.ward?.message}
+                 required={true}
+                 value={field.value}
+                 onChange={field.onChange}
+                 options={wardOptions}
+                 enableSearch={true}
+                 searchPlaceholder="Tìm phường/xã..."
+               />
+             )}
+           />
+         </div>
 
-        {/* Detail Address */}
-        <Controller
-          control={control}
-          name="detail"
-          render={({field}) => (
-            <TextField
-              htmlFor="detail"
-              id="detail"
-              label="Địa chỉ chi tiết"
-              placeholder="Nhập địa chỉ chi tiết (Số nhà, tên đường...)"
-              disabled={isMutating}
-              error={errors.detail?.message}
-              required={true}
-              value={field.value}
-              onChange={field.onChange}
-            />
-          )}
-        />
-      </div>
-    </Modal>
-  );
-}
+         {/* Detail Address */}
+         <Controller
+           control={control}
+           name="detail"
+           render={({field}) => (
+             <TextField
+               htmlFor="detail"
+               id="detail"
+               label="Địa chỉ chi tiết"
+               placeholder="Nhập địa chỉ chi tiết (Số nhà, tên đường...)"
+               disabled={isMutating}
+               error={errors.detail?.message}
+               required={true}
+               value={field.value}
+               onChange={field.onChange}
+             />
+           )}
+         />
+       </div>
+     </Modal>
+   );
+ }

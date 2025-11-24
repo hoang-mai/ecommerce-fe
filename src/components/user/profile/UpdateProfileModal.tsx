@@ -10,7 +10,7 @@ import DatePicker from "@/libs/DatePicker";
 import Modal from "@/libs/Modal";
 import useSWRMutation from "swr/mutation";
 import {USER} from "@/services/api";
-import {patch} from "@/services/axios";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
@@ -70,14 +70,14 @@ interface Props {
   reload: () => void;
 }
 
-const fetcher = (url: string, {arg}: { arg: ProfileFormData }) => patch<BaseResponse<never>>(url, arg).then(res => res.data);
-
 export default function UpdateProfileModal({
   profileData,
   isOpen,
   setIsOpen,
   reload,
 }: Props) {
+  const { patch } = useAxiosContext();
+  const fetcher = (url: string, {arg}: { arg: ProfileFormData }) => patch<BaseResponse<never>>(url, arg).then(res => res.data);
 
   const {
     control,
@@ -97,9 +97,7 @@ export default function UpdateProfileModal({
     },
   });
 
-  const { trigger , isMutating } = useSWRMutation(USER, fetcher,{
-    revalidate: false,
-  })
+  const { trigger , isMutating } = useSWRMutation(USER, fetcher,{ revalidate: false })
   const dispatch = useDispatch();
   const onSubmit = (data: ProfileFormData) => {
     trigger(data).then(res => {

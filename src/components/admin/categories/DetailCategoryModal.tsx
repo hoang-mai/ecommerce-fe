@@ -4,7 +4,6 @@ import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
 import {formatDateTime} from "@/util/FnCommon";
 import useSWR from "swr";
 import {CATEGORY} from "@/services/api";
-import {get} from "@/services/axios";
 import {useEffect} from "react";
 import Table, {Column} from "@/libs/Table";
 import CategoryRoundedIcon from '@mui/icons-material/CategoryRounded';
@@ -16,6 +15,7 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
 import {InfoRow} from "@/libs/InfoRow";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 
 interface ResCategoryDTO {
   categoryId: number;
@@ -35,9 +35,11 @@ type Props = {
   categoryId: number;
 }
 
-const fetcher = (url: string) => get<BaseResponse<ResCategoryDTO>>(url).then(res => res.data.data);
 
 export default function DetailCategoryModal({isOpen, setIsOpen, categoryId}: Props) {
+
+  const {get} = useAxiosContext();
+  const fetcher = (url: string) => get<BaseResponse<ResCategoryDTO>>(url).then(res => res.data.data);
   const {data: category, isLoading, error} = useSWR(
     isOpen && categoryId ? `${CATEGORY}/${categoryId}` : null,
     fetcher,

@@ -9,7 +9,7 @@ import Title from "@/libs/Title";
 import {formatDateTime} from "@/util/FnCommon";
 import useSWR from "swr";
 import {USER_VIEW} from "@/services/api";
-import {get} from "@/services/axios";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
 import {useDebounce} from "@/hooks/useDebounce";
 import {useDispatch} from "react-redux";
@@ -37,9 +37,9 @@ interface UserViewDto {
   updatedAt: string;
 }
 
-const fetcher = (url: string) => get<BaseResponse<PageResponse<UserViewDto>>>(url).then(res => res.data);
-
 export default function Main() {
+  const { get } = useAxiosContext();
+  const fetcher = (url: string) => get<BaseResponse<PageResponse<UserViewDto>>>(url).then(res => res.data);
   const [status, setStatus] = useState<string>("");
   const [keyword, setKeyword] = useState("");
   const [pageNo, setPageNo] = useState(0);
