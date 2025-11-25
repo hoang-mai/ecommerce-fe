@@ -1,8 +1,9 @@
 import {format} from "date-fns";
 import {jwtDecode, JwtPayload} from "jwt-decode";
+import {Role} from "@/enum";
 
 interface JwtDecodedPayload extends JwtPayload {
-  role: string;
+  role: Role;
 }
 
 export function formatDateTime(date: string) {
@@ -20,4 +21,15 @@ export function getRoleFromJwtToken(token: string) {
 
 export function formatPrice(price: number) {
   return price.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
+}
+
+export function isTokenExpired(token: string) {
+  const decoded: JwtDecodedPayload = jwtDecode(token);
+  if (!decoded.exp) {
+    return true;
+  }
+  const currentTime = Math.floor(Date.now() / 1000);
+  const bufferTime = 60;
+
+  return decoded.exp - bufferTime < currentTime;
 }

@@ -9,7 +9,7 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Button from "@/libs/Button";
 import {AlertType, ColorButton} from "@/enum";
-import { SvgIconComponent } from '@mui/icons-material';
+import {SvgIconComponent} from '@mui/icons-material';
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -27,8 +27,9 @@ interface MenuItem {
   link: string;
   icon: SvgIconComponent;
 }
-export default function Sidebar(){
-  const { get, post } = useAxiosContext();
+
+export default function Sidebar() {
+  const {get, post} = useAxiosContext();
   const fetcher = (url: string) => post<BaseResponse<never>>(url, {}, {withCredentials: true}).then(res => res.data);
   const fetcherUser = (url: string) => get<BaseResponse<ProfileData>>(url).then(res => res.data.data);
   const {data: dataUser} = useSWR(USER, fetcherUser, {
@@ -37,10 +38,10 @@ export default function Sidebar(){
   })
   const pathname = usePathname();
   const menuItems: MenuItem[] = [
-    { name: "Tổng quan", link: "/owner/dashboard", icon: InsightsIcon },
-    { name: "Nhân viên", link: "/owner/employees", icon: GroupIcon },
-    { name: "Cửa hàng", link: "/owner/shops", icon: StorefrontIcon },
-    { name: "Cài đặt", link: "/admin/settings", icon: ManageAccountsIcon },
+    {name: "Tổng quan", link: "/owner/dashboard", icon: InsightsIcon},
+    {name: "Nhân viên", link: "/owner/employees", icon: GroupIcon},
+    {name: "Cửa hàng", link: "/owner/shops", icon: StorefrontIcon},
+    {name: "Cài đặt", link: "/admin/settings", icon: ManageAccountsIcon},
   ];
 
   const router = useRouter();
@@ -66,7 +67,8 @@ export default function Sidebar(){
       router.push('/login');
     });
   }
-  return <div className={"hidden md:flex sticky top-0 left-0 z-sidebar h-screen w-60 min-w-60 border-r border-grey-c200 shadow-md flex flex-col px-4 pt-8 pb-4 rounded-r-lg overflow-y-auto"}>
+  return <div
+    className={"hidden md:flex sticky top-0 left-0 z-sidebar h-screen w-60 min-w-60 border-r border-grey-c200 shadow-md flex flex-col px-4 pt-8 pb-4 rounded-r-lg overflow-y-auto"}>
     {/* Logo */}
     <div className="flex items-center justify-center mb-8">
       <Image src={"/evoway.svg"} alt={"logo"} width={300} height={40} className={"h-full w-30"}/>
@@ -82,12 +84,12 @@ export default function Sidebar(){
             key={item.link}
             href={item.link}
             className={`px-4 py-3 rounded-lg transition-colors duration-200 flex items-center gap-3 hover:bg-grey-c100 ${
-              isActive 
-                ? "bg-grey-c100 text-primary-c700 font-bold" 
+              isActive
+                ? "bg-grey-c100 text-primary-c700 font-bold"
                 : "text-primary-c500 font-medium"
             }`}
           >
-            <IconComponent className="text-xl" />
+            <IconComponent className="text-xl"/>
             {item.name}
           </Link>
         );
@@ -113,7 +115,8 @@ export default function Sidebar(){
         }
       </div>
       <div className="flex-1 overflow-hidden">
-        <p className="text-sm font-semibold text-grey-c800 truncate">{`${dataUser?.firstName} ${dataUser?.middleName} ${dataUser?.lastName}`.trim() || 'Người dùng'}</p>
+        <p
+          className="text-sm font-semibold text-grey-c800 truncate"> {`${dataUser?.firstName || ''} ${dataUser?.middleName || ''} ${dataUser?.lastName || ''}`.trim() || 'Người dùng'}</p>
         <p className="text-xs text-grey-c500 truncate">{dataUser?.email}</p>
       </div>
     </div>
@@ -122,7 +125,7 @@ export default function Sidebar(){
     <Button
       onClick={handleLogout}
       type={"button"}
-      startIcon={<LogoutIcon />}
+      startIcon={<LogoutIcon/>}
       fullWidth={true}
       color={ColorButton.ERROR}
       className="mt-2"

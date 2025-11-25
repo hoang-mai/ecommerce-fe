@@ -1,7 +1,7 @@
 export const AUTH= "/api/v1/auth";
 export const LOGIN= AUTH + "/login";
 export const LOGOUT= AUTH + "/logout";
-export const REFRESH = AUTH + "/refresh";
+export const REFRESH_TOKEN = AUTH + "/refresh-token";
 export const REGISTER = "/api/v1/saga/register";
 export const CATEGORY= "/api/v1/category";
 export const USER = "/api/v1/user";

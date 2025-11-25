@@ -1,5 +1,4 @@
 import { Client, IFrame, IMessage, StompSubscription } from '@stomp/stompjs';
-import SockJS from "sockjs-client";
 
 export interface WebSocketConfig {
   debug?: boolean;
