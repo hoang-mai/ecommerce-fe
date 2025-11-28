@@ -8,7 +8,7 @@ import {CATEGORY} from "@/services/api";
 import useSWRMutation from "swr/mutation";
 import useSWR from "swr";
 import {useDispatch} from "react-redux";
-import {AlertType} from "@/enum";
+import {AlertType} from "@/type/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useCallback, useEffect, useState} from "react";
 import Loading from "@/components/modals/Loading";
@@ -49,7 +49,7 @@ export default function CreateCategoryModal({isOpen, setIsOpen, reload}: Props) 
   const [allCategories, setAllCategories] = useState<ResCategorySearchDTO[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const {data: categoriesResponse, isLoading: isLoadingCategories,error: errorCategories} = useSWR(
-    isOpen ? `${CATEGORY}/search?keyword=${searchKeyword}&pageNo=${pageNo}&pageSize=10` : null,
+    isOpen ? `${CATEGORY}/search?keyword=${encodeURIComponent(searchKeyword.trim())}&pageNo=${pageNo}&pageSize=10` : null,
     categoriesFetcher,
     {
       refreshInterval: 0,

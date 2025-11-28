@@ -8,7 +8,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Button from "@/libs/Button";
-import {AlertType, ColorButton} from "@/enum";
+import {AlertType, ColorButton} from "@/type/enum";
 import {SvgIconComponent} from '@mui/icons-material';
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";

@@ -41,7 +41,7 @@ export default function DropdownSelect(
   }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [position, setPosition] = useState({ top: 0, left: 0});
   const [isPositioned, setIsPositioned] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -92,7 +92,6 @@ export default function DropdownSelect(
         setPosition({
           top: align === "top" ? rect.top - 8 : rect.bottom + 8,
           left: rect.left,
-          width: rect.width,
         });
         setIsPositioned(true);
       }
@@ -174,14 +173,14 @@ export default function DropdownSelect(
       {typeof window !== 'undefined' && isOpen && isPositioned && !disabled && createPortal(
         <div
           ref={menuRef}
-          className={`fixed bg-white border-2 border-primary-c500 rounded-2xl shadow-lg z-dropdown ${
+          className={`fixed bg-white border-2 border-primary-c500 rounded-2xl shadow-lg z-dropdown w-fit ${
             align === "top" ? "origin-bottom" : "origin-top"
           }`}
           style={{
             top: align === "top" ? 'auto' : `${position.top}px`,
             bottom: align === "top" ? `${window.innerHeight - position.top}px` : 'auto',
             left: `${position.left}px`,
-            width: `${position.width}px`,
+
           }}
         >
           {/* Search Input */}

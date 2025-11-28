@@ -3,58 +3,12 @@ import {useState} from "react";
 import Image from "next/image";
 import Table, {Column} from "@/libs/Table";
 import Button from "@/libs/Button";
-import {ColorButton, SortDir} from "@/enum";
+import {ColorButton, SortDir} from "@/type/enum";
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import {formatDateTime} from "@/util/FnCommon";
-
-enum ProductStatus {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-  OUT_OF_STOCK = "OUT_OF_STOCK",
-  DRAFT = "DRAFT",
-}
-
-interface ResCategoryDTO {
-  categoryId: number;
-  categoryName: string;
-}
-
-interface ResProductImageDTO {
-  productImageId: number;
-  imageUrl: string;
-  isPrimary: boolean;
-}
-
-interface ResProductAttributeDTO {
-  productAttributeId: number;
-  attributeName: string;
-  attributeValue: string;
-}
-
-interface ResProductVariantDTO {
-  productVariantId: number;
-  variantName: string;
-  price: number;
-  stock: number;
-  sku: string;
-}
-
-interface ResProductDTO {
-  productId: number;
-  shopId: number;
-  name: string;
-  description: string;
-  productStatus: ProductStatus;
-  category: ResCategoryDTO;
-  productImages: ResProductImageDTO[];
-  productAttributes: ResProductAttributeDTO[];
-  productVariants: ResProductVariantDTO[];
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface ProductTableProps {
   shopId: string;

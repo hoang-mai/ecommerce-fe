@@ -19,13 +19,13 @@ export default function WebSocketProvider({children}: WebSocketProviderProps) {
     if (typeof window === 'undefined') return;
     const wsUrl = process.env.NEXT_PUBLIC_WEB_SOCKET_URL;
     if (!wsUrl) {
-      console.error('NEXT_PUBLIC_WEB_SOCKET_URL is not defined');
+      console.log('NEXT_PUBLIC_WEB_SOCKET_URL is not defined');
       return;
     }
     const connectWebSocket = () => {
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) {
-        console.error('Access token is not available');
+        console.log('Access token is not available');
         return;
       }
       WebSocketService.disconnect();

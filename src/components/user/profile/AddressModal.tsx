@@ -1,7 +1,7 @@
 import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import Button from "@/libs/Button";
-import {AlertType, ColorButton} from "@/enum";
+import {AlertType, ColorButton} from "@/type/enum";
 import Modal from "@/libs/Modal";
 import useSWR from "swr";
 import {ADDRESS} from "@/services/api";

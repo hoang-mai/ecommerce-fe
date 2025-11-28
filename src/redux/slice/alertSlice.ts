@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import { AlertType } from '@/enum'
+import { AlertType } from '@/type/enum'
 
 const initialState: AlertState = {
   isOpen: false,

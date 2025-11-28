@@ -2,7 +2,7 @@
 import React, {useState, useCallback, useEffect} from "react";
 import Button from "@/libs/Button";
 import Table, {Column} from "@/libs/Table";
-import {AlertType, CategoryStatus, ColorButton} from "@/enum";
+import {AlertType, CategoryStatus, ColorButton} from "@/type/enum";
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
@@ -25,6 +25,7 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
+import {useBuildUrl} from "@/hooks/useBuildUrl";
 
 
 interface ResCategorySearchDTO {
@@ -51,26 +52,23 @@ export default function Main() {
   const [pageSize, setPageSize] = useState("10");
   const [sortBy, setSortBy] = useState("");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-
-  // Debounce keyword để tránh gọi API quá nhiều
   const debouncedKeyword = useDebounce(keyword, 500);
 
-  // Build URL với query params
-  const buildSearchUrl = useCallback(() => {
-    const params = new URLSearchParams();
-    if (debouncedKeyword) params.append("keyword", debouncedKeyword);
-    if (status) params.append("status", status);
-    params.append("pageNo", currentPage.toString());
-    params.append("pageSize", pageSize);
-    params.append("sortBy", sortBy);
-    params.append("sortDir", sortDir);
-
-    return `${CATEGORY}/search?${params.toString()}`;
-  }, [debouncedKeyword, status, currentPage, pageSize, sortBy, sortDir]);
+  const url = useBuildUrl({
+    baseUrl: `${CATEGORY}/search`,
+    queryParams: {
+      keyword: debouncedKeyword?.trim() || undefined,
+      status: status || undefined,
+      pageNo: currentPage,
+      pageSize,
+      sortBy: sortBy || undefined,
+      sortDir: sortDir || undefined,
+    }
+  });
 
   const {data, mutate, isLoading, error} = useSWR(
-    buildSearchUrl(),
-    (url: string) => get<BaseResponse<PageResponse<ResCategorySearchDTO>>>(url).then(res => res.data),
+    url,
+    (u: string) => get<BaseResponse<PageResponse<ResCategorySearchDTO>>>(u).then(res => res.data),
     {
       refreshInterval: 0,
       revalidateOnFocus: false,

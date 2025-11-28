@@ -3,7 +3,7 @@ import React, {useEffect, ReactNode, useState} from "react";
 import Image from "next/image";
 import useSWR from "swr";
 import Button from "@/libs/Button";
-import {AlertType, ColorButton, ShopStatus} from "@/enum";
+import {AlertType, ColorButton, ShopStatus} from "@/type/enum";
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import StoreRoundedIcon from '@mui/icons-material/Storefront';

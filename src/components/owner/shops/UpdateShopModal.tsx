@@ -11,7 +11,7 @@ import useSWRMutation from "swr/mutation";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {SHOP} from "@/services/api";
 import {useDispatch} from "react-redux";
-import {AlertType} from "@/enum";
+import {AlertType} from "@/type/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
 import {useAddressMapping} from "@/hooks/useAddressMapping";

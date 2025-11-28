@@ -1,10 +1,10 @@
 import Modal from "@/libs/Modal";
-import {ProductStatus} from "@/enum";
+import {ProductStatus} from "@/type/enum";
 import useSWRMutation from "swr/mutation";
 import {PRODUCT} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useDispatch} from "react-redux";
-import {AlertType} from "@/enum";
+import {AlertType} from "@/type/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
 import Loading from "@/components/modals/Loading";
@@ -17,7 +17,7 @@ type Props = {
   isOpen: boolean;
   setIsOpen: () => void;
   reload: () => void;
-  productId: number;
+  productId: string;
   currentStatus: ProductStatus;
   productName: string;
 }

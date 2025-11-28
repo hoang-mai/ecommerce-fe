@@ -16,7 +16,7 @@ import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useRouter} from "next/navigation";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
-import {AlertType, ColorButton, Gender, GenderLabel} from "@/enum";
+import {AlertType, ColorButton, Gender, GenderLabel} from "@/type/enum";
 import DropdownSelect from "@/libs/DropdownSelect";
 import provinceData from "@/util/province.json";
 import wardData from "@/util/ward.json";

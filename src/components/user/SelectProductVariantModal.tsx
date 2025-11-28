@@ -9,22 +9,24 @@ import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftR
 import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import useSWRMutation from "swr/mutation";
 import {CART} from "@/services/api";
-import { useAxiosContext } from '@/components/provider/AxiosProvider';
-import {AlertType} from "@/enum";
+import {useAxiosContext} from '@/components/provider/AxiosProvider';
+import {AlertType} from "@/type/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useDispatch} from "react-redux";
 import Loading from "@/components/modals/Loading";
-import {ProductViewDTO, ProductVariantDTO} from "@/components/user/layout/header/Cart";
+import {ProductView, ProductVariant} from "@/type/interface";
 import {useCartData} from "@/components/provider/CartProvider";
+import Carousel from "@/libs/Carousel";
+import CountdownTimer from "@/libs/CountDownTime";
 
 type Props = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  product: ProductViewDTO
+  product: ProductView
 }
 
 export default function SelectProductVariantModal({isOpen, setIsOpen, product}: Props) {
-  const { post } = useAxiosContext();
+  const {post} = useAxiosContext();
   const fetcher = (url: string, {arg}: { arg: ReqAddToCartDTO }) =>
     post<BaseResponse<never>>(url, arg, {}).then(res => res.data);
 
@@ -33,7 +35,7 @@ export default function SelectProductVariantModal({isOpen, setIsOpen, product}: 
   const dispatch = useDispatch();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  // selectedAttributes maps productAttributeId -> productAttributeValueId
+
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>(() => {
     const map: Record<string, string> = {};
     if (defaultVariant && defaultVariant.productVariantAttributeValues) {
@@ -44,7 +46,7 @@ export default function SelectProductVariantModal({isOpen, setIsOpen, product}: 
     return map;
   });
   const [quantity, setQuantity] = useState(1);
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariantDTO | null>(defaultVariant || null);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(defaultVariant || null);
   const {trigger, isMutating} = useSWRMutation(`${CART}`, fetcher);
   const calculateFinalPrice = () => {
     if (!selectedVariant) return 0;
@@ -135,51 +137,30 @@ export default function SelectProductVariantModal({isOpen, setIsOpen, product}: 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Product Images */}
         <div>
-          <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3">
+          <div className="aspect-square rounded-lg overflow-hidden mb-3">
             {product.productImages.length > 0 ? (
-              <Image
-                src={product.productImages[currentImageIndex].url}
-                alt={product.name}
-                width={400}
-                height={400}
-                className="w-full h-full object-cover"
-                onClick={() => setSelectedImage(product.productImages[currentImageIndex].url)}
-              />
+              <Carousel title={"Hình ảnh sản phẩm"} images={product.productImages.map(value => {
+                return {imageId: value.productImageId, imageUrl: value.imageUrl}
+              })}/>
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400">
                 No Image
               </div>
             )}
           </div>
-
-          {/* Thumbnails */}
-          {product.productImages.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto">
-              {product.productImages.map((img, idx) => (
-                <button
-                  key={img.productImageId}
-                  onClick={() => setCurrentImageIndex(idx)}
-                  className={`flex-shrink-0 w-16 h-16 rounded border-2 overflow-hidden ${
-                    idx === currentImageIndex ? 'border-blue-500' : 'border-gray-200'
-                  }`}
-                >
-                  <Image
-                    src={img.url}
-                    alt=""
-                    width={64}
-                    height={64}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Product Info */}
         <div>
-          <h3 className="text-2xl font-bold mb-2">{product.name}</h3>
-
+          <div className={"flex gap-2"}><h3 className="text-2xl font-bold truncate">{product.name}</h3>
+            {Number(product.discount) > 0 && (
+              <div
+                className=" bg-gradient-to-r from-support-c900 to-support-c800 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-md flex items-center gap-1">
+                <span className="text-xs">-</span>
+                <span>{product.discount}%</span>
+              </div>
+            )}
+          </div>
           {/* Price */}
           <div className="mb-6">
             <div className="flex items-baseline gap-2">
@@ -187,16 +168,19 @@ export default function SelectProductVariantModal({isOpen, setIsOpen, product}: 
                     className={`text-3xl font-bold text-primary-c900`}>
                     {formatPrice(calculateFinalPrice())}
                   </span>
-              {Number(product.discount)>0 && (
+              {Number(product.discount) > 0 && (
                 <>
                       <span className="text-lg text-gray-400 line-through">
                         {formatPrice(selectedVariant?.price || 0)}
                       </span>
-                  <span className="text-sm bg-secondary-c100 text-secondary-c600 px-2 py-1 rounded">
-                        -{product.discount}%
-                      </span>
                 </>
               )}
+            </div>
+            <div className={"flex gap-2"}>
+              <span className="text-xs text-green-600 font-medium ">
+                Tiết kiệm {formatPrice(defaultVariant.price - defaultVariant.price * (100 - (product.discount || 0)) / 100)}
+              </span>
+              {product.discountEndDate && <CountdownTimer endDate={product.discountEndDate}/>}
             </div>
           </div>
 

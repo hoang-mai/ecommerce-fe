@@ -14,7 +14,7 @@ import ChangePassword from "@/components/user/layout/header/ChangePassword";
 import {LOGOUT, USER} from "@/services/api";
 import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import useSWRMutation from "swr/mutation";
-import {AlertType} from "@/enum";
+import {AlertType} from "@/type/enum";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import DisableAccount from "@/components/user/layout/header/DisableAccount";

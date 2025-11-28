@@ -4,7 +4,7 @@ import {ADDRESS} from "@/services/api";
 import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
-import {AlertType} from "@/enum";
+import {AlertType} from "@/type/enum";
 import Loading from "@/components/modals/Loading";
 import {useAddressMapping} from "@/hooks/useAddressMapping";
 

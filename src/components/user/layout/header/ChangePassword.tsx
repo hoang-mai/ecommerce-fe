@@ -9,7 +9,7 @@ import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import useSWRMutation from "swr/mutation";
 import {AUTH} from "@/services/api";
-import { AlertType } from "@/enum";
+import { AlertType } from "@/type/enum";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 

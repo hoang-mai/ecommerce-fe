@@ -20,7 +20,7 @@ export default function CountdownTimer({endDate}: { endDate: string }) {
     return () => clearInterval(interval);
   }, [timeLeft]);
 
-  if (timeLeft <= 0) return <span className="text-xs text-red-500">Đã hết hạn</span>;
+  if (timeLeft <= 0) return <span className="text-xs text-support-c900">Đã hết hạn</span>;
 
   const days = Math.floor(timeLeft / 86400);
   const hours = Math.floor((timeLeft % 86400) / 3600);
@@ -28,7 +28,7 @@ export default function CountdownTimer({endDate}: { endDate: string }) {
   const seconds = timeLeft % 60;
 
   return (
-    <span className="text-xs text-orange-500">
+    <span className="text-xs text-secondary-c800">
         Còn lại: {days > 0 ? `${days} ngày ` : ""}{hours.toString().padStart(2, "0")}:{minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}
       </span>
   );

@@ -3,7 +3,7 @@
 import { useEffect, useState} from 'react';
 import Image from 'next/image';
 import Button from "@/libs/Button";
-import {AlertType, ColorButton, Gender, GenderLabel, Role} from "@/enum";
+import {AlertType, ColorButton, Gender, GenderLabel, Role} from "@/type/enum";
 import BorderColorRoundedIcon from '@mui/icons-material/BorderColorRounded';
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded';

@@ -7,7 +7,7 @@ import TextField from "@/libs/TextField";
 import Table, {Column} from "@/libs/Table";
 import Button from "@/libs/Button";
 import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
-import {AlertType, ColorButton, ShopStatus, SortDir} from "@/enum";
+import {AlertType, ColorButton, ShopStatus, SortDir} from "@/type/enum";
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import ChangeCircleRoundedIcon from '@mui/icons-material/ChangeCircleRounded';
@@ -26,6 +26,7 @@ import Loading from "@/components/modals/Loading";
 import {useAddressMapping} from "@/hooks/useAddressMapping";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import {useRouter} from "next/navigation";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
 
 interface Shop {
   shopId: number;
@@ -63,20 +64,19 @@ export default function Main() {
   const {getProvinceName, getWardName} = useAddressMapping();
 
   // Build URL với query params
-  const buildUrl = useCallback(() => {
-    const params = new URLSearchParams();
-    if (status) params.append("status", status);
-    if (debouncedKeyword) params.append("keyword", debouncedKeyword);
-    params.append("pageNo", currentPage.toString());
-    params.append("pageSize", pageSize);
-    if (sortBy) {
-      params.append("sortBy", sortBy);
-      params.append("sortDir", sortDir);
+  const url = useBuildUrl({
+    baseUrl: `${SHOP}/search`,
+    queryParams: {
+      status: status || undefined,
+      keyword: debouncedKeyword || undefined,
+      pageNo: currentPage,
+      pageSize,
+      sortBy: sortBy || undefined,
+      sortDir: sortBy ? sortDir : undefined,
     }
-    return `${SHOP}/search?${params.toString()}`;
-  }, [status, debouncedKeyword, currentPage, pageSize, sortBy, sortDir]);
+  });
 
-  const {data, error, isLoading, mutate} = useSWR(buildUrl(), fetcher, {
+  const {data, error, isLoading, mutate} = useSWR(url, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   });

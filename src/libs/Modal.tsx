@@ -4,7 +4,7 @@ import {ReactNode, useEffect, useState} from 'react';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import SaveAsRoundedIcon from '@mui/icons-material/SaveAsRounded';
 import Button from './Button';
-import {ColorButton} from '@/enum';
+import {ColorButton} from '@/type/enum';
 
 interface ModalProps {
   isOpen: boolean;

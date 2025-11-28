@@ -1,6 +1,6 @@
 "use client";
 import Modal from "@/libs/Modal";
-import {AlertType, UserVerificationStatus, UserVerificationStatusLabel , ColorButton} from "@/enum";
+import {AlertType, UserVerificationStatus, UserVerificationStatusLabel , ColorButton} from "@/type/enum";
 import {useState} from "react";
 import ImagePreview from "@/libs/ImagePreview";
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';

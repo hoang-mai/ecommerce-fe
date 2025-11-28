@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-    <body className="font-sans max-w-[2560px] mx-auto min-h-screen bg-grey-c50">
+    <body className="font-sans max-w-[2560px] mx-auto bg-grey-c50">
 
     <ReduxProvider>
       <Alert/>

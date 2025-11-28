@@ -14,3 +14,4 @@ export const CART = "/api/v1/cart";
 export const ORDER = "/api/v1/order";
 export const CART_VIEW = "/api/v1/cart-view";
 export const PRODUCT_VIEW = "/api/v1/product-view";
+export const SHOP_VIEW = "/api/v1/shop-view";

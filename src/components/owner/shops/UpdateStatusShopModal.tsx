@@ -1,10 +1,10 @@
 import Modal from "@/libs/Modal";
-import {ShopStatus} from "@/enum";
+import {ShopStatus} from "@/type/enum";
 import useSWRMutation from "swr/mutation";
 import {SHOP} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useDispatch} from "react-redux";
-import {AlertType} from "@/enum";
+import {AlertType} from "@/type/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
 import Loading from "@/components/modals/Loading";

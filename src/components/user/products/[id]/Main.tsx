@@ -1,22 +1,17 @@
 "use client";
 import React, {useEffect, useMemo, useState} from "react";
-import Image from "next/image";
 import useSWR from "swr";
-import {PRODUCT_VIEW, CART} from "@/services/api";
-import { useAxiosContext } from '@/components/provider/AxiosProvider';
+import {CART, PRODUCT_VIEW} from "@/services/api";
+import {useAxiosContext} from '@/components/provider/AxiosProvider';
 import Loading from "@/components/modals/Loading";
 import {ReqAddToCartDTO} from "@/components/user/ProductCard";
 import useSWRMutation from "swr/mutation";
 import {useCartData} from "@/components/provider/CartProvider";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
-import {AlertType} from "@/enum";
+import {AlertType, ColorButton, ProductStatus, ProductVariantStatus, ShopStatus} from "@/type/enum";
 import Button from "@/libs/Button";
-import {ColorButton} from "@/enum";
-import {
-  ProductViewDTO,
-  ProductVariantDTO,
-} from "@/components/user/layout/header/Cart";
+import {ProductVariant, ProductView,} from "@/type/interface";
 import ImagePreview from "@/libs/ImagePreview";
 import {formatPrice} from "@/util/FnCommon";
 import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
@@ -25,31 +20,114 @@ import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRound
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import StarHalfRoundedIcon from '@mui/icons-material/StarHalfRounded';
 import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
+import Carousel from "@/libs/Carousel";
+import CountdownTimer from "@/libs/CountDownTime";
 
-const productDefault: ProductViewDTO = {
-  productId: "",
-  name: "",
-  description: "",
-  discount: 0,
-  productImages: [],
-  productAttributes: [],
-  productVariants: [],
-  shopId: "",
-  rating: 0,
-  productStatus: "",
-  totalSold: 0,
-  discountStartDate: null,
-  discountEndDate: null,
-  categoryId: "",
-}
+const productDefault: ProductView = {
+  productId: "prod_002",
+  shopId: "shop_samsung_official",
+  rating: 4.7,
+  totalReviews: 298,
+  name: "Samsung Galaxy S24 Ultra",
+  description: "Galaxy S24 Ultra với bút S Pen tích hợp, camera 200MP, chip Snapdragon 8 Gen 3 for Galaxy, màn hình Dynamic AMOLED 2X 6.8 inch. Hỗ trợ Galaxy AI thông minh.",
+  productStatus: ProductStatus.ACTIVE,
+  totalSold: 980,
+  discount: 10,
+  discountStartDate: "2024-12-01T00:00:00Z",
+  discountEndDate: "2025-12-31T23:59:59Z",
+  categoryId: "cat_001",
+  categoryName: "Điện thoại",
+  shopStatus: ShopStatus.ACTIVE,
+  productImages: [
+    {
+      productImageId: "img_002_1",
+      imageUrl: "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-ltxipthba13z82@resize_w82_nl"
+    },
+    {
+      productImageId: "img_002_2",
+      imageUrl: "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-ltxipthba13z82@resize_w164_nl"
+    },
+    {
+      productImageId: "img_002_3",
+      imageUrl: "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-ltxipthba13z82@resize_w164_nl"
+    }
+  ],
+  productAttributes: [
+    {
+      productAttributeId: "attr_color_s24",
+      productAttributeName: "Màu sắc",
+      productAttributeValues: [
+        {productAttributeValueId: "val_color_s24_1", productAttributeValue: "Titan Xám"},
+        {productAttributeValueId: "val_color_s24_2", productAttributeValue: "Titan Đen"},
+        {productAttributeValueId: "val_color_s24_3", productAttributeValue: "Titan Tím"},
+        {productAttributeValueId: "val_color_s24_4", productAttributeValue: "Titan Vàng"},
+        {productAttributeValueId: "val_color_s24_5", productAttributeValue: "Titan Hồng"},
+        {productAttributeValueId: "val_color_s24_6", productAttributeValue: "Titan Xanh"},
+      ]
+    },
+    {
+      productAttributeId: "attr_storage_s24",
+      productAttributeName: "Dung lượng",
+      productAttributeValues: [
+        {productAttributeValueId: "val_storage_s24_1", productAttributeValue: "256GB"},
+        {productAttributeValueId: "val_storage_s24_2", productAttributeValue: "512GB"},
+        {productAttributeValueId: "val_storage_s24_3", productAttributeValue: "1TB"}
+      ]
+    }
+  ],
+  productVariants: [
+    {
+      productVariantId: "var_002_1",
+      productVariantStatus: ProductVariantStatus.ACTIVE,
+      price: 26990000,
+      stockQuantity: 60,
+      sold: 1900,
+      isDefault: true,
+      productVariantAttributeValues: [
+        {
+          productVariantAttributeValueId: "vav_002_1",
+          productAttributeId: "attr_color_s24",
+          productAttributeValueId: "val_color_s24_1"
+        },
+        {
+          productVariantAttributeValueId: "vav_002_2",
+          productAttributeId: "attr_storage_s24",
+          productAttributeValueId: "val_storage_s24_1"
+        }
+      ]
+    },
+    {
+      productVariantId: "var_002_2",
+      productVariantStatus: ProductVariantStatus.ACTIVE,
+      price: 29990000,
+      stockQuantity: 40,
+      sold: 120,
+      isDefault: false,
+      productVariantAttributeValues: [
+        {
+          productVariantAttributeValueId: "vav_002_3",
+          productAttributeId: "attr_color_s24",
+          productAttributeValueId: "val_color_s24_2"
+        },
+        {
+          productVariantAttributeValueId: "vav_002_4",
+          productAttributeId: "attr_storage_s24",
+          productAttributeValueId: "val_storage_s24_2"
+        }
+      ]
+    }
+  ],
+  createdAt: "2024-01-20T10:00:00Z",
+  updatedAt: "2024-11-15T14:20:00Z"
+};
 
 type Props = {
   id: string
 }
 
 export default function Main({id}: Props) {
-  const { get, post } = useAxiosContext();
-  const fetcher = (url: string) => get<BaseResponse<ProductViewDTO>>(url).then(res => res.data);
+  const {get, post} = useAxiosContext();
+  const fetcher = (url: string) => get<BaseResponse<ProductView>>(url).then(res => res.data);
   const addToCartFetcher = (url: string, {arg}: {
     arg: ReqAddToCartDTO
   }) => post<BaseResponse<never>>(url, arg).then(res => res.data);
@@ -58,14 +136,13 @@ export default function Main({id}: Props) {
     revalidateOnFocus: false,
     refreshInterval: 0
   });
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const product = data?.data ?? productDefault;
   const defaultVariant = useMemo(() =>
     product.productVariants.find(v => v.isDefault) ?? product.productVariants[0], [product.productVariants]);
 
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariantDTO | null>(defaultVariant || null);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(defaultVariant || null);
   const [quantity, setQuantity] = useState(1);
   const {mutate} = useCartData();
   const dispatch = useDispatch();
@@ -87,14 +164,7 @@ export default function Main({id}: Props) {
       [productAttributeId]: productAttributeValueId
     }));
   };
-  const calculateFinalPrice = () => {
-    if (!selectedVariant) return 0;
-    const basePrice = selectedVariant.price || 0;
-    if (product.discount) {
-      return Math.round(basePrice * (1 - (product.discount || 0) / 100));
-    }
-    return basePrice;
-  };
+
   const handleQuantityChange = (delta: number) => {
     const newQuantity = quantity + delta;
     if (selectedVariant && newQuantity > 0 && newQuantity <= selectedVariant.stockQuantity) {
@@ -166,65 +236,49 @@ export default function Main({id}: Props) {
     const stars: React.ReactNode[] = [];
     for (let i = 1; i <= 5; i++) {
       if (rating >= i) {
-        stars.push(<StarRoundedIcon key={i} fontSize="small" className="text-yellow-500" />);
+        stars.push(<StarRoundedIcon key={i} fontSize="small" className="text-yellow-500"/>);
       } else if (rating >= i - 0.5) {
-        stars.push(<StarHalfRoundedIcon key={i} fontSize="small" className="text-yellow-500" />);
+        stars.push(<StarHalfRoundedIcon key={i} fontSize="small" className="text-yellow-500"/>);
       } else {
-        stars.push(<StarBorderRoundedIcon key={i} fontSize="small" className="text-yellow-500" />);
+        stars.push(<StarBorderRoundedIcon key={i} fontSize="small" className="text-yellow-500"/>);
       }
     }
     return stars;
   };
-
+  const renderSoldCount = (totalSold: number) => {
+    if (totalSold >= 1000) {
+      return (totalSold / 1000).toFixed(1) + 'k';
+    }
+    return totalSold.toString();
+  }
   return (
     <div className="max-w-5xl mx-auto p-6">
       {isLoading && <Loading/>}
       <div className="flex flex-col gap-10">
-        <div className={"flex flex-row gap-10"}>
-          <div className={""}>
-            <div className={"aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3"}>
-              {/* Wrap image in a button for keyboard accessibility and make access null-safe */}
-              <button
-                type="button"
-                onClick={() => setSelectedImage(product.productImages[currentImageIndex]?.url ?? '/avatar_hoat_hinh_db4e0e9cf4.webp')}
-                aria-label="Open image preview"
-                className="w-150 h-150 block"
-              >
-                <Image
-                  src={product.productImages[currentImageIndex]?.url ?? '/avatar_hoat_hinh_db4e0e9cf4.webp'}
-                  alt={product.name || 'Product image'}
-                  width={400}
-                  height={400}
-                  className="w-full h-full object-cover rounded"
-                  priority={true}
-                />
-              </button>
+        <div className={"flex flex-row gap-10 flex-wrap"}>
+          <div className={"flex-1"}>
+            <div className={"aspect-square rounded-lg overflow-hidden mb-3"}>
+              {product.productImages.length > 0 ? (
+                <Carousel title={"Hình ảnh sản phẩm"} images={product.productImages.map(value => {
+                  return {imageId: value.productImageId, imageUrl: value.imageUrl}
+                })}/>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  No Image
+                </div>
+              )}
             </div>
-            {/* Thumbnails */}
-            {product.productImages.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto">
-                {product.productImages.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentImageIndex(idx)}
-                    className={`flex-shrink-0 w-16 h-16 rounded border-2 overflow-hidden ${
-                      idx === currentImageIndex ? 'border-blue-500' : 'border-gray-200'
-                    }`}
-                  >
-                    <Image
-                      src={img.url}
-                      alt=""
-                      width={64}
-                      height={64}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}</div>
-          <div className={""}>
-            <h3 className="text-2xl font-bold mb-2">{product.name}</h3>
-
+          </div>
+          <div className={"w-md"}>
+            <div className={"text-xs text-grey-c600"}>{product.categoryName}</div>
+            <div className={"flex flex-row gap-2"}><h3 className="text-2xl font-bold truncate ">{product.name}</h3>
+              {Number(product.discount) > 0 && (
+                <div
+                  className=" bg-gradient-to-r from-support-c900 to-support-c800 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-md flex items-center gap-1">
+                  <span className="text-xs">-</span>
+                  <span>{product.discount}%</span>
+                </div>
+              )}</div>
             {/* Rating */}
             <div className="flex items-center gap-2 mb-3">
               {Number(product.rating) > 0 ? (
@@ -240,23 +294,28 @@ export default function Main({id}: Props) {
             </div>
 
             {/* Price */}
-            <div className="mb-6">
-              <div className="flex items-baseline gap-2">
-                <span
-                  className={`text-3xl font-bold text-primary-c900`}>
-                  {formatPrice(calculateFinalPrice())}
-                </span>
-                {Number(product.discount) > 0 && (
-                  <>
-                    <span className="text-lg text-gray-400 line-through">
-                      {formatPrice(selectedVariant?.price || 0)}
+            <div className="mb-3">
+              {Number(product.discount) > 0 ? (
+                <div className={"flex flex-col gap-1"}>
+                  <div className={"flex items-center gap-3"}>
+                      <span className="text-primary-c900 font-bold text-3xl">
+                      {formatPrice(defaultVariant.price * (100 - (product.discount || 0)) / 100)}
                     </span>
-                    <span className="text-sm bg-secondary-c100 text-secondary-c600 px-2 py-1 rounded">
-                      -{product.discount}%
+                    <span className="text-gray-400 text-sm line-through">
+                      {formatPrice(defaultVariant.price)}
                     </span>
-                  </>
-                )}
-              </div>
+                  </div>
+                  <span className="text-xs text-green-600 font-medium ">
+                      Tiết kiệm {formatPrice(defaultVariant.price - defaultVariant.price * (100 - (product.discount || 0)) / 100)}
+
+                    </span>
+                  {product.discountEndDate && <CountdownTimer endDate={product.discountEndDate}/>}
+                </div>
+              ) : (
+                <div className="text-primary-c900 font-bold text-3xl mb-10.5">
+                  {formatPrice(defaultVariant.price * (100 - (product.discount || 0)) / 100)}
+                </div>
+              )}
             </div>
             {/* Attributes Selection */}
             {product.productAttributes.map(attribute => (
@@ -291,7 +350,7 @@ export default function Main({id}: Props) {
                   Còn lại: <span className="font-semibold">{selectedVariant.stockQuantity}</span> sản phẩm
                 </p>
                 <p className="text-sm text-grey-c600">
-                  Đã bán: <span className="font-semibold">{selectedVariant.sold || 0}</span>
+                  Đã bán: <span className="font-semibold">{renderSoldCount(selectedVariant.sold || 0)}</span>
                 </p>
               </div>
             )}

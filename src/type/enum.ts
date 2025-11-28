@@ -77,3 +77,14 @@ export enum ProductVariantStatus {
   INACTIVE = "INACTIVE",
   OUT_OF_STOCK = "OUT_OF_STOCK"
 }
+
+export enum OrderStatus {
+  PENDING = "PENDING",
+  CONFIRMED = "CONFIRMED",
+  PAID = "PAID",
+  DELIVERED = "DELIVERED",
+  SHIPPED = "SHIPPED",
+  COMPLETED = "COMPLETED",
+  RETURNED = "RETURNED",
+  CANCELLED = "CANCELLED"
+}

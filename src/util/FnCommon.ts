@@ -1,6 +1,6 @@
 import {format} from "date-fns";
 import {jwtDecode, JwtPayload} from "jwt-decode";
-import {Role} from "@/enum";
+import {Role} from "@/type/enum";
 
 interface JwtDecodedPayload extends JwtPayload {
   role: Role;

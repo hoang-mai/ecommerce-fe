@@ -17,8 +17,8 @@ import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useRouter} from "next/navigation";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
-import {AlertType, Role} from "@/enum";
-import {ColorButton} from "@/enum";
+import {AlertType, Role} from "@/type/enum";
+import {ColorButton} from "@/type/enum";
 import {getRoleFromJwtToken} from "@/util/FnCommon";
 
 const loginSchema = z.object({

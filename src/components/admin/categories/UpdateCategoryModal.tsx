@@ -8,7 +8,7 @@ import {CATEGORY} from "@/services/api";
 import useSWRMutation from "swr/mutation";
 import useSWR from "swr";
 import {useDispatch} from "react-redux";
-import {AlertType, CategoryStatus} from "@/enum";
+import {AlertType, CategoryStatus} from "@/type/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useState, useCallback, useEffect} from "react";
 import Loading from "@/components/modals/Loading";
@@ -74,7 +74,7 @@ export default function UpdateCategoryModal({isOpen, setIsOpen, reload, category
   );
 
   const {data: categoriesResponse, isLoading: isLoadingCategories,error: errorCategories} = useSWR(
-    isOpen ? `${CATEGORY}/search?keyword=${searchKeyword}&pageNo=${pageNo}&pageSize=10` : null,
+    isOpen ? `${CATEGORY}/search?keyword=${encodeURIComponent(searchKeyword.trim())}&pageNo=${pageNo}&pageSize=10` : null,
     categoriesFetcher,
     {
       refreshInterval: 0,

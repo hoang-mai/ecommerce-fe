@@ -1,8 +1,8 @@
-import React, {useRef, useState} from "react";
+import React, {ReactNode, useRef, useState} from "react";
 import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRounded";
 import {formatPrice} from "@/util/FnCommon";
 import Button from "@/libs/Button";
-import {AlertType, ColorButton} from "@/enum";
+import {AlertType, ColorButton} from "@/type/enum";
 import {useCartData, useCartRef} from "@/components/provider/CartProvider";
 import Image from "next/image";
 import SelectProductVariantModal from "@/components/user/SelectProductVariantModal";
@@ -12,10 +12,17 @@ import {useAxiosContext} from '@/components/provider/AxiosProvider';
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useDispatch} from "react-redux";
 import {useRouter} from "next/navigation";
-import {ProductViewDTO} from "@/components/user/layout/header/Cart";
+import {ProductView} from "@/type/interface";
+import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
+import StarHalfRoundedIcon from '@mui/icons-material/StarHalfRounded';
+import StarOutlineRoundedIcon from '@mui/icons-material/StarOutlineRounded';
+import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
+import CountdownTimer from "@/libs/CountDownTime";
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
 
 interface ProductCardProps {
-  product: ProductViewDTO;
+  product: ProductView;
 }
 
 export interface ReqAddToCartDTO {
@@ -33,7 +40,7 @@ export default function ProductCard({product}: ProductCardProps) {
 
   const router = useRouter();
   const dispatch = useDispatch();
-  const { post } = useAxiosContext();
+  const {post} = useAxiosContext();
   const fetcher = (url: string, {arg}: { arg: ReqAddToCartDTO }) =>
     post<BaseResponse<never>>(url, arg, {}).then(res => res.data);
   const {trigger, isMutating} = useSWRMutation(`${CART}`, fetcher);
@@ -117,6 +124,26 @@ export default function ProductCard({product}: ProductCardProps) {
 
   }
 
+  const renderStars = (rating: number): React.ReactNode[] => {
+    const stars: React.ReactNode[] = [];
+    for (let i = 1; i <= 5; i++) {
+      if (rating >= i) {
+        stars.push(<StarRoundedIcon key={i} fontSize="small" className="text-yellow-500"/>);
+      } else if (rating >= i - 0.5) {
+        stars.push(<StarHalfRoundedIcon key={i} fontSize="small" className="text-yellow-500"/>);
+      } else {
+        stars.push(<StarBorderRoundedIcon key={i} fontSize="small" className="text-yellow-500"/>);
+      }
+    }
+    return stars;
+  };
+
+  const renderSoldCount = (totalSold: number) => {
+    if (totalSold >= 1000) {
+      return (totalSold / 1000).toFixed(1) + 'k';
+    }
+    return totalSold.toString();
+  }
   return (
     <>
       <div
@@ -127,7 +154,7 @@ export default function ProductCard({product}: ProductCardProps) {
         <div className="relative overflow-hidden">
           <Image
             ref={imageRef}
-            src={product.productImages[0]?.url || "/placeholder.png"}
+            src={product.productImages[0]?.imageUrl || "/placeholder.png"}
             alt={product.name}
             width={400}
             height={400}
@@ -135,38 +162,61 @@ export default function ProductCard({product}: ProductCardProps) {
             className="w-full h-48 object-cover group-hover:scale-110 transition duration-300"
           />
           {Number(product.discount) > 0 && (
-            <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
-              -{product.discount}%
+            <div
+              className="absolute top-3 left-3 bg-gradient-to-r from-support-c900 to-support-c800 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
+              <span className="text-xs">-</span>
+              <span>{product.discount}%</span>
             </div>
           )}
         </div>
 
         <div className="p-4">
-          <h3 className="font-semibold text-lg mb-1 truncate h-10">{product.name}</h3>
+          <div className={"text-xs text-grey-c600"}>{product.categoryName}</div>
+          <h3 className="font-semibold text-lg mb-1 truncate h-10 text-grey-c900">{product.name}</h3>
+          <div className="flex flex-col">
+            <div className={"flex flex-row items-center gap-2"}>
+              <div className="text-sm text-grey-c600">
+                Đã bán <span className={"font-semibold"}>{renderSoldCount(product.totalSold) || 0}</span>
+              </div>
+              <div className="h-4 w-px bg-gray-300"></div>
+              <div className="flex items-center gap-1 text-gray-600">
+                <ChatBubbleOutlineRoundedIcon className={"!w-4 !h-4"}/>
+                <span className="text-sm font-semibold">{renderSoldCount(product.totalReviews || 0)}</span>
+              </div>
+            </div>
+            <div className="flex items-center">
+              {renderStars(Number(product.rating))}
+              <span className="text-sm text-gray-600 font-medium">{Number(product.rating).toFixed(1)}</span>
+            </div>
 
-          <div className="flex items-center gap-1 mb-2">
-
-          <span className="text-sm text-grey-c600">
-            Đã bán <span className={"font-semibold"}>{product.totalSold || 0}</span>
-          </span>
           </div>
 
           <div className="mb-3">
-            <div className="flex items-center gap-2">
-            <span className="text-primary-c900 font-bold text-lg">
-              {formatPrice(defaultVariant.price * (100 + (product.discount || 0)) / 100)}
-            </span>
-              {Number(product.discount) > 0 &&
+            {Number(product.discount) > 0 ? (
+              <div className={"flex flex-col"}>
+                <div className={"flex items-center gap-2"}>
+                      <span className="text-primary-c900 font-bold text-lg">
+                      {formatPrice(defaultVariant.price * (100 - (product.discount || 0)) / 100)}
+                    </span>
                   <span className="text-gray-400 text-sm line-through">
-                {formatPrice(defaultVariant.price * (100 + (product.discount || 0)) / 100)}
-                    {formatPrice(defaultVariant.price)}
-              </span>
-              }
-            </div>
+                      {formatPrice(defaultVariant.price)}
+                    </span>
+                </div>
+                <span className="text-xs text-green-600 font-medium ">
+                      Tiết kiệm {formatPrice(defaultVariant.price - defaultVariant.price * (100 - (product.discount || 0)) / 100)}
+
+                    </span>
+                {product.discountEndDate && <CountdownTimer endDate={product.discountEndDate}/>}
+              </div>
+            ) : (
+              <div className="text-primary-c900 font-bold text-lg mb-10.5">
+                {formatPrice(defaultVariant.price * (100 - (product.discount || 0)) / 100)}
+              </div>
+            )}
           </div>
 
           <Button
-            title="Thêm v��o giỏ"
+            title="Thêm vào giỏ"
             color={ColorButton.PRIMARY}
             fullWidth
             startIcon={<AddShoppingCartRoundedIcon/>}

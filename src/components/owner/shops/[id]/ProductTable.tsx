@@ -3,7 +3,7 @@ import {useCallback, useEffect, useState} from "react";
 import Image from "next/image";
 import Table, {Column} from "@/libs/Table";
 import Button from "@/libs/Button";
-import {AlertType, ColorButton, ProductStatus, SortDir} from "@/enum";
+import {AlertType, ColorButton, ProductStatus, SortDir} from "@/type/enum";
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
@@ -17,7 +17,7 @@ import UpdateStatusProductModal from "./UpdateStatusProductModal";
 import DetailProductModal from "./DetailProductModal";
 import useSWR from "swr";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {PRODUCT} from "@/services/api";
+import {PRODUCT_VIEW} from "@/services/api";
 import TextField from "@/libs/TextField";
 import DropdownSelect from "@/libs/DropdownSelect";
 import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
@@ -25,60 +25,17 @@ import {useDebounce} from "@/hooks/useDebounce";
 import Loading from "@/components/modals/Loading";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
-
-interface ResCategoryDTO {
-  categoryId: number;
-  categoryName: string;
-}
-
-interface ResProductImageDTO {
-  productImageId: number;
-  imageUrl: string;
-}
-
-interface ResProductAttributeValueDTO {
-  attributeValueId: number;
-  attributeValue: string;
-}
-
-interface ResProductAttributeDTO {
-  productAttributeId: number;
-  attributeName: string;
-  attributeValues: ResProductAttributeValueDTO[];
-}
-
-interface ResProductVariantDTO {
-  productVariantId: number;
-  price: number;
-  stockQuantity: number;
-  sold:number;
-  isDefault: boolean;
-  attributeValues: Record<string, string>;
-}
-
-interface ResProductDTO {
-  productId: number;
-  shopId: number;
-  name: string;
-  description: string;
-  totalSold:number;
-  productStatus: ProductStatus;
-  category: ResCategoryDTO;
-  productImages: ResProductImageDTO[];
-  productAttributes: ResProductAttributeDTO[];
-  productVariants: ResProductVariantDTO[];
-  createdAt: string;
-  updatedAt: string;
-}
+import {ProductView} from "@/type/interface";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
 
 interface ProductTableProps {
   shopId: string;
 }
 
 export default function ProductTable({shopId}: ProductTableProps) {
-  const { get } = useAxiosContext();
+  const {get} = useAxiosContext();
   const productFetcher = (url: string) =>
-    get<BaseResponse<PageResponse<ResProductDTO>>>(url).then((res) => res.data);
+    get<BaseResponse<PageResponse<ProductView>>>(url, {isToken : true}).then((res) => res.data);
 
   const [pageNo, setPageNo] = useState(0);
   const [pageSize, setPageSize] = useState("10");
@@ -90,35 +47,28 @@ export default function ProductTable({shopId}: ProductTableProps) {
   const debouncedKeyword = useDebounce(keyword, 500);
   const dispatch = useDispatch();
 
-  // State for update status modal
   const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<ResProductDTO | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ProductView | null>(null);
 
-  // State for update product modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [productToEdit, setProductToEdit] = useState<ResProductDTO | null>(null);
 
-  // State for detail product modal
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [productToView, setProductToView] = useState<ResProductDTO | null>(null);
 
-  // Build URL với query params
-  const buildUrl = useCallback(() => {
-    const params = new URLSearchParams();
-    params.append("shopId", shopId);
-    if (selectedStatus) params.append("status", selectedStatus);
-    if (debouncedKeyword) params.append("keyword", debouncedKeyword);
-    params.append("pageNo", pageNo.toString());
-    params.append("pageSize", pageSize);
-    if (sortBy) {
-      params.append("sortBy", sortBy);
-      params.append("sortDir", sortDir);
+  const url = useBuildUrl({
+    baseUrl: PRODUCT_VIEW,
+    queryParams: {
+      shopId,
+      status: selectedStatus || undefined,
+      keyword: debouncedKeyword || undefined,
+      pageNo,
+      pageSize,
+      sortBy: sortBy || undefined,
+      sortDir: sortBy ? sortDir : undefined,
+      isOwner: true,
     }
-    return `${PRODUCT}/search?${params.toString()}`;
-  }, [shopId, selectedStatus, debouncedKeyword, pageNo, pageSize, sortBy, sortDir]);
+  });
 
-  // Fetch products using useSWR
-  const {data, error, isLoading, mutate} = useSWR(buildUrl(), productFetcher, {
+  const {data, error, isLoading, mutate} = useSWR(url, productFetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   });
@@ -213,7 +163,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
     setIsCreateModalOpen(true);
   };
 
-  const columns: Column<ResProductDTO>[] = [
+  const columns: Column<ProductView>[] = [
     {
       key: "productId",
       label: "ID",
@@ -243,7 +193,8 @@ export default function ProductTable({shopId}: ProductTableProps) {
                 />
               </div>
             ) : (
-              <div className="w-14 h-14 rounded-lg border-2 border-grey-c300 bg-grey-c100 flex-shrink-0 flex items-center justify-center">
+              <div
+                className="w-14 h-14 rounded-lg border-2 border-grey-c300 bg-grey-c100 flex-shrink-0 flex items-center justify-center">
                 <span className="text-grey-c500 text-xs font-semibold">No Img</span>
               </div>
             )}
@@ -262,12 +213,12 @@ export default function ProductTable({shopId}: ProductTableProps) {
       },
     },
     {
-      key: "category",
+      key: "categoryName",
       label: "Danh mục",
       sortable: true,
       render: (row) => (
         <Chip
-          label={row.category.categoryName}
+          label={row.categoryName}
           color={ChipColor.PRIMARY}
           variant={ChipVariant.SOFT}
           size={ChipSize.MEDIUM}
@@ -358,23 +309,23 @@ export default function ProductTable({shopId}: ProductTableProps) {
         <div className="flex gap-2 justify-center">
           <button
             onClick={() => {
-              setProductToView(row);
+              setSelectedProduct(row);
               setIsDetailModalOpen(true);
             }}
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
           >
-            <VisibilityRoundedIcon />
+            <VisibilityRoundedIcon/>
           </button>
           <button
             onClick={() => {
-              setProductToEdit(row);
+              setSelectedProduct(row);
               setIsEditModalOpen(true);
             }}
             className="cursor-pointer p-2 text-yellow-c800 hover:bg-yellow-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Chỉnh sửa"
           >
-            <EditRoundedIcon />
+            <EditRoundedIcon/>
           </button>
           <button
             onClick={() => {
@@ -384,7 +335,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
             className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Đổi trạng thái"
           >
-            <ChangeCircleRoundedIcon />
+            <ChangeCircleRoundedIcon/>
           </button>
         </div>
       ),
@@ -403,7 +354,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
         <Button
           onClick={handleAddProduct}
           color={ColorButton.SUCCESS}
-          startIcon={<AddRoundedIcon />}
+          startIcon={<AddRoundedIcon/>}
         >
           Thêm sản phẩm
         </Button>
@@ -496,25 +447,15 @@ export default function ProductTable({shopId}: ProductTableProps) {
       )}
 
       {/* Update Product Modal */}
-      {isEditModalOpen && productToEdit && (
+      {isEditModalOpen && selectedProduct && (
         <UpdateProductModal
           isOpen={isEditModalOpen}
           onClose={() => {
             setIsEditModalOpen(false);
-            setProductToEdit(null);
+            setSelectedProduct(null);
           }}
           reload={() => mutate()}
-          productData={{
-            productId: productToEdit.productId,
-            shopId: productToEdit.shopId,
-            name: productToEdit.name,
-            description: productToEdit.description,
-            categoryId: productToEdit.category.categoryId,
-            categoryName: productToEdit.category.categoryName,
-            productImages: productToEdit.productImages,
-            productAttributes: productToEdit.productAttributes,
-            productVariants: productToEdit.productVariants,
-          }}
+          productData={selectedProduct}
         />
       )}
 
@@ -531,27 +472,14 @@ export default function ProductTable({shopId}: ProductTableProps) {
       )}
 
       {/* Detail Product Modal */}
-      {isDetailModalOpen && productToView && (
+      {isDetailModalOpen && selectedProduct && (
         <DetailProductModal
           isOpen={isDetailModalOpen}
           onClose={() => {
             setIsDetailModalOpen(false);
-            setProductToView(null);
+            setSelectedProduct(null);
           }}
-          productData={{
-            productId: productToView.productId,
-            shopId: productToView.shopId,
-            name: productToView.name,
-            totalSold: productToView.totalSold,
-            description: productToView.description,
-            productStatus: productToView.productStatus,
-            categoryName: productToView.category.categoryName,
-            productImages: productToView.productImages,
-            productAttributes: productToView.productAttributes,
-            productVariants: productToView.productVariants,
-            createdAt: productToView.createdAt,
-            updatedAt: productToView.updatedAt,
-          }}
+          productData={selectedProduct}
         />
       )}
     </div>

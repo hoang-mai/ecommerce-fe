@@ -1,4 +1,4 @@
-import {AlertType} from "@/enum";
+import {AlertType} from "@/type/enum";
 
 declare global {
   type ErrorResponse = {

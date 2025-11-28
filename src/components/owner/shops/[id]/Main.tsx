@@ -1,9 +1,9 @@
 "use client";
-import React, {useEffect, ReactNode, useState} from "react";
+import React, {useEffect, useState} from "react";
 import Image from "next/image";
 import useSWR from "swr";
 import Button from "@/libs/Button";
-import {AlertType, ColorButton, ShopStatus} from "@/enum";
+import {AlertType, ColorButton, ShopStatus} from "@/type/enum";
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import StoreRoundedIcon from '@mui/icons-material/Storefront';
@@ -17,7 +17,7 @@ import {formatDateTime} from "@/util/FnCommon";
 import {useRouter} from "next/navigation";
 import ProductTable from "./ProductTable";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {SHOP} from "@/services/api";
+import {SHOP_VIEW} from "@/services/api";
 import Loading from "@/components/modals/Loading";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
@@ -50,10 +50,10 @@ type Props = {
 }
 
 export default function Main({id}: Props) {
-  const { get } = useAxiosContext();
+  const {get} = useAxiosContext();
 
   const fetcher = (url: string) =>
-    get<BaseResponse<ResShopDTO>>(url).then(res => res.data.data);
+    get<BaseResponse<ResShopDTO>>(url, {isToken: true}).then(res => res.data.data);
 
   const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -61,7 +61,7 @@ export default function Main({id}: Props) {
   const dispatch = useDispatch();
   const {getProvinceName, getWardName} = useAddressMapping();
   const {data: shop, error, isLoading, mutate} = useSWR(
-    `${SHOP}/${id}`,
+    `${SHOP_VIEW}/${id}?isOwner=true`,
     fetcher,
     {
       refreshInterval: 0,
@@ -119,7 +119,7 @@ export default function Main({id}: Props) {
   }, [dispatch, error]);
 
   if (isLoading || !shop) {
-    return <Loading />;
+    return <Loading/>;
   }
 
   return (
@@ -130,7 +130,7 @@ export default function Main({id}: Props) {
           <Button
             onClick={handleBack}
             color={ColorButton.SECONDARY}
-            startIcon={<ArrowBackRoundedIcon />}
+            startIcon={<ArrowBackRoundedIcon/>}
           >
             Quay lại
           </Button>
@@ -138,7 +138,7 @@ export default function Main({id}: Props) {
         {shop.shopStatus === ShopStatus.SUSPENDED && (
           <div className="flex-1 flex items-center justify-center">
             <div className="bg-support-c100 border-2 border-support-c500 rounded-lg px-4 py-2 flex items-center gap-2">
-              <WarningRoundedIcon className="text-support-c900" />
+              <WarningRoundedIcon className="text-support-c900"/>
               <span className="text-support-c900 font-semibold">Cửa hàng đã bị đình chỉ. Vui lòng liên hệ Admin để mở lại.</span>
             </div>
           </div>
@@ -147,7 +147,7 @@ export default function Main({id}: Props) {
           <Button
             onClick={handleEdit}
             color={ColorButton.WARNING}
-            startIcon={<EditRoundedIcon />}
+            startIcon={<EditRoundedIcon/>}
             disabled={shop.shopStatus === ShopStatus.SUSPENDED}
           >
             Chỉnh sửa
@@ -155,7 +155,7 @@ export default function Main({id}: Props) {
           <Button
             onClick={handleUpdateStatus}
             color={ColorButton.ERROR}
-            startIcon={<ChangeCircleRoundedIcon />}
+            startIcon={<ChangeCircleRoundedIcon/>}
             disabled={shop.shopStatus === ShopStatus.SUSPENDED}
           >
             Đổi trạng thái
@@ -186,7 +186,8 @@ export default function Main({id}: Props) {
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
           <div className="flex items-end gap-6">
             {/* Logo */}
-            <div className="w-28 h-28 rounded-full overflow-hidden bg-white shadow-2xl flex-shrink-0 transform hover:scale-105 transition-transform">
+            <div
+              className="w-28 h-28 rounded-full overflow-hidden bg-white shadow-2xl flex-shrink-0 transform hover:scale-105 transition-transform">
               {shop.logoUrl ? (
                 <Image
                   src={shop.logoUrl}
@@ -197,7 +198,7 @@ export default function Main({id}: Props) {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <StoreRoundedIcon style={{fontSize: '72px'}} className="text-primary-c700" />
+                  <StoreRoundedIcon style={{fontSize: '72px'}} className="text-primary-c700"/>
                 </div>
               )}
             </div>
@@ -209,7 +210,7 @@ export default function Main({id}: Props) {
               </h1>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                  <StarRoundedIcon className="text-yellow-400" />
+                  <StarRoundedIcon className="text-yellow-400"/>
                   <span className="text-xl font-bold">{shop.rating?.toFixed(1) || "0.0"}</span>
                   <span className="text-sm opacity-90">/ 5.0</span>
                 </div>
@@ -230,7 +231,8 @@ export default function Main({id}: Props) {
         <div className="lg:col-span-2 space-y-6">
           {/* Description Card */}
           {shop.description && (
-            <div className="bg-white rounded-2xl shadow-lg border border-grey-c200 p-6 hover:shadow-xl transition-shadow">
+            <div
+              className="bg-white rounded-2xl shadow-lg border border-grey-c200 p-6 hover:shadow-xl transition-shadow">
               <h3 className="text-lg font-bold text-grey-c800 mb-4 flex items-center gap-2">
                 <div className="w-1 h-6 bg-primary-c700 rounded"></div>
                 Giới thiệu
@@ -251,12 +253,12 @@ export default function Main({id}: Props) {
             </h3>
             <div className="bg-grey-c50 rounded-lg p-4 space-y-0">
               <InfoRow
-                icon={<LocationOnRoundedIcon />}
+                icon={<LocationOnRoundedIcon/>}
                 label="Địa chỉ"
                 value={`${shop.detail}, ${getWardName(shop.ward)}, ${getProvinceName(shop.province)}`}
               />
               <InfoRow
-                icon={<PhoneRoundedIcon />}
+                icon={<PhoneRoundedIcon/>}
                 label="Số điện thoại"
                 value={shop.phoneNumber}
               />
@@ -264,9 +266,8 @@ export default function Main({id}: Props) {
           </div>
 
 
-
           {/* Product Table */}
-          <ProductTable shopId={id} />
+          <ProductTable shopId={id}/>
         </div>
 
         {/* Right Column - Additional Info */}
@@ -279,12 +280,12 @@ export default function Main({id}: Props) {
             </h3>
             <div className="bg-grey-c50 rounded-lg p-4 space-y-0">
               <InfoRow
-                icon={<CalendarTodayRoundedIcon />}
+                icon={<CalendarTodayRoundedIcon/>}
                 label="Ngày tạo"
                 value={formatDateTime(shop.createdAt)}
               />
               <InfoRow
-                icon={<AccessTimeRoundedIcon />}
+                icon={<AccessTimeRoundedIcon/>}
                 label="Cập nhật gần nhất"
                 value={formatDateTime(shop.updatedAt)}
               />

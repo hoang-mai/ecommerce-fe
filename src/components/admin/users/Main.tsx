@@ -1,9 +1,9 @@
 "use client";
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useEffect, useState, useCallback} from "react";
 import DropdownSelect from "@/libs/DropdownSelect";
 import TextField from "@/libs/TextField";
 import Table, {Column} from "@/libs/Table";
-import {AccountStatus, AlertType, Role} from "@/enum";
+import {AccountStatus, AlertType, Role} from "@/type/enum";
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import Title from "@/libs/Title";
 import {formatDateTime} from "@/util/FnCommon";
@@ -21,6 +21,7 @@ import ChangeCircleRoundedIcon from "@mui/icons-material/ChangeCircleRounded";
 import Image from "next/image";
 import ChangeAccountStatusModal from "@/components/admin/users/ChangeAccountStatusModal";
 import DetailUserModal from "@/components/admin/users/DetailUserModal";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
 
 interface UserViewDto {
   userId: number;
@@ -50,18 +51,19 @@ export default function Main() {
   const [isChangeStatusModalOpen, setIsChangeStatusModalOpen] = useState(false);
   const [selectedData, setSelectedData] = useState<UserViewDto | null>(null);
   const debouncedKeyword = useDebounce(keyword, 500);
-  const buildUrl = useCallback(() => {
-    const params = new URLSearchParams();
-    params.append("pageNo", pageNo.toString());
-    params.append("pageSize", pageSize);
-    params.append("sortBy", sortBy);
-    params.append("sortDir", sortDir);
-    if (debouncedKeyword) params.append("keyword", debouncedKeyword);
-    if (status) params.append("accountStatus", status);
-    return `${USER_VIEW}?${params.toString()}`;
-  }, [pageNo, pageSize, sortBy, sortDir, debouncedKeyword, status]);
+  const url = useBuildUrl({
+    baseUrl: USER_VIEW,
+    queryParams: {
+      pageNo,
+      pageSize,
+      sortBy: sortBy || undefined,
+      sortDir: sortDir || undefined,
+      keyword: debouncedKeyword || undefined,
+      accountStatus: status || undefined,
+    }
+  });
 
-  const {data, error, isLoading, mutate} = useSWR(buildUrl(), fetcher, {
+  const {data, error, isLoading, mutate} = useSWR(url, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   });
@@ -372,8 +374,8 @@ export default function Main() {
         setPageSize={handlePageSizeChange}
         emptyMessage={
           keyword || status
-            ? "Không tìm thấy yêu cầu phù hợp. Thử thay đổi từ khóa hoặc bộ lọc."
-            : "Không có yêu cầu nào"
+            ? "Không tìm thấy dữ liệu phù hợp. Thử thay đổi từ khóa hoặc bộ lọc."
+            : "Không có dữ liệu"
         }
       />
       {isChangeStatusModalOpen && selectedData && (

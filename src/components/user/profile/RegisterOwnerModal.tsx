@@ -9,7 +9,7 @@ import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import useSWRMutation from "swr/mutation";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
-import {AlertType} from "@/enum";
+import {AlertType} from "@/type/enum";
 import Loading from "@/components/modals/Loading";
 
 const registerOwnerSchema = z.object({

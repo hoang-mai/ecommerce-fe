@@ -3,7 +3,7 @@ import {useCallback, useEffect, useState} from "react";
 import DropdownSelect from "@/libs/DropdownSelect";
 import TextField from "@/libs/TextField";
 import Table, {Column} from "@/libs/Table";
-import {AlertType, UserVerificationStatus, UserVerificationStatusLabel} from "@/enum";
+import {AlertType, UserVerificationStatus, UserVerificationStatusLabel} from "@/type/enum";
 import DetailRegisterOwnerModal from "./DetailRegisterOwnerModal";
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
@@ -24,6 +24,7 @@ import Image from "next/image";
 import ImagePreview from "@/libs/ImagePreview";
 import useSWRMutation from "swr/mutation";
 import RejectReasonModal from "./RejectReasonModal";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
 
 interface ResUserVerificationDTO {
   userVerificationId: number;
@@ -63,18 +64,20 @@ export default function Main() {
 
   const debouncedKeyword = useDebounce(keyword, 500);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const buildUrl = useCallback(() => {
-    const params = new URLSearchParams();
-    params.append("pageNo", pageNo.toString());
-    params.append("pageSize", pageSize);
-    params.append("sortBy", sortBy);
-    params.append("sortDir", sortDir);
-    if (debouncedKeyword) params.append("keyword", debouncedKeyword);
-    if (status) params.append("status", status);
-    return `${USER_VERIFICATION}/search?${params.toString()}`;
-  }, [pageNo, pageSize, sortBy, sortDir, debouncedKeyword, status]);
 
-  const {data, error, isLoading, mutate} = useSWR(buildUrl(), fetcher, {
+  const url = useBuildUrl({
+    baseUrl: USER_VERIFICATION,
+    queryParams: {
+      pageNo,
+      pageSize,
+      sortBy: sortBy || undefined,
+      sortDir: sortBy ? sortDir : undefined,
+      status: status || undefined,
+      keyword: debouncedKeyword || undefined,
+    }
+  });
+
+  const {data, error, isLoading, mutate} = useSWR(url, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   });

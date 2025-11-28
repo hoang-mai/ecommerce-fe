@@ -4,7 +4,7 @@ import {useCallback, useEffect, useState} from "react";
 import useSWR from "swr";
 import {USER_VERIFICATION} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {AlertType, UserVerificationStatus, UserVerificationStatusLabel} from "@/enum";
+import {AlertType, UserVerificationStatus, UserVerificationStatusLabel} from "@/type/enum";
 import {formatDateTime} from "@/util/FnCommon";
 import DropdownSelect from "@/libs/DropdownSelect";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
@@ -19,6 +19,7 @@ import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import {useDebounce} from "@/hooks/useDebounce";
 import ImagePreview from "@/libs/ImagePreview";
 import DetailRegisterOwnerModal from "@/components/admin/register-owners/DetailRegisterOwnerModal";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
 
 interface ResUserVerificationDTO {
   userVerificationId: number;
@@ -64,18 +65,19 @@ export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
   const [selectedData, setSelectedData] = useState<ResUserVerificationDTO | null>(null);
   const debouncedKeyword = useDebounce(keyword, 500);
 
-  const buildUrl = useCallback(() => {
-    const params = new URLSearchParams();
-    params.append("pageNo", pageNo.toString());
-    params.append("pageSize", pageSize);
-    params.append("sortBy", sortBy);
-    params.append("sortDir", sortDir);
-    if (debouncedKeyword) params.append("keyword", debouncedKeyword);
-    if (status) params.append("status", status);
-    return `${USER_VERIFICATION}?${params.toString()}`;
-  }, [pageNo, pageSize, sortBy, sortDir, debouncedKeyword, status]);
+  const url = useBuildUrl({
+    baseUrl: USER_VERIFICATION,
+    queryParams: {
+      pageNo,
+      pageSize,
+      sortBy: sortBy || undefined,
+      sortDir: sortBy ? sortDir : undefined,
+      keyword: debouncedKeyword || undefined,
+      status: status || undefined,
+    }
+  });
 
-  const {data, error, isLoading, mutate} = useSWR(buildUrl(), fetcher, {
+  const {data, error, isLoading, mutate} = useSWR(url, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   });

@@ -3,7 +3,7 @@ import {ReactNode} from "react";
 import Modal from "@/libs/Modal";
 import Image from "next/image";
 import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
-import {ProductStatus} from "@/enum";
+import {ProductStatus} from "@/type/enum";
 import CategoryRoundedIcon from '@mui/icons-material/CategoryRounded';
 import InventoryRoundedIcon from '@mui/icons-material/InventoryRounded';
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
@@ -12,49 +12,13 @@ import ImageRoundedIcon from '@mui/icons-material/ImageRounded';
 import StyleRoundedIcon from '@mui/icons-material/StyleRounded';
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
 import {formatDateTime} from "@/util/FnCommon";
+import {ProductView} from "@/type/interface";
 
-interface ProductImageDTO {
-  productImageId: number;
-  imageUrl: string;
-}
-
-interface ProductAttributeValueDTO {
-  attributeValueId: number;
-  attributeValue: string;
-}
-
-interface ProductAttributeDTO {
-  productAttributeId: number;
-  attributeName: string;
-  attributeValues: ProductAttributeValueDTO[];
-}
-
-interface ProductVariantDTO {
-  productVariantId: number;
-  price: number;
-  stockQuantity: number;
-  sold: number;
-  isDefault: boolean;
-  attributeValues: Record<string, string>;
-}
 
 interface DetailProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  productData: {
-    productId: number;
-    shopId: number;
-    name: string;
-    description: string;
-    totalSold: number;
-    productStatus: ProductStatus;
-    categoryName: string;
-    productImages: ProductImageDTO[];
-    productAttributes: ProductAttributeDTO[];
-    productVariants: ProductVariantDTO[];
-    createdAt: string;
-    updatedAt: string;
-  };
+  productData: ProductView;
 }
 
 export default function DetailProductModal({isOpen, onClose, productData}: DetailProductModalProps) {
@@ -204,13 +168,13 @@ export default function DetailProductModal({isOpen, onClose, productData}: Detai
                   </div>
                   <div className="flex-1">
                     <span className="text-sm font-semibold text-grey-c600 block mb-2">
-                      {attr.attributeName}
+                      {attr.productAttributeName}
                     </span>
                     <div className="flex flex-wrap gap-2">
-                      {attr.attributeValues.map((val) => (
+                      {attr.productAttributeValues.map((val) => (
                         <Chip
-                          key={val.attributeValueId}
-                          label={val.attributeValue}
+                          key={val.productAttributeValueId}
+                          label={val.productAttributeValue}
                           color={ChipColor.PRIMARY}
                           variant={ChipVariant.SOFT}
                           size={ChipSize.SMALL}
@@ -280,18 +244,28 @@ export default function DetailProductModal({isOpen, onClose, productData}: Detai
                   </div>
 
                   {/* Attribute Values */}
-                  {Object.keys(variant.attributeValues).length > 0 && (
+                  {variant.productVariantAttributeValues.length > 0 && (
                     <div className="mt-4 pt-4 ">
                       <span className="text-sm font-semibold text-grey-c600 block mb-2">
                         Giá trị thuộc tính:
                       </span>
                       <div className="flex flex-wrap gap-2">
-                        {Object.entries(variant.attributeValues).map(([key, value]) => (
+                        {variant.productVariantAttributeValues.map((value) => (
                           <div
-                            key={key}
+                            key={value.productVariantAttributeValueId}
                             className="px-3 py-1.5 bg-primary-c50 text-primary-c800 rounded-lg text-sm"
                           >
-                            <span className="font-semibold">{key}:</span> {value}
+                            {(() => {
+                              const attr = productData.productAttributes.find(a => a.productAttributeId === value.productAttributeId);
+                              const attrName = attr?.productAttributeName || value.productAttributeId;
+                              const attrValueObj = attr?.productAttributeValues.find(v => v.productAttributeValueId === value.productAttributeValueId);
+                              const attrValueLabel = attrValueObj?.productAttributeValue || value.productAttributeValueId;
+                              return (
+                                <>
+                                  <span className="font-semibold">{attrName}:</span> {attrValueLabel}
+                                </>
+                              );
+                            })()}
                           </div>
                         ))}
                       </div>

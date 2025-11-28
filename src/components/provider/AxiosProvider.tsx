@@ -1,7 +1,7 @@
 'use client';
 import {createContext, useContext, useCallback, useMemo, FC, ReactNode} from 'react';
 import axios, {AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig} from 'axios';
-import {LOGIN, PRODUCT_VIEW, REFRESH_TOKEN, REGISTER} from '@/services/api';
+import {LOGIN, PRODUCT_VIEW, REFRESH_TOKEN, REGISTER, SHOP_VIEW} from '@/services/api';
 import {isTokenExpired} from "@/util/FnCommon";
 import {clearAllLocalStorage} from "@/services/localStorage";
 
@@ -16,7 +16,7 @@ type RefreshTokenResponse = {
 };
 
 type AxiosContextValue = {
-  get<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
+  get<T>(url: string, config?: AxiosRequestConfig & {isToken? : boolean}): Promise<AxiosResponse<T>>;
   post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
   patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
   put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
@@ -29,6 +29,7 @@ const ROUTER_NOT_AUTHS = [
   LOGIN,
   REGISTER,
   PRODUCT_VIEW,
+  `${SHOP_VIEW}/`,
   REFRESH_TOKEN,
 ];
 
@@ -41,11 +42,11 @@ export const AxiosProvider: FC<{ children: ReactNode }> = ({children}) => {
     },
   });
   axiosInstance.interceptors.request.use(
-    async (config: InternalAxiosRequestConfig) => {
+    async (config: InternalAxiosRequestConfig & {isToken? : boolean}) => {
       const isRouterNotAuth = ROUTER_NOT_AUTHS.some(value => {
         return config.url?.includes(value);
       });
-      if (isRouterNotAuth) {
+      if (isRouterNotAuth && !config.isToken) {
         return config;
       }
 
@@ -57,7 +58,7 @@ export const AxiosProvider: FC<{ children: ReactNode }> = ({children}) => {
         if (refreshToken && !isTokenExpired(refreshToken)) {
           try {
             const res = await axios.post<BaseResponse<RefreshTokenResponse>>(
-              `${process.env.NEXT_PUBLIC_API_URL}${REFRESH_TOKEN}`, {refreshToken}
+              `${process.env.NEXT_PUBLIC_API_URL}${REFRESH_TOKEN}`, {refreshToken}, {withCredentials: true}
             )
             if (res.data.data) {
               const accessToken = res.data.data.accessToken;

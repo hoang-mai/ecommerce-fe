@@ -1,10 +1,10 @@
 import type {NextRequest} from 'next/server'
 import {NextResponse} from 'next/server'
 import {getRoleFromJwtToken} from "@/util/FnCommon";
-import {Role} from "./enum";
+import {Role} from "@/type/enum";
 
 export function proxy(request: NextRequest) {
-  const refreshToken = request.cookies.get('refreshToken')?.value;
+  const refreshToken = request.cookies.get('accessToken')?.value;
   const {pathname} = request.nextUrl;
   if (!refreshToken) {
 

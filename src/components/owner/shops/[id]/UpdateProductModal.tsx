@@ -12,7 +12,7 @@ import useSWRMutation from "swr/mutation";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {CATEGORY, PRODUCT} from "@/services/api";
 import {useDispatch} from "react-redux";
-import {AlertType, ColorButton} from "@/enum";
+import {AlertType, ColorButton} from "@/type/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
@@ -20,18 +20,19 @@ import useSWR from "swr";
 import DropdownSelect from "@/libs/DropdownSelect";
 import Loading from "@/components/modals/Loading";
 import CheckBox from "@/libs/CheckBox";
+import {ProductView} from "@/type/interface";
 
 const productAttributeSchema = z.object({
-  productAttributeId: z.number().optional(),
-  attributeName: z.string().min(1, "Tên thuộc tính không được để trống"),
-  attributeValues: z.array(z.object({
-    attributeValueId: z.number().optional(),
-    attributeValue: z.string().min(1, "Giá trị không được để trống"),
+  productAttributeId: z.string().optional(),
+  productAttributeName: z.string().min(1, "Tên thuộc tính không được để trống"),
+  productAttributeValues: z.array(z.object({
+    productAttributeValueId: z.string().optional(),
+    productAttributeValue: z.string().min(1, "Giá trị không được để trống"),
   })).min(1, "Phải có ít nhất 1 giá trị"),
 });
 
 const productVariantSchema = z.object({
-  productVariantId: z.number().optional(),
+  productVariantId: z.string().optional(),
   price: z.number().positive("Giá phải lớn hơn 0"),
   stockQuantity: z.number().int().min(0, "Số lượng phải lớn hơn hoặc bằng 0"),
   isDefault: z.boolean().optional(),
@@ -56,45 +57,11 @@ const updateProductSchema = z.object({
 
 export type UpdateProductFormData = z.infer<typeof updateProductSchema>;
 
-interface ProductImageDTO {
-  productImageId: number;
-  imageUrl: string;
-}
-
-interface ProductAttributeValueDTO {
-  attributeValueId: number;
-  attributeValue: string;
-}
-
-interface ProductAttributeDTO {
-  productAttributeId: number;
-  attributeName: string;
-  attributeValues: ProductAttributeValueDTO[];
-}
-
-interface ProductVariantDTO {
-  productVariantId: number;
-  price: number;
-  stockQuantity: number;
-  isDefault: boolean;
-  attributeValues: Record<string, string>;
-}
-
 interface UpdateProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   reload: () => void;
-  productData: {
-    productId: number;
-    shopId: number;
-    name: string;
-    description: string;
-    categoryId: number;
-    categoryName: string;
-    productImages: ProductImageDTO[];
-    productAttributes: ProductAttributeDTO[];
-    productVariants: ProductVariantDTO[];
-  };
+  productData: ProductView;
 }
 
 export default function UpdateProductModal({isOpen, onClose, reload, productData}: UpdateProductModalProps) {
@@ -177,15 +144,16 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
       imageUrls: productData.productImages.map(img => img.imageUrl),
       productAttributes: productData.productAttributes.map(attr => ({
         productAttributeId: attr.productAttributeId,
-        attributeName: attr.attributeName,
-        attributeValues: attr.attributeValues,
+        productAttributeName: attr.productAttributeName,
+        productAttributeValues: attr.productAttributeValues,
       })),
       productVariants: productData.productVariants.map(variant => ({
-        productVariantId: variant.productVariantId,
+        productVariantId: variant.productVariantId?.toString(),
         price: variant.price,
         stockQuantity: variant.stockQuantity,
         isDefault: variant.isDefault,
-        attributeValues: variant.attributeValues,
+        // attributeValues are managed locally via `variantAttributeValues` state (mapped by attribute name)
+        attributeValues: undefined,
       })),
     },
   });
@@ -208,22 +176,22 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
     const currentValue = tempAttributeValue[attrIndex];
     if (!currentValue?.trim()) return;
 
-    const currentValues = watch(`productAttributes.${attrIndex}.attributeValues`) || [];
+    const currentValues = watch(`productAttributes.${attrIndex}.productAttributeValues`) || [];
 
     // Allow adding new values to both new and existing attributes
-    setValue(`productAttributes.${attrIndex}.attributeValues`, [
+    setValue(`productAttributes.${attrIndex}.productAttributeValues`, [
       ...currentValues,
-      {attributeValue: currentValue.trim()}
+      {productAttributeValue: currentValue.trim()}
     ]);
     setTempAttributeValue(prev => ({...prev, [attrIndex]: ""}));
   };
 
   const handleRemoveAttributeValue = (attrIndex: number, valueIndex: number) => {
-    const currentValues = watch(`productAttributes.${attrIndex}.attributeValues`) || [];
+    const currentValues = watch(`productAttributes.${attrIndex}.productAttributeValues`) || [];
     const valueToRemove = currentValues[valueIndex];
 
     // Prevent removing existing attribute values
-    if (valueToRemove?.attributeValueId) {
+    if (valueToRemove?.productAttributeValueId) {
       const alert: AlertState = {
         isOpen: true,
         message: "Không thể xóa giá trị thuộc tính đã tồn tại",
@@ -234,7 +202,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
       return;
     }
 
-    setValue(`productAttributes.${attrIndex}.attributeValues`, currentValues.filter((_, i) => i !== valueIndex));
+    setValue(`productAttributes.${attrIndex}.productAttributeValues`, currentValues.filter((_, i) => i !== valueIndex));
   };
 
   const handleRemoveAttribute = (index: number) => {
@@ -288,10 +256,10 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
     const currentImages = watch('imageUrls') || [];
 
     if (typeof indexOrId === 'string') {
-      // It's an existing image URL
+
       const imageToRemove = productData.productImages.find(img => img.imageUrl === indexOrId);
       if (imageToRemove) {
-        setDeletedImageIds(prev => [...prev, imageToRemove.productImageId]);
+        setDeletedImageIds(prev => [...prev, Number(imageToRemove.productImageId)]);
       }
       setValue('imageUrls', currentImages.filter(img => img !== indexOrId));
     } else {
@@ -369,13 +337,35 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
   // Initialize variantAttributeValues from existing data
   useEffect(() => {
     const initialValues: {[variantIndex: number]: {[attrName: string]: string}} = {};
+
+    // Build a lookup map from attributeId -> { name, valuesMap(valueId -> valueString) }
+    const attributeLookup: Record<string, {name: string; valuesMap: Record<string, string>}> = {};
+    productData.productAttributes.forEach(attr => {
+      const valuesMap: Record<string, string> = {};
+      attr.productAttributeValues.forEach(v => {
+        valuesMap[v.productAttributeValueId] = v.productAttributeValue;
+      });
+      attributeLookup[attr.productAttributeId] = {name: attr.productAttributeName, valuesMap};
+    });
+
     productData.productVariants.forEach((variant, index) => {
-      if (variant.attributeValues) {
-        initialValues[index] = {...variant.attributeValues};
+
+      const mapping: {[attrName: string]: string} = {};
+      variant.productVariantAttributeValues?.forEach((pva) => {
+        const attrEntry = attributeLookup[pva.productAttributeId];
+        if (attrEntry) {
+          const valueString = attrEntry.valuesMap[pva.productAttributeValueId];
+          if (valueString) mapping[attrEntry.name] = valueString;
+        }
+      });
+
+      if (Object.keys(mapping).length > 0) {
+        initialValues[index] = mapping;
       }
     });
+
     setVariantAttributeValues(initialValues);
-  }, [productData.productVariants]);
+  }, [productData.productAttributes, productData.productVariants]);
 
   return (
     <>
@@ -482,7 +472,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
               type="button"
               color={ColorButton.PRIMARY}
               startIcon={<AddRoundedIcon/>}
-              onClick={() => appendAttribute({attributeName: "", attributeValues: []})}
+              onClick={() => appendAttribute({productAttributeName: "", productAttributeValues: []})}
             >
               Thêm thuộc tính
             </Button>
@@ -523,7 +513,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                     </div>
 
                     <Controller
-                      name={`productAttributes.${index}.attributeName`}
+                      name={`productAttributes.${index}.productAttributeName`}
                       control={control}
                       render={({field}) => (
                         <TextField
@@ -531,7 +521,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                           onChange={field.onChange}
                           label="Tên thuộc tính"
                           placeholder="VD: Màu sắc, Kích thước"
-                          error={errors.productAttributes?.[index]?.attributeName?.message}
+                          error={errors.productAttributes?.[index]?.productAttributeName?.message}
                           disabled={isExistingAttribute}
                           required
                         />
@@ -568,8 +558,8 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
 
                       {/* Display added values */}
                       <div className="flex flex-wrap gap-2">
-                        {watch(`productAttributes.${index}.attributeValues`)?.map((value, valueIndex) => {
-                          const isExistingValue = !!value?.attributeValueId;
+                        {watch(`productAttributes.${index}.productAttributeValues`)?.map((value, valueIndex) => {
+                          const isExistingValue = !!value?.productAttributeValueId;
                           return (
                             <div
                               key={valueIndex}
@@ -579,7 +569,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                                   : 'bg-primary-c100 text-primary-c800'
                               }`}
                             >
-                              {value?.attributeValue || ''}
+                              {value?.productAttributeValue || ''}
                               {!isExistingValue && (
                                 <button
                                   type="button"
@@ -600,9 +590,9 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                         </p>
                       )}
 
-                      {errors.productAttributes?.[index]?.attributeValues && (
+                      {errors.productAttributes?.[index]?.productAttributeValues && (
                         <p className="text-sm text-support-c900 mt-2">
-                          {errors.productAttributes[index]?.attributeValues?.message}
+                          {errors.productAttributes[index]?.productAttributeValues?.message}
                         </p>
                       )}
                     </div>
@@ -722,23 +712,23 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                         Giá trị thuộc tính cho biến thể này
                       </label>
                       {attributes.map((attr, attrIndex) => {
-                        if (!attr?.attributeName) return null;
+                        if (!attr?.productAttributeName) return null;
                         return (
                           <DropdownSelect
                             key={attrIndex}
-                            label={attr.attributeName}
-                            placeholder={`Chọn ${attr.attributeName}`}
-                            options={attr.attributeValues?.map(val => ({
-                              id: val?.attributeValue || '',
-                              label: val?.attributeValue || ''
+                            label={attr.productAttributeName}
+                            placeholder={`Chọn ${attr.productAttributeName}`}
+                            options={attr.productAttributeValues?.map(val => ({
+                              id: val?.productAttributeValue || '',
+                              label: val?.productAttributeValue || ''
                             })) || []}
-                            value={variantAttributeValues[index]?.[attr.attributeName] || ""}
+                            value={variantAttributeValues[index]?.[attr.productAttributeName] || ""}
                             onChange={(value) => {
                               setVariantAttributeValues(prev => ({
                                 ...prev,
                                 [index]: {
                                   ...(prev[index] || {}),
-                                  [attr.attributeName]: value || ""
+                                  [attr.productAttributeName]: value || ""
                                 }
                               }));
                             }}

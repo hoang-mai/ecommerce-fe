@@ -1,4 +1,4 @@
-import {AccountStatus, Role} from "@/enum";
+import {AccountStatus, Role} from "@/type/enum";
 import Modal from "@/libs/Modal";
 import {InfoRow} from "@/libs/InfoRow";
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
