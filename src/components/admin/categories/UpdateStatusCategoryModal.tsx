@@ -1,9 +1,9 @@
 import Modal from "@/libs/Modal";
-import {CategoryStatus} from "@/type/enum";
+import {CategoryStatus} from "@/types/enum";
 import useSWRMutation from "swr/mutation";
 import {CATEGORY} from "@/services/api";
 import {useDispatch} from "react-redux";
-import {AlertType} from "@/type/enum";
+import {AlertType} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
 import Loading from "@/components/modals/Loading";

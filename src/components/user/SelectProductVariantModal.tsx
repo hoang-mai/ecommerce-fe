@@ -10,11 +10,11 @@ import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRigh
 import useSWRMutation from "swr/mutation";
 import {CART} from "@/services/api";
 import {useAxiosContext} from '@/components/provider/AxiosProvider';
-import {AlertType} from "@/type/enum";
+import {AlertType} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useDispatch} from "react-redux";
 import Loading from "@/components/modals/Loading";
-import {ProductView, ProductVariant} from "@/type/interface";
+import {ProductView, ProductVariant} from "@/types/interface";
 import {useCartData} from "@/components/provider/CartProvider";
 import Carousel from "@/libs/Carousel";
 import CountdownTimer from "@/libs/CountDownTime";

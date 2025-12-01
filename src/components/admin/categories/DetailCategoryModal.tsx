@@ -1,5 +1,5 @@
 import Modal from "@/libs/Modal";
-import {AlertType, CategoryStatus} from "@/type/enum";
+import {AlertType, CategoryStatus} from "@/types/enum";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
 import {formatDateTime} from "@/util/FnCommon";
 import useSWR from "swr";

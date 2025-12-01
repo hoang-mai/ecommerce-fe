@@ -6,10 +6,10 @@ import ArrowRightAltRoundedIcon from '@mui/icons-material/ArrowRightAltRounded';
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import FilterAltRoundedIcon from '@mui/icons-material/FilterAltRounded';
 import Button from "@/libs/Button";
-import {ColorButton, ProductStatus, ProductVariantStatus, ShopStatus} from "@/type/enum";
+import {ColorButton, ProductStatus, ProductVariantStatus, RatingNumber, ShopStatus} from "@/types/enum";
 import DropdownSelect from "@/libs/DropdownSelect";
 import ProductCard from "@/components/user/ProductCard";
-import {ProductView} from "@/type/interface";
+import {ProductView} from "@/types/interface";
 import TextField from "@/libs/TextField";
 
 export const sampleProducts: ProductView[] = [
@@ -18,7 +18,15 @@ export const sampleProducts: ProductView[] = [
     productId: "prod_001",
     shopId: "shop_apple_official",
     rating: 3,
-    totalReviews: 420,
+    numberOfRatings: 420,
+    numberOfReviews: 420,
+    ratingStatistics: {
+      [RatingNumber.ONE]: 10,
+      [RatingNumber.TWO]: 20,
+      [RatingNumber.THREE]: 100,
+      [RatingNumber.FOUR]: 150,
+      [RatingNumber.FIVE]: 140
+    },
     name: "iPhone 15 Pro Max",
     description: "iPhone 15 Pro Max với chip A17 Pro mạnh mẽ, camera 48MP, khung titan cao cấp và màn hình Super Retina XDR 6.7 inch. Hỗ trợ USB-C và Action Button hoàn toàn mới.",
     productStatus: ProductStatus.ACTIVE,
@@ -135,7 +143,15 @@ export const sampleProducts: ProductView[] = [
     productId: "prod_002",
     shopId: "shop_samsung_official",
     rating: 4.7,
-    totalReviews: 298,
+    numberOfRatings: 298,
+    numberOfReviews: 298,
+    ratingStatistics: {
+      [RatingNumber.ONE]: 5,
+      [RatingNumber.TWO]: 10,
+      [RatingNumber.THREE]: 20,
+      [RatingNumber.FOUR]: 100,
+      [RatingNumber.FIVE]: 163
+    },
     name: "Samsung Galaxy S24 Ultra",
     description: "Galaxy S24 Ultra với bút S Pen tích hợp, camera 200MP, chip Snapdragon 8 Gen 3 for Galaxy, màn hình Dynamic AMOLED 2X 6.8 inch. Hỗ trợ Galaxy AI thông minh.",
     productStatus: ProductStatus.ACTIVE,
@@ -232,7 +248,15 @@ export const sampleProducts: ProductView[] = [
     productId: "prod_003",
     shopId: "shop_apple_official",
     rating: 4.9,
-    totalReviews: 210,
+    numberOfRatings: 210,
+    numberOfReviews: 210,
+    ratingStatistics: {
+      [RatingNumber.ONE]: 2,
+      [RatingNumber.TWO]: 3,
+      [RatingNumber.THREE]: 10,
+      [RatingNumber.FOUR]: 45,
+      [RatingNumber.FIVE]: 150
+    },
     name: "MacBook Pro 14 inch M3",
     description: "MacBook Pro 14 inch với chip M3 mạnh mẽ, màn hình Liquid Retina XDR, thời lượng pin lên đến 22 giờ. Thiết kế nhôm cao cấp với bàn phím Magic Keyboard và Touch ID.",
     productStatus: ProductStatus.ACTIVE,
@@ -367,7 +391,15 @@ export const sampleProducts: ProductView[] = [
     productId: "prod_004",
     shopId: "shop_apple_official",
     rating: 4.8,
-    totalReviews: 640,
+    numberOfRatings: 640,
+    numberOfReviews: 640,
+    ratingStatistics: {
+      [RatingNumber.ONE]: 10,
+      [RatingNumber.TWO]: 15,
+      [RatingNumber.THREE]: 40,
+      [RatingNumber.FOUR]: 200,
+      [RatingNumber.FIVE]: 375
+    },
     name: "AirPods Pro 2 (USB-C)",
     description: "AirPods Pro thế hệ 2 với chip H2, chống ồn chủ động gấp đôi, âm thanh thích ứng, âm thanh không gian cá nhân hóa. Hộp sạc USB-C hỗ trợ sạc MagSafe và Qi.",
     productStatus: ProductStatus.ACTIVE,
@@ -423,7 +455,15 @@ export const sampleProducts: ProductView[] = [
     productId: "prod_005",
     shopId: "shop_sony_official",
     rating: 4.9,
-    totalReviews: 520,
+    numberOfRatings: 520,
+    numberOfReviews: 520,
+    ratingStatistics: {
+      [RatingNumber.ONE]: 3,
+      [RatingNumber.TWO]: 5,
+      [RatingNumber.THREE]: 12,
+      [RatingNumber.FOUR]: 100,
+      [RatingNumber.FIVE]: 400
+    },
     name: "Sony WH-1000XM5",
     description: "Tai nghe chống ồn hàng đầu với 8 micro, chống ồn thông minh tự động điều chỉnh, âm thanh Hi-Res, thời lượng pin 30 giờ, sạc nhanh 3 phút cho 3 giờ nghe nhạc.",
     productStatus: ProductStatus.ACTIVE,
@@ -496,7 +536,15 @@ export const sampleProducts: ProductView[] = [
     productId: "prod_006",
     shopId: "shop_apple_official",
     rating: 4.7,
-    totalReviews: 310,
+    numberOfRatings: 310,
+    numberOfReviews: 310,
+    ratingStatistics: {
+      [RatingNumber.ONE]: 8,
+      [RatingNumber.TWO]: 12,
+      [RatingNumber.THREE]: 30,
+      [RatingNumber.FOUR]: 120,
+      [RatingNumber.FIVE]: 140
+    },
     name: "iPad Air M2 11 inch",
     description: "iPad Air với chip M2 mạnh mẽ, màn hình Liquid Retina 11 inch, hỗ trợ Apple Pencil Pro và Magic Keyboard. Thiết kế mỏng nhẹ với 4 màu sắc thời trang.",
     productStatus: ProductStatus.ACTIVE,
@@ -720,7 +768,7 @@ export default function Search() {
               {/* Lọc theo số sao */}
               <div>
                 <h4 className="font-medium text-grey-c800 mb-3">Đánh giá</h4>
-                {[5, 4, 3, 2, 1].map(rating => (
+                {(Object.values(RatingNumber).reverse().filter(v => typeof v === 'number') as number[]).map((rating: number)  => (
                   <button
                     key={rating}
                     onClick={() => handleFilterChange('minRating', filters.minRating === rating ? 0 : rating)}

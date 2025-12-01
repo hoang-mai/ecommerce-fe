@@ -14,7 +14,7 @@ import ChangePassword from "@/components/user/layout/header/ChangePassword";
 import {LOGOUT, USER} from "@/services/api";
 import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import useSWRMutation from "swr/mutation";
-import {AlertType} from "@/type/enum";
+import {AlertType} from "@/types/enum";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import DisableAccount from "@/components/user/layout/header/DisableAccount";
@@ -153,14 +153,24 @@ export default function Information() {
               id: 2,
               label: (
                 <div className="flex items-center gap-2">
-                  <LockRoundedIcon className="text-grey-c600"/>
+                  <ShoppingCartRoundedIcon className="text-success-c700"/>
+                  <span>Đơn mua</span>
+                </div>
+              ),
+              onClick: () => router.push('/orders')
+            },
+            {
+              id: 3,
+              label: (
+                <div className="flex items-center gap-2">
+                  <LockRoundedIcon className="text-support-c900"/>
                   <span>Đổi mật khẩu</span>
                 </div>
               ),
               onClick: () => setIsOpen(true)
             },
             {
-              id: 3,
+              id: 4,
               label: (
                 <div className="flex items-center gap-2">
                   <BlockRoundedIcon className="text-yellow-c700"/>
@@ -169,9 +179,9 @@ export default function Information() {
               ),
               onClick: () => setIsOpenDisableAccount(true)
             },
-            {id: 4, label: 'Divider', divider: true},
+            {id: 5, label: 'Divider', divider: true},
             {
-              id: 5,
+              id: 6,
               label: (
                 <div className="flex items-center gap-2 text-support-c900">
                   <LogoutRoundedIcon/>

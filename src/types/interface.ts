@@ -1,4 +1,4 @@
-import {ProductStatus, ProductVariantStatus, ShopStatus} from "@/type/enum";
+import {ProductStatus, ProductVariantStatus, RatingNumber, ShopStatus} from "@/types/enum";
 
 export interface ProductImage {
   productImageId: string;
@@ -36,7 +36,9 @@ export interface ProductView {
   productId: string;
   shopId: string;
   rating: number;
-  totalReviews: number;
+  numberOfRatings: number;
+  numberOfReviews: number;
+  ratingStatistics: Record<RatingNumber, number>;
   name: string;
   description: string;
   productStatus: ProductStatus;
@@ -54,15 +56,39 @@ export interface ProductView {
   updatedAt: string;
 }
 
+export interface ShopView {
+  shopId: string;
+  shopName: string;
+  description: string;
+  logoUrl: string;
+  bannerUrl: string;
+  shopStatus: ShopStatus;
+  ownerId: string;
+  province: string;
+  ward: string;
+  detail: string;
+  phoneNumber: string;
+  totalProducts: number;
+  activeProducts: number;
+  totalSold: number;
+  totalRevenue: number;
+  rating: number;
+  numberOfRatings: number;
+  numberOfReviews: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ProductCartItemViewDTO {
   productCartItemId: string;
+  productView: ProductView;
   productVariantId: string;
   quantity: number;
 }
 
 export interface CartItemViewDTO {
   cartItemId: string;
-  productView: ProductView;
+  shopView: ShopView;
   productCartItems: ProductCartItemViewDTO[];
 }
 

@@ -2,7 +2,7 @@
 import React, {useState, useCallback, useEffect} from "react";
 import Button from "@/libs/Button";
 import Table, {Column} from "@/libs/Table";
-import {AlertType, CategoryStatus, ColorButton} from "@/type/enum";
+import {AlertType, CategoryStatus, ColorButton} from "@/types/enum";
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';

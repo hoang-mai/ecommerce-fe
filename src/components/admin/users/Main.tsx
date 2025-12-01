@@ -3,7 +3,7 @@ import React, {useEffect, useState, useCallback} from "react";
 import DropdownSelect from "@/libs/DropdownSelect";
 import TextField from "@/libs/TextField";
 import Table, {Column} from "@/libs/Table";
-import {AccountStatus, AlertType, Role} from "@/type/enum";
+import {AccountStatus, AlertType, Role} from "@/types/enum";
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import Title from "@/libs/Title";
 import {formatDateTime} from "@/util/FnCommon";

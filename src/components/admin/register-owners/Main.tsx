@@ -3,7 +3,7 @@ import {useCallback, useEffect, useState} from "react";
 import DropdownSelect from "@/libs/DropdownSelect";
 import TextField from "@/libs/TextField";
 import Table, {Column} from "@/libs/Table";
-import {AlertType, UserVerificationStatus, UserVerificationStatusLabel} from "@/type/enum";
+import {AlertType, UserVerificationStatus, UserVerificationStatusLabel} from "@/types/enum";
 import DetailRegisterOwnerModal from "./DetailRegisterOwnerModal";
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';

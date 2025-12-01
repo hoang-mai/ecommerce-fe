@@ -5,7 +5,7 @@ import {ADDRESS, CART_VIEW, ORDER} from "@/services/api";
 import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import {useDispatch} from "react-redux";
 import React, {useEffect, useMemo, useState} from "react";
-import {AlertType} from "@/type/enum";
+import {AlertType} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
 import Image from "next/image";
@@ -18,11 +18,11 @@ import AddressModal from "@/components/user/profile/AddressModal";
 import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import Button from "@/libs/Button";
-import {ColorButton} from "@/type/enum";
+import {ColorButton} from "@/types/enum";
 import {useRouter} from "next/navigation";
 import useSWRMutation from "swr/mutation";
 import Divide from "@/libs/Divide";
-import {CartViewDTO} from "@/type/interface";
+import {CartViewDTO} from "@/types/interface";
 import Empty from "@/libs/Empty";
 
 interface ResCreateProductOrderItemDTO {
@@ -32,6 +32,9 @@ interface ResCreateProductOrderItemDTO {
 }
 interface ResCreateOrderItemDTO{
   productId: number;
+  totalPrice: number;
+  totalDiscount: number;
+  totalFinalPrice: number;
   productOrderItems: ResCreateProductOrderItemDTO[];
 }
 interface ResCreateOrderDTO {
@@ -97,20 +100,38 @@ export default function Main() {
       dispatch(openAlert(alert));
       return;
     }
-    const orderItems: ResCreateOrderItemDTO[] = cartData.cartItems.map(item => ({
-      productId: Number(item.productView.productId),
-      productOrderItems: item.productCartItems.map(pci => {
-        const variant = item.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
-        const price = variant?.price || 0;
-        const discount = item.productView.discount || 0;
-        const discountedPrice = Math.round(price * (1 - discount / 100));
-        return {
-          productVariantId: Number(pci.productVariantId),
-          quantity: pci.quantity,
-          price: discountedPrice,
-        }
-      })
-    }));
+    const orderItems: ResCreateOrderItemDTO[] = cartData.cartItems.map(item => {
+      let totalPrice = 0;
+      let totalDiscount = 0;
+      let totalFinalPrice = 0;
+
+      const productOrderItems: ResCreateProductOrderItemDTO[] = item.productCartItems
+        .map(pci => {
+          const variant = item.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
+          if (!variant) return null;
+          const price = variant.price || 0;
+          const discount = item.productView.discount || 0;
+          const discountedPrice = Math.round(price * (1 - discount / 100));
+
+          totalPrice += price * pci.quantity;
+          totalFinalPrice += discountedPrice * pci.quantity;
+          totalDiscount += (price - discountedPrice) * pci.quantity;
+
+          return {
+            productVariantId: Number(pci.productVariantId),
+            quantity: pci.quantity,
+            price: discountedPrice,
+          };
+        }).filter((x): x is ResCreateProductOrderItemDTO => x !== null);
+
+      return {
+        productId: Number(item.productView.productId),
+        totalPrice,
+        totalDiscount,
+        totalFinalPrice,
+        productOrderItems,
+      };
+    });
     const reqCreateOrder: ResCreateOrderDTO = {
       receiverName: address.receiverName,
       address: getFullAddress(address.detail, address.ward, address.province),
@@ -124,7 +145,6 @@ export default function Main() {
     () => data?.data ?? {cartId: "", cartItems: []},
     [data?.data]
   );
-
   const totalQuantity = useMemo(() => cartData.cartItems.reduce(
     (sum, item) => sum + item.productCartItems.reduce((s, pci) => {
       const variant = item.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);

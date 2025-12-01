@@ -2,7 +2,7 @@ import React, {ReactNode, useRef, useState} from "react";
 import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRounded";
 import {formatPrice} from "@/util/FnCommon";
 import Button from "@/libs/Button";
-import {AlertType, ColorButton} from "@/type/enum";
+import {AlertType, ColorButton} from "@/types/enum";
 import {useCartData, useCartRef} from "@/components/provider/CartProvider";
 import Image from "next/image";
 import SelectProductVariantModal from "@/components/user/SelectProductVariantModal";
@@ -12,14 +12,13 @@ import {useAxiosContext} from '@/components/provider/AxiosProvider';
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useDispatch} from "react-redux";
 import {useRouter} from "next/navigation";
-import {ProductView} from "@/type/interface";
-import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
+import {ProductView} from "@/types/interface";
 import StarHalfRoundedIcon from '@mui/icons-material/StarHalfRounded';
-import StarOutlineRoundedIcon from '@mui/icons-material/StarOutlineRounded';
 import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 import CountdownTimer from "@/libs/CountDownTime";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
+import Star from "@/libs/Star";
 
 interface ProductCardProps {
   product: ProductView;
@@ -124,20 +123,6 @@ export default function ProductCard({product}: ProductCardProps) {
 
   }
 
-  const renderStars = (rating: number): React.ReactNode[] => {
-    const stars: React.ReactNode[] = [];
-    for (let i = 1; i <= 5; i++) {
-      if (rating >= i) {
-        stars.push(<StarRoundedIcon key={i} fontSize="small" className="text-yellow-500"/>);
-      } else if (rating >= i - 0.5) {
-        stars.push(<StarHalfRoundedIcon key={i} fontSize="small" className="text-yellow-500"/>);
-      } else {
-        stars.push(<StarBorderRoundedIcon key={i} fontSize="small" className="text-yellow-500"/>);
-      }
-    }
-    return stars;
-  };
-
   const renderSoldCount = (totalSold: number) => {
     if (totalSold >= 1000) {
       return (totalSold / 1000).toFixed(1) + 'k';
@@ -181,11 +166,11 @@ export default function ProductCard({product}: ProductCardProps) {
               <div className="h-4 w-px bg-gray-300"></div>
               <div className="flex items-center gap-1 text-gray-600">
                 <ChatBubbleOutlineRoundedIcon className={"!w-4 !h-4"}/>
-                <span className="text-sm font-semibold">{renderSoldCount(product.totalReviews || 0)}</span>
+                <span className="text-sm font-semibold">{renderSoldCount(product.numberOfReviews || 0)}</span>
               </div>
             </div>
             <div className="flex items-center">
-              {renderStars(Number(product.rating))}
+              <Star rating={Number(product.rating)}/>
               <span className="text-sm text-gray-600 font-medium">{Number(product.rating).toFixed(1)}</span>
             </div>
 

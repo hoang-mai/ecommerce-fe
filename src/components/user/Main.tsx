@@ -4,16 +4,17 @@ import {PRODUCT_VIEW} from "@/services/api";
 import useSWR from "swr";
 import React, {useEffect, useState} from "react";
 import Loading from "@/components/modals/Loading";
-import {AlertType} from "@/type/enum";
+import {AlertType} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useDispatch} from "react-redux";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {ProductView} from "@/type/interface";
+import {ProductView} from "@/types/interface";
 import { useBuildUrl } from "@/hooks/useBuildUrl";
 import KeyboardDoubleArrowLeftRoundedIcon from "@mui/icons-material/KeyboardDoubleArrowLeftRounded";
 import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
 import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
 import KeyboardDoubleArrowRightRoundedIcon from "@mui/icons-material/KeyboardDoubleArrowRightRounded";
+import Pagination from "@/libs/Pagination";
 
 
 export default function Main() {
@@ -47,31 +48,7 @@ export default function Main() {
       dispatch(openAlert(alert));
     }
   }, [dispatch, error]);
-  const renderPagination = () => {
-    if (totalPages <= 1) return null;
 
-    const pages = [];
-    const maxVisible = 5;
-    const start = Math.max(0, pageNo - Math.floor(maxVisible / 2));
-    const end = Math.min(totalPages, start + maxVisible);
-
-    for (let i = start; i < end; i++) {
-      pages.push(
-        <button
-          key={i}
-          onClick={() => setPageNo(i)}
-          className={`cursor-pointer px-4 py-2 mx-1 rounded-lg transition-colors ${
-            pageNo === i
-              ? "bg-primary-c700 text-white font-bold"
-              : "bg-grey-c100 text-grey-c700 hover:bg-grey-c200"
-          }`}
-        >
-          {i + 1}
-        </button>
-      );
-    }
-    return pages;
-  };
 
 
   return (
@@ -82,46 +59,8 @@ export default function Main() {
           <ProductCard product={product} key={product.productId}/>
         ))}
       </div>
-      {/* Pagination Buttons */}
-      {totalPages > 1 && (
-        <div className="overflow-x-auto ">
-          <div className="flex items-center gap-2 justify-center mt-4">
-            <button
-              onClick={() => setPageNo(0)}
-              disabled={pageNo === 0}
-              className="cursor-pointer px-3 py-2 rounded-lg bg-white border border-grey-c300 text-grey-c700 hover:bg-grey-c100 hover:border-primary-c500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="Trang đầu"
-            >
-              <KeyboardDoubleArrowLeftRoundedIcon/>
-            </button>
-            <button
-              onClick={() => setPageNo(Math.max(0, pageNo - 1))}
-              disabled={pageNo === 0}
-              className="cursor-pointer px-3 py-2 rounded-lg bg-white border border-grey-c300 text-grey-c700 hover:bg-grey-c100 hover:border-primary-c500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="Trang trước"
-            >
-              <KeyboardArrowLeftRoundedIcon/>
-            </button>
-            {renderPagination()}
-            <button
-              onClick={() => setPageNo(Math.min(totalPages - 1, pageNo + 1))}
-              disabled={pageNo === totalPages - 1}
-              className="cursor-pointer px-3 py-2 rounded-lg bg-white border border-grey-c300 text-grey-c700 hover:bg-grey-c100 hover:border-primary-c500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="Trang sau"
-            >
-              <KeyboardArrowRightRoundedIcon/>
-            </button>
-            <button
-              onClick={() => setPageNo(totalPages - 1)}
-              disabled={pageNo === totalPages - 1}
-              className="cursor-pointer px-3 py-2 rounded-lg bg-white border border-grey-c300 text-grey-c700 hover:bg-grey-c100 hover:border-primary-c500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="Trang cuối"
-            >
-              <KeyboardDoubleArrowRightRoundedIcon/>
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination  totalPages={totalPages} currentPage={pageNo} onPageChange={setPageNo}/>
+
     </div>
   );
 }

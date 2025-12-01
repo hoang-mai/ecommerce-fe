@@ -1,5 +1,5 @@
 import {MouseEventHandler, ReactNode, useMemo} from "react";
-import {ColorButton} from "@/type/enum";
+import {ColorButton} from "@/types/enum";
 
 type Props = {
   children?: ReactNode;

@@ -11,7 +11,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import useSWRMutation from "swr/mutation";
 import { CATEGORY, PRODUCT} from "@/services/api";
 import {useDispatch} from "react-redux";
-import {AlertType, ColorButton} from "@/type/enum";
+import {AlertType, ColorButton} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";

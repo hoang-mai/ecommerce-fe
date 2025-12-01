@@ -3,7 +3,7 @@ import {ReactNode} from "react";
 import Modal from "@/libs/Modal";
 import Image from "next/image";
 import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
-import {ProductStatus} from "@/type/enum";
+import {ProductStatus} from "@/types/enum";
 import CategoryRoundedIcon from '@mui/icons-material/CategoryRounded';
 import InventoryRoundedIcon from '@mui/icons-material/InventoryRounded';
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
@@ -12,7 +12,7 @@ import ImageRoundedIcon from '@mui/icons-material/ImageRounded';
 import StyleRoundedIcon from '@mui/icons-material/StyleRounded';
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
 import {formatDateTime} from "@/util/FnCommon";
-import {ProductView} from "@/type/interface";
+import {ProductView} from "@/types/interface";
 
 
 interface DetailProductModalProps {

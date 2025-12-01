@@ -8,7 +8,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningIcon from "@mui/icons-material/Warning";
 import InfoIcon from "@mui/icons-material/Info";
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import {AlertType} from "@/type/enum";
+import {AlertType} from "@/types/enum";
 
 const alertConfig = {
   [AlertType.ERROR]: {

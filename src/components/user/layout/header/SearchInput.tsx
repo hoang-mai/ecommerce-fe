@@ -5,11 +5,11 @@ import {useDebounce} from "@/hooks/useDebounce";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import useSWR from "swr";
 import {PRODUCT_VIEW} from "@/services/api";
-import {ProductView} from "@/type/interface";
+import {ProductView} from "@/types/interface";
 import {useRouter} from "next/navigation";
 import {useBuildUrl} from "@/hooks/useBuildUrl";
 import {useDispatch} from "react-redux";
-import {AlertType} from "@/type/enum";
+import {AlertType} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Empty from "@/libs/Empty";
 
@@ -29,7 +29,10 @@ export default function SearchInput() {
       pageSize: 5,
     }
   })
-  const {data, isLoading, error} = useSWR(url, fetcher)
+  const {data, isLoading, error} = useSWR(url, fetcher,{
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
   const dispatch = useDispatch();
 
   useEffect(() => {

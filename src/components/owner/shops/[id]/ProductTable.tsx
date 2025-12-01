@@ -3,7 +3,7 @@ import {useCallback, useEffect, useState} from "react";
 import Image from "next/image";
 import Table, {Column} from "@/libs/Table";
 import Button from "@/libs/Button";
-import {AlertType, ColorButton, ProductStatus, SortDir} from "@/type/enum";
+import {AlertType, ColorButton, ProductStatus, SortDir} from "@/types/enum";
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
@@ -25,7 +25,7 @@ import {useDebounce} from "@/hooks/useDebounce";
 import Loading from "@/components/modals/Loading";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
-import {ProductView} from "@/type/interface";
+import {ProductView} from "@/types/interface";
 import { useBuildUrl } from "@/hooks/useBuildUrl";
 
 interface ProductTableProps {

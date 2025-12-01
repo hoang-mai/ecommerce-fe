@@ -4,7 +4,7 @@ import TextField from "@/libs/TextField";
 import {Controller, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {z} from "zod";
-import {AlertType, ColorButton} from "@/type/enum";
+import {AlertType, ColorButton} from "@/types/enum";
 import Loading from "@/components/modals/Loading";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import useSWRMutation from "swr/mutation";

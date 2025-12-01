@@ -9,9 +9,9 @@ import useSWRMutation from "swr/mutation";
 import {useCartData} from "@/components/provider/CartProvider";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
-import {AlertType, ColorButton, ProductStatus, ProductVariantStatus, ShopStatus} from "@/type/enum";
+import {AlertType, ColorButton, ProductStatus, ProductVariantStatus, ShopStatus} from "@/types/enum";
 import Button from "@/libs/Button";
-import {ProductVariant, ProductView,} from "@/type/interface";
+import {ProductVariant, ProductView,} from "@/types/interface";
 import ImagePreview from "@/libs/ImagePreview";
 import {formatPrice} from "@/util/FnCommon";
 import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
@@ -22,12 +22,22 @@ import StarHalfRoundedIcon from '@mui/icons-material/StarHalfRounded';
 import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
 import Carousel from "@/libs/Carousel";
 import CountdownTimer from "@/libs/CountDownTime";
+import Review from "@/components/user/products/[id]/Review";
+import Star from "@/libs/Star";
 
 const productDefault: ProductView = {
   productId: "prod_002",
   shopId: "shop_samsung_official",
-  rating: 4.7,
-  totalReviews: 298,
+  rating: 500,
+  numberOfRatings: 200,
+  numberOfReviews: 300,
+  ratingStatistics: {
+    5: 150,
+    4: 30,
+    3: 10,
+    2: 5,
+    1: 5
+  },
   name: "Samsung Galaxy S24 Ultra",
   description: "Galaxy S24 Ultra với bút S Pen tích hợp, camera 200MP, chip Snapdragon 8 Gen 3 for Galaxy, màn hình Dynamic AMOLED 2X 6.8 inch. Hỗ trợ Galaxy AI thông minh.",
   productStatus: ProductStatus.ACTIVE,
@@ -232,19 +242,6 @@ export default function Main({id}: Props) {
     }
   }, [defaultVariant]);
 
-  const renderStars = (rating: number): React.ReactNode[] => {
-    const stars: React.ReactNode[] = [];
-    for (let i = 1; i <= 5; i++) {
-      if (rating >= i) {
-        stars.push(<StarRoundedIcon key={i} fontSize="small" className="text-yellow-500"/>);
-      } else if (rating >= i - 0.5) {
-        stars.push(<StarHalfRoundedIcon key={i} fontSize="small" className="text-yellow-500"/>);
-      } else {
-        stars.push(<StarBorderRoundedIcon key={i} fontSize="small" className="text-yellow-500"/>);
-      }
-    }
-    return stars;
-  };
   const renderSoldCount = (totalSold: number) => {
     if (totalSold >= 1000) {
       return (totalSold / 1000).toFixed(1) + 'k';
@@ -284,7 +281,7 @@ export default function Main({id}: Props) {
               {Number(product.rating) > 0 ? (
                 <>
                   <div className="flex items-center">
-                    {renderStars(Number(product.rating))}
+                    <Star rating={Number(product.rating)}/>
                   </div>
                   <span className="text-sm text-gray-600 font-medium">{Number(product.rating).toFixed(1)}</span>
                 </>
@@ -396,6 +393,7 @@ export default function Main({id}: Props) {
         onClose={() => setSelectedImage(null)}
         alt="Product Image"
       />
+      <Review id={id} product={product}/>
     </div>
   )
 }

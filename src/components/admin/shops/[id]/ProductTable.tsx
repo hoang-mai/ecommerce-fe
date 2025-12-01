@@ -3,7 +3,8 @@ import {useState} from "react";
 import Image from "next/image";
 import Table, {Column} from "@/libs/Table";
 import Button from "@/libs/Button";
-import {ColorButton, SortDir} from "@/type/enum";
+import {ColorButton, SortDir} from "@/types/enum";
+
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';

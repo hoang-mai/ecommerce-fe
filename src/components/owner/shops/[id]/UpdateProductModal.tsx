@@ -12,7 +12,7 @@ import useSWRMutation from "swr/mutation";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {CATEGORY, PRODUCT} from "@/services/api";
 import {useDispatch} from "react-redux";
-import {AlertType, ColorButton} from "@/type/enum";
+import {AlertType, ColorButton} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
@@ -20,7 +20,7 @@ import useSWR from "swr";
 import DropdownSelect from "@/libs/DropdownSelect";
 import Loading from "@/components/modals/Loading";
 import CheckBox from "@/libs/CheckBox";
-import {ProductView} from "@/type/interface";
+import {ProductView} from "@/types/interface";
 
 const productAttributeSchema = z.object({
   productAttributeId: z.string().optional(),

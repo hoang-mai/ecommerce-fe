@@ -8,7 +8,7 @@ import {CATEGORY} from "@/services/api";
 import useSWRMutation from "swr/mutation";
 import useSWR from "swr";
 import {useDispatch} from "react-redux";
-import {AlertType} from "@/type/enum";
+import {AlertType} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useCallback, useEffect, useState} from "react";
 import Loading from "@/components/modals/Loading";

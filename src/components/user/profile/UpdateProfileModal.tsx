@@ -4,7 +4,7 @@ import {Controller, useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
 import TextField from "@/libs/TextField";
-import {AlertType, Gender, GenderLabel, Role} from "@/type/enum";
+import {AlertType, Gender, GenderLabel, Role} from "@/types/enum";
 import DropdownSelect from "@/libs/DropdownSelect";
 import DatePicker from "@/libs/DatePicker";
 import Modal from "@/libs/Modal";

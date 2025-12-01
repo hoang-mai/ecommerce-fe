@@ -10,7 +10,7 @@ import {ADDRESS} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
-import {AlertType} from "@/type/enum";
+import {AlertType} from "@/types/enum";
 import Loading from "@/components/modals/Loading";
 import Switch from "@/libs/Switch";
 import {phoneRegex} from "@/util/regex";

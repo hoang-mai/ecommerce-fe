@@ -1,5 +1,5 @@
 import { useAxiosContext } from '@/components/provider/AxiosProvider';
-import {AccountStatus, AlertType} from "@/type/enum";
+import {AccountStatus, AlertType} from "@/types/enum";
 import Modal from "@/libs/Modal";
 import useSWRMutation from "swr/mutation";
 import {AUTH, LOGOUT} from "@/services/api";

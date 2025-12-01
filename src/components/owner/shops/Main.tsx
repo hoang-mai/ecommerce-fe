@@ -7,7 +7,7 @@ import TextField from "@/libs/TextField";
 import Table, {Column} from "@/libs/Table";
 import Button from "@/libs/Button";
 import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
-import {AlertType, ColorButton, ShopStatus, SortDir} from "@/type/enum";
+import {AlertType, ColorButton, ShopStatus, SortDir} from "@/types/enum";
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import ChangeCircleRoundedIcon from '@mui/icons-material/ChangeCircleRounded';

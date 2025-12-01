@@ -4,7 +4,7 @@ import {useCallback, useEffect, useState} from "react";
 import useSWR from "swr";
 import {USER_VERIFICATION} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {AlertType, UserVerificationStatus, UserVerificationStatusLabel} from "@/type/enum";
+import {AlertType, UserVerificationStatus, UserVerificationStatusLabel} from "@/types/enum";
 import {formatDateTime} from "@/util/FnCommon";
 import DropdownSelect from "@/libs/DropdownSelect";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
