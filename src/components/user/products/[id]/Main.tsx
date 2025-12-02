@@ -184,6 +184,7 @@ export default function Main({id}: Props) {
   const handleAddToCart = () => {
     if (selectedVariant) {
       trigger({
+        shopId: product.shopId,
         productId: product.productId,
         productVariantId: selectedVariant.productVariantId,
         quantity: quantity,

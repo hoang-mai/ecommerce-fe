@@ -74,6 +74,7 @@ export default function SelectProductVariantModal({isOpen, setIsOpen, product}: 
   const handleOnSave = () => {
     if (selectedVariant) {
       trigger({
+        shopId: product.shopId,
         productId: product.productId,
         productVariantId: selectedVariant.productVariantId,
         quantity: quantity,

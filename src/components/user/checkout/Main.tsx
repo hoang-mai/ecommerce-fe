@@ -26,15 +26,14 @@ import {CartViewDTO} from "@/types/interface";
 import Empty from "@/libs/Empty";
 
 interface ResCreateProductOrderItemDTO {
-  productVariantId:number;
-  quantity:number;
-  price:number;
-}
-interface ResCreateOrderItemDTO{
   productId: number;
-  totalPrice: number;
-  totalDiscount: number;
-  totalFinalPrice: number;
+  discount: number;
+  productVariantId: number;
+  quantity: number;
+  price: number;
+}
+interface ResCreateOrderItemDTO {
+  shopId: number;
   productOrderItems: ResCreateProductOrderItemDTO[];
 }
 interface ResCreateOrderDTO {
@@ -100,45 +99,50 @@ export default function Main() {
       dispatch(openAlert(alert));
       return;
     }
-    const orderItems: ResCreateOrderItemDTO[] = cartData.cartItems.map(item => {
-      let totalPrice = 0;
-      let totalDiscount = 0;
-      let totalFinalPrice = 0;
 
+    const orderItems: ResCreateOrderItemDTO[] = cartData.cartItems.map(item => {
       const productOrderItems: ResCreateProductOrderItemDTO[] = item.productCartItems
         .map(pci => {
-          const variant = item.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
+          const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
           if (!variant) return null;
+
           const price = variant.price || 0;
-          const discount = item.productView.discount || 0;
+          const discount = pci.productView.discount || 0;
           const discountedPrice = Math.round(price * (1 - discount / 100));
 
-          totalPrice += price * pci.quantity;
-          totalFinalPrice += discountedPrice * pci.quantity;
-          totalDiscount += (price - discountedPrice) * pci.quantity;
-
           return {
+            productId: Number(pci.productView.productId),
+            discount: discount,
             productVariantId: Number(pci.productVariantId),
             quantity: pci.quantity,
             price: discountedPrice,
           };
-        }).filter((x): x is ResCreateProductOrderItemDTO => x !== null);
+        })
+        .filter((x): x is ResCreateProductOrderItemDTO => x !== null);
 
       return {
-        productId: Number(item.productView.productId),
-        totalPrice,
-        totalDiscount,
-        totalFinalPrice,
-        productOrderItems,
+        shopId: Number(item.shopView.shopId),
+        productOrderItems: productOrderItems,
       };
     });
+
     const reqCreateOrder: ResCreateOrderDTO = {
       receiverName: address.receiverName,
       address: getFullAddress(address.detail, address.ward, address.province),
       phoneNumber: address.phoneNumber,
       items: orderItems,
     };
-    trigger(reqCreateOrder);
+
+    trigger(reqCreateOrder)
+      .catch((err: ErrorResponse) => {
+        const alert: AlertState = {
+          isOpen: true,
+          message: err.message || "Đặt hàng thất bại",
+          type: AlertType.ERROR,
+          title: "Thất bại",
+        }
+        dispatch(openAlert(alert));
+      });
   }
 
   const cartData: CartViewDTO = useMemo(
@@ -147,16 +151,16 @@ export default function Main() {
   );
   const totalQuantity = useMemo(() => cartData.cartItems.reduce(
     (sum, item) => sum + item.productCartItems.reduce((s, pci) => {
-      const variant = item.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
+      const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
       if (!variant || variant.stockQuantity === 0) return s;
       return s + pci.quantity;
     }, 0),
     0
   ), [cartData]);
   const totalPrice = useMemo(() => cartData.cartItems.reduce((sum, item) => {
-    const discount = item.productView.discount || 0;
     const itemTotal = item.productCartItems.reduce((itemSum, pci) => {
-      const variant = item.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
+      const discount = pci.productView.discount || 0;
+      const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
       if (!variant || variant.stockQuantity === 0) return itemSum;
       const price = variant.price || 0;
       const discountedPrice = Math.round(price * (1 - discount / 100));
@@ -169,109 +173,116 @@ export default function Main() {
     <Title title={"Thanh toán & Giao hàng"}/>
     <div className="flex flex-col gap-6 mt-4">
       {cartData.cartItems.length > 0 ? cartData.cartItems.map(item => {
-          const discount = item.productView.discount;
-          const hasDiscount = !!(discount && item.productView.discountEndDate && item.productView.discountStartDate);
-          const itemTotal = item.productCartItems.reduce((sum, pci) => {
-            const variant = item.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
-            if (!variant || variant.stockQuantity === 0) return sum;
-            const price = variant.price || 0;
-            const discountedPrice = hasDiscount ? Math.round(price * (1 - discount / 100)) : price;
-            return sum + discountedPrice * pci.quantity;
-          }, 0);
-
           return (
-            <div
-              key={item.cartItemId}
-              className="flex flex-row gap-4 items-center border-b p-4 border border-primary-c300 rounded-lg transition-shadow duration-200 bg-grey-c50 hover:shadow-md"
-            >
-              <div className="w-24 h-24 flex-shrink-0">
-                <Image
-                  src={item.productView.productImages[0]?.imageUrl || '/avatar_hoat_hinh_db4e0e9cf4.webp'}
-                  alt={item.productView.name}
-                  width={100}
-                  height={100}
-                  className="object-cover rounded-md w-full h-full"
-                />
+            <div key={item.cartItemId} className="border border-primary-c400 rounded-lg p-4 bg-white">
+              {/* Shop Header */}
+              <div className="mb-3 pb-2 border-b border-grey-c300">
+                <h3 className="font-semibold text-lg text-primary-c900">
+                  🏪 {item.shopView.shopName}
+                </h3>
               </div>
-              <div className="flex flex-col gap-1 flex-1">
-                <h3 className="font-semibold text-base text-primary-c900">{item.productView.name}</h3>
-                <p className="truncate max-w-sm text-sm text-gray-700">{item.productView.description}</p>
-                <div className="flex gap-2 text-sm flex-col">
-                  {item.productCartItems.map(pci => {
-                    const variant = item.productView.productVariants.find(v => v.productVariantId === pci.productVariantId) ?? item.productView.productVariants[0];
-                    const price = variant?.price || 0;
-                    const discountedPrice = hasDiscount ? Math.round(price * (1 - discount / 100)) : price;
-                    return (
-                      <div key={pci.productCartItemId} className="flex flex-col">
-                        <div className={"flex flex-row"}>{item.productView.productAttributes.map(attr => {
-                          const attrValue = variant.productVariantAttributeValues.find(
-                            pvav => pvav.productAttributeId === attr.productAttributeId
-                          );
 
-                          const valueObj = attr.productAttributeValues.find(
-                            v => v.productAttributeValueId === attrValue?.productAttributeValueId
-                          );
+              {/* Products in this shop */}
+              <div className="space-y-3">
+                {item.productCartItems.map(pci => {
+                  const productView = pci.productView;
+                  const discount = productView.discount;
+                  const hasDiscount = !!(discount && productView.discountEndDate && productView.discountStartDate);
+                  const variant = productView.productVariants.find(v => v.productVariantId === pci.productVariantId) ?? productView.productVariants[0];
+                  const price = variant?.price || 0;
+                  const discountedPrice = hasDiscount ? Math.round(price * (1 - discount / 100)) : price;
+                  const itemTotal = discountedPrice * pci.quantity;
 
-                          return valueObj ? (
+                  return (
+                    <div
+                      key={pci.productCartItemId}
+                      className="flex flex-row gap-4 items-center p-3 border border-primary-c200 rounded-lg transition-shadow duration-200 bg-grey-c50 hover:shadow-md"
+                    >
+                      <div className="w-24 h-24 flex-shrink-0">
+                        <Image
+                          src={productView.productImages[0]?.imageUrl || '/avatar_hoat_hinh_db4e0e9cf4.webp'}
+                          alt={productView.name}
+                          width={100}
+                          height={100}
+                          className="object-cover rounded-md w-full h-full"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 flex-1">
+                        <h4 className="font-semibold text-base text-primary-c900">{productView.name}</h4>
+                        <p className="truncate max-w-sm text-sm text-gray-700">{productView.description}</p>
+
+                        {/* Variant attributes */}
+                        <div className="flex gap-2 text-sm flex-col">
+                          {productView.productAttributes.map(attr => {
+                            const attrValue = variant?.productVariantAttributeValues.find(
+                              pvav => pvav.productAttributeId === attr.productAttributeId
+                            );
+
+                            const valueObj = attr.productAttributeValues.find(
+                              v => v.productAttributeValueId === attrValue?.productAttributeValueId
+                            );
+
+                            return valueObj ? (
+                              <span
+                                key={valueObj.productAttributeValueId}
+                                className="mr-1 text-gray-700 flex flex-row gap-2"
+                              >
+                                {attr.productAttributeName}:{' '}
+                                <span className="font-medium">{valueObj.productAttributeValue}</span>
+                              </span>
+                            ) : null;
+                          })}
+
+                          {/* Quantity */}
+                          <div className="flex flex-row items-center">
+                            <span className="text-gray-700">Số lượng:</span>
                             <span
-                              key={valueObj.productAttributeValueId}
-                              className="mr-1 text-gray-700 flex flex-row gap-2"
-                            >
-                                 {attr.productAttributeName}:{' '}
-                              <span className="font-medium">{valueObj.productAttributeValue}</span>
-                                </span>
-                          ) : null;
-                        })}</div>
-
-                        <div className={"flex flex-row items-center"}>
-                          {/* Số lượng */}
-                          <span className="text-gray-700">Số lượng:</span>
-                          <span
-                            className={`font-medium w-6 text-center items-center flex justify-center ${variant?.stockQuantity === 0 ? "text-grey-c600" : "text-primary-c900"}`}>
+                              className={`font-medium w-6 text-center items-center flex justify-center ml-1 ${variant?.stockQuantity === 0 ? "text-grey-c600" : "text-primary-c900"}`}>
                               {pci.quantity}
                             </span>
-                          {variant?.stockQuantity === 0 && <Chip label={"Hết hàng"} color={ChipColor.ERROR}/>}
-                          {/* Giá */}
-                          <div className="">
+                            {variant?.stockQuantity === 0 && <Chip label={"Hết hàng"} color={ChipColor.ERROR}/>}
+                          </div>
+
+                          {/* Price */}
+                          <div className="mt-1">
                             {hasDiscount ? (
                               <span className="text-primary-c900">
-                                  Giá sau giảm:{' '}
+                                Giá sau giảm:{' '}
                                 <span className="font-medium">
-                                    {formatPrice(discountedPrice)}
-                                  </span>
+                                  {formatPrice(discountedPrice)}
                                 </span>
+                              </span>
                             ) : (
                               <span className="text-primary-c900">
-                                  Giá:{' '}
+                                Giá:{' '}
                                 <span className="font-medium">
-                                    {formatPrice(price)}
-                                  </span>
+                                  {formatPrice(price)}
                                 </span>
+                              </span>
                             )}
                             {hasDiscount && (
                               <span className="text-gray-400 text-xs ml-2">
                                 (Giá gốc:{' '}
-                                <span className="line-through">{formatPrice(price)}</span>
-                                )
+                                <span className="line-through">{formatPrice(price)}</span>)
                               </span>
                             )}
                           </div>
-
-
                         </div>
 
-                      </div>
+                        <div className="text-sm font-semibold text-primary-c800">
+                          Thành tiền: {formatPrice(itemTotal)}
+                        </div>
 
-                    )
-                  })}
-                </div>
-                <div className="text-sm font-semibold text-primary-c800">Thành tiền: {formatPrice(itemTotal)}</div>
-                {hasDiscount && item.productView.discountEndDate && (
-                  <div className="flex gap-2 items-center text-xs text-gray-600">
-                    <span>Giảm giá đến: {formatDate(item.productView.discountEndDate)}</span>
-                    <CountdownTimer endDate={item.productView.discountEndDate}/>
-                  </div>
-                )}
+                        {hasDiscount && productView.discountEndDate && (
+                          <div className="flex gap-2 items-center text-xs text-gray-600">
+                            <span>Giảm giá đến: {formatDate(productView.discountEndDate)}</span>
+                            <CountdownTimer endDate={productView.discountEndDate}/>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )

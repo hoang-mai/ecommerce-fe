@@ -10,10 +10,6 @@ import {useDispatch} from "react-redux";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {ProductView} from "@/types/interface";
 import { useBuildUrl } from "@/hooks/useBuildUrl";
-import KeyboardDoubleArrowLeftRoundedIcon from "@mui/icons-material/KeyboardDoubleArrowLeftRounded";
-import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
-import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
-import KeyboardDoubleArrowRightRoundedIcon from "@mui/icons-material/KeyboardDoubleArrowRightRounded";
 import Pagination from "@/libs/Pagination";
 
 

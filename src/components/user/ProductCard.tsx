@@ -25,6 +25,7 @@ interface ProductCardProps {
 }
 
 export interface ReqAddToCartDTO {
+  shopId: string;
   productId: string;
   productVariantId: string;
   quantity: number;
@@ -49,6 +50,7 @@ export default function ProductCard({product}: ProductCardProps) {
     } else {
       animationAddToCart();
       trigger({
+        shopId: product.shopId,
         productId: product.productId,
         productVariantId: defaultVariant.productVariantId,
         quantity: 1,

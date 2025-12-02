@@ -242,6 +242,7 @@ export default function Main() {
   const [status, setStatus] = useState<string>("");
   const [keyword, setKeyword] = useState<string>('');
   const [selectOrderItem, setSelectOrderItem] = useState<OrderItem | null>(null);
+  const [selectedOrderStatus, setSelectedOrderStatus] = useState<OrderStatus | "">("");
   const debounce = useDebounce(keyword);
   const dispatch = useDispatch();
   const url = useBuildUrl({
@@ -340,6 +341,7 @@ export default function Main() {
           {orders.map((order) => (
             <div key={order.orderId}
                  className="bg-white rounded-xl shadow-sm border border-grey-c200 overflow-hidden hover:shadow-md transition-shadow">
+
               <div className="p-5">
                 {/* Order Header */}
                 <div className="flex items-start justify-between mb-4">
@@ -363,44 +365,51 @@ export default function Main() {
                     </div>
                   </div>
                 </div>
-
-                {/* Order Items */}
-                <div className="space-y-3 mb-4">
-                  {order.orderItems.map((item) => (
-                    <div key={item.orderItemId}
-                         onClick={() => {
-                           setSelectOrderItem(item)
-                           setIsOpen(true)
-                         }}
-                         className="flex gap-4 p-3 bg-grey-c50 rounded-lg hover:bg-grey-c100 cursor-pointer transition-colors">
-                      <Image
-                        src={item.productImageUrl}
-                        alt={item.productName}
-                        width={80}
-                        height={80}
-                        className="w-20 h-20 object-cover rounded-lg"
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-medium text-grey-c800 mb-1">{item.productName}</h4>
-                        <div className="text-sm text-grey-c600 flex flex-col gap-1">
-                          <div className="flex flex-row gap-3">
-                            {item.productAttributes.map((productAttribute, index) => (
-                              <div key={index} className={"flex flex-row gap-2"}>
-                                <span className="text-grey-c500">{productAttribute.attributeName}:</span>
-                                <span className="font-medium">{productAttribute.attributeValue}</span>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="flex items-center gap-4 mt-1">
+                <div className={"border border-primary-c400 rounded-lg p-4 "}>
+                  <div className="mb-3 pb-2 border-b border-grey-c300">
+                    <h3 className="font-semibold text-lg text-primary-c900">
+                      🏪 {order.shopName}
+                    </h3>
+                  </div>
+                  {/* Order Items */}
+                  <div className="space-y-3 mb-4">
+                    {order.orderItems.map((item) => (
+                      <div key={item.orderItemId}
+                           onClick={() => {
+                             setSelectOrderItem(item)
+                             setSelectedOrderStatus(order.orderStatus);
+                             setIsOpen(true)
+                           }}
+                           className="flex gap-4 p-3 bg-grey-c50 rounded-lg hover:bg-grey-c100 cursor-pointer transition-colors">
+                        <Image
+                          src={item.productImageUrl}
+                          alt={item.productName}
+                          width={80}
+                          height={80}
+                          className="w-20 h-20 object-cover rounded-lg"
+                        />
+                        <div className="flex-1">
+                          <h4 className="font-medium text-grey-c800 mb-1">{item.productName}</h4>
+                          <div className="text-sm text-grey-c600 flex flex-col gap-1">
+                            <div className="flex flex-row gap-3">
+                              {item.productAttributes.map((productAttribute, index) => (
+                                <div key={index} className={"flex flex-row gap-2"}>
+                                  <span className="text-grey-c500">{productAttribute.attributeName}:</span>
+                                  <span className="font-medium">{productAttribute.attributeValue}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-4 mt-1">
                             <span>Số lượng:
                               <span className="font-medium ml-2">{item.quantity}</span>
                             </span>
-                            <span className="text-primary-c800 font-semibold">{formatPrice(item.price)}</span>
+                              <span className="text-primary-c800 font-semibold">{formatPrice(item.price)}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
 
                 {/* Order Footer */}
@@ -430,7 +439,12 @@ export default function Main() {
       <Pagination totalPages={totalPages} currentPage={pageNo} onPageChange={setPageNo}/>
       {/* Order Detail Modal */}
       {selectOrderItem && isOpen && (
-        <OrderItemDetailModal isOpen={isOpen} setIsOpen={setIsOpen} selectedOrderItem={selectOrderItem}/>
+        <OrderItemDetailModal
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          selectedOrderItem={selectOrderItem}
+          orderStatus={selectedOrderStatus}
+        />
       )}
     </div>
   )

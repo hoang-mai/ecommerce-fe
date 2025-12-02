@@ -21,6 +21,7 @@ import {useRouter} from "next/navigation";
 import {CartViewDTO} from "@/types/interface";
 import Divide from "@/libs/Divide";
 import Empty from "@/libs/Empty";
+import {useDebounce} from "@/hooks/useDebounce";
 
 
 type Props = {
@@ -32,8 +33,8 @@ export function Cart({isOpen, setIsOpen}: Props) {
   const router = useRouter();
   const { get, del, patch } = useAxiosContext();
   const fetcher = (url: string) => get<BaseResponse<CartViewDTO>>(url).then(res => res.data);
-  const fetcherDeleteCartItem = (url: string, {arg}: { arg: { cartItemId: string } }) =>
-    del<BaseResponse<never>>(`${url}/${arg.cartItemId}`).then(res => res.data);
+  const fetcherDeleteProductCartItem = (url: string, {arg}: { arg: { productCartItemId: string } }) =>
+    del<BaseResponse<never>>(`${url}/${arg.productCartItemId}`).then(res => res.data);
   const fetcherDeleteAll = (url: string) =>
     del<BaseResponse<never>>(url).then(res => res.data);
   const fetcherUpdateProductCartItemQuantity = (url: string, {arg}: {
@@ -46,7 +47,7 @@ export function Cart({isOpen, setIsOpen}: Props) {
     revalidateOnFocus: false,
   });
   const {mutate} = useCartData();
-  const {trigger} = useSWRMutation(CART, fetcherDeleteCartItem);
+  const {trigger} = useSWRMutation(CART, fetcherDeleteProductCartItem);
   const {trigger: triggerDeleteAll} = useSWRMutation(CART, fetcherDeleteAll)
   const {trigger: triggerUpdateProductCartItemQuantity} = useSWRMutation(CART, fetcherUpdateProductCartItemQuantity);
   const dispatch = useDispatch();
@@ -65,6 +66,9 @@ export function Cart({isOpen, setIsOpen}: Props) {
     cartId: "",
     cartItems: []
   })
+  const [pendingUpdates, setPendingUpdates] = useState<Record<string, number>>({});
+  const debouncedPendingUpdates = useDebounce(pendingUpdates, 500);
+
   useEffect(() => {
     if (data && data.data) {
       setTimeout(() => {
@@ -76,18 +80,32 @@ export function Cart({isOpen, setIsOpen}: Props) {
       }, 0);
     }
   }, [data]);
+
+  useEffect(() => {
+    if (Object.keys(debouncedPendingUpdates).length === 0) return;
+
+    Object.entries(debouncedPendingUpdates).forEach(([productCartItemId, quantity]) => {
+      triggerUpdateProductCartItemQuantity({productCartItemId, quantity})
+        .then(() => {
+          mutate();
+          mutateCartView();
+        })
+        .catch((err: ErrorResponse) => {
+          const alert: AlertState = {
+            isOpen: true,
+            title: "Thất bại",
+            message: err.message || "Cập nhật số lượng thất bại",
+            type: AlertType.ERROR,
+          }
+          dispatch(openAlert(alert));
+        });
+    });
+    setTimeout(()=>{
+      setPendingUpdates({});
+    },0);
+  }, [debouncedPendingUpdates, triggerUpdateProductCartItemQuantity, mutate, mutateCartView, dispatch]);
+
   const handleChangeQuantity = (cartItemId: string, productCartItemId: string, delta: number) => {
-    // Cập nhật trên server
-    const cartItem = cartData.cartItems.find(item => item.cartItemId === cartItemId);
-    if (!cartItem) return;
-    const productCartItem = cartItem.productCartItems.find(pci => pci.productCartItemId === productCartItemId);
-    if (!productCartItem) return;
-    const variant = productCartItem.productView.productVariants.find(v => v.productVariantId === productCartItem.productVariantId);
-    const maxQty = variant?.stockQuantity || 99;
-    const newQty = Math.max(1, Math.min(productCartItem.quantity + delta, maxQty));
-
-    triggerUpdateProductCartItemQuantity({productCartItemId, quantity: newQty})
-
     setCartData(prev => {
       const newCartItems = prev.cartItems.map(item => {
         if (item.cartItemId !== cartItemId) return item;
@@ -99,6 +117,12 @@ export function Cart({isOpen, setIsOpen}: Props) {
             const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
             const maxQty = variant?.stockQuantity || 99;
             const newQty = Math.max(1, Math.min(pci.quantity + delta, maxQty));
+
+            setPendingUpdates(prev => ({
+              ...prev,
+              [productCartItemId]: newQty
+            }));
+
             return {...pci, quantity: newQty};
           })
         };
@@ -107,8 +131,8 @@ export function Cart({isOpen, setIsOpen}: Props) {
     });
   };
 
-  const handleDelete = (cartItemId: string) => {
-    trigger({cartItemId}).then(() => {
+  const handleDelete = (productCartItemId: string) => {
+    trigger({productCartItemId}).then(() => {
       mutate();
       mutateCartView();
     }).catch((err: ErrorResponse) => {
@@ -344,7 +368,11 @@ export function Cart({isOpen, setIsOpen}: Props) {
                           <button
                             className="p-2 rounded bg-support-c300 hover:bg-support-c400 transition cursor-pointer"
                             title="Xóa sản phẩm"
-                            onClick={() => handleDelete(item.cartItemId)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              handleDelete(pci.productCartItemId);
+                            }}
                           >
                             <DeleteOutlineRoundedIcon className={"text-support-c700"}/>
                           </button>
