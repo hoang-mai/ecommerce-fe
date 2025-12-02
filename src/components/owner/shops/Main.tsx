@@ -1,5 +1,5 @@
 "use client";
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import Image from "next/image";
 import useSWR from "swr";
 import DropdownSelect from "@/libs/DropdownSelect";
@@ -29,28 +29,14 @@ import {useAddressMapping} from "@/hooks/useAddressMapping";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import {useRouter} from "next/navigation";
 import {useBuildUrl} from "@/hooks/useBuildUrl";
+import { ShopView } from "@/types/interface";
 
-interface Shop {
-  shopId: number;
-  ownerId: number;
-  shopName: string;
-  description: string | null;
-  logoUrl: string | null;
-  bannerUrl: string | null;
-  rating: number | null;
-  shopStatus: ShopStatus;
-  province: string;
-  ward: string;
-  detail: string;
-  phoneNumber: string;
-  createdAt: string;
-  updatedAt: string;
-}
+
 
 export default function Main() {
   const { get } = useAxiosContext();
   const fetcher = (url: string) =>
-    get<BaseResponse<PageResponse<Shop>>>(url).then(res => res.data);
+    get<BaseResponse<PageResponse<ShopView>>>(url).then(res => res.data);
 
   const [status, setStatus] = useState<string>("");
   const [keyword, setKeyword] = useState("");
@@ -61,7 +47,7 @@ export default function Main() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
+  const [selectedShop, setSelectedShop] = useState<ShopView | null>(null);
   const router = useRouter();
   const debouncedKeyword = useDebounce(keyword, 500);
   const dispatch = useDispatch();
@@ -177,19 +163,19 @@ export default function Main() {
     router.push(`/owner/shops/${id}`);
   };
 
-  const handleEditShop = (shop: Shop) => {
+  const handleEditShop = (shop: ShopView) => {
     setSelectedShop(shop);
     setIsEditModalOpen(true);
   };
 
-  const handleUpdateStatus = (shop: Shop) => {
+  const handleUpdateStatus = (shop: ShopView) => {
     setSelectedShop(shop);
     setIsUpdateStatusOpen(true);
   };
 
 
   // Define columns for the table
-  const columns: Column<Shop>[] = [
+  const columns: Column<ShopView>[] = [
     {
       key: "shopId",
       label: "ID",
@@ -298,7 +284,7 @@ export default function Main() {
       render: (row) => (
         <div className="flex gap-2 justify-center">
           <button
-            onClick={() => handleViewShop(row.shopId)}
+            onClick={() => handleViewShop(Number(row.shopId))}
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
           >
@@ -398,7 +384,7 @@ export default function Main() {
       )}
 
       {/* Table */}
-      <Table<Shop>
+      <Table<ShopView>
         columns={columns}
         data={shops}
         keyExtractor={(row) => row.shopId}
@@ -431,7 +417,7 @@ export default function Main() {
           isOpen={isUpdateStatusOpen}
           setIsOpen={setIsUpdateStatusOpen}
           reload={mutate}
-          shopId={selectedShop.shopId}
+          shopId={Number(selectedShop.shopId)}
           currentStatus={selectedShop.shopStatus}
           shopName={selectedShop.shopName}
         />
@@ -447,7 +433,7 @@ export default function Main() {
           }}
           reload={mutate}
           shopData={{
-            shopId: selectedShop.shopId,
+            shopId: Number(selectedShop.shopId),
             shopName: selectedShop.shopName,
             description: selectedShop.description,
             logoUrl: selectedShop.logoUrl,

@@ -27,23 +27,7 @@ import ChangeCircleRoundedIcon from "@mui/icons-material/ChangeCircleRounded";
 import UpdateStatusShopModal from "@/components/owner/shops/UpdateStatusShopModal";
 import UpdateShopModal from "@/components/owner/shops/UpdateShopModal";
 import {InfoRow} from "@/libs/InfoRow";
-
-interface ResShopDTO {
-  shopId: number;
-  ownerId: number;
-  shopName: string;
-  description: string | null;
-  logoUrl: string | null;
-  bannerUrl: string | null;
-  rating: number | null;
-  shopStatus: ShopStatus;
-  province: string;
-  ward: string;
-  detail: string;
-  phoneNumber: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import {ShopView} from "@/types/interface";
 
 type Props = {
   id: string;
@@ -53,7 +37,7 @@ export default function Main({id}: Props) {
   const {get} = useAxiosContext();
 
   const fetcher = (url: string) =>
-    get<BaseResponse<ResShopDTO>>(url, {isToken: true}).then(res => res.data.data);
+    get<BaseResponse<ShopView>>(url, {isToken: true}).then(res => res.data.data);
 
   const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -165,21 +149,12 @@ export default function Main({id}: Props) {
 
       {/* Banner với overlay gradient */}
       <div className="relative w-full h-72 rounded-3xl overflow-hidden mb-8 shadow-2xl group">
-        {shop.bannerUrl ? (
           <Image
-            src={shop.bannerUrl}
+            src={shop.bannerUrl || "/imageBanner.jpg"}
             alt={shop.shopName}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
-        ) : (
-          <Image
-            src={"/imageBanner.jpg"}
-            alt={shop.shopName}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
 
         {/* Shop info overlay on banner */}
@@ -299,7 +274,7 @@ export default function Main({id}: Props) {
           isOpen={isUpdateStatusOpen}
           setIsOpen={setIsUpdateStatusOpen}
           reload={mutate}
-          shopId={shop.shopId}
+          shopId={Number(shop.shopId)}
           currentStatus={shop.shopStatus}
           shopName={shop.shopName}
         />
@@ -314,7 +289,7 @@ export default function Main({id}: Props) {
           }}
           reload={mutate}
           shopData={{
-            shopId: shop.shopId,
+            shopId: Number(shop.shopId),
             shopName: shop.shopName,
             description: shop.description,
             logoUrl: shop.logoUrl,

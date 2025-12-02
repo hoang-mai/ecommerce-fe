@@ -33,3 +33,10 @@ export function isTokenExpired(token: string) {
 
   return decoded.exp - bufferTime < currentTime;
 }
+
+export function formatNumber(number: number) {
+    if (number >= 1000) {
+        return (number / 1000).toFixed(1) + 'k';
+    }
+    return number.toString();
+}

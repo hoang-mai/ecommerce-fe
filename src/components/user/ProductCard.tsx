@@ -1,6 +1,6 @@
 import React, {ReactNode, useRef, useState} from "react";
 import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRounded";
-import {formatPrice} from "@/util/FnCommon";
+import {formatNumber, formatPrice} from "@/util/FnCommon";
 import Button from "@/libs/Button";
 import {AlertType, ColorButton} from "@/types/enum";
 import {useCartData, useCartRef} from "@/components/provider/CartProvider";
@@ -125,12 +125,7 @@ export default function ProductCard({product}: ProductCardProps) {
 
   }
 
-  const renderSoldCount = (totalSold: number) => {
-    if (totalSold >= 1000) {
-      return (totalSold / 1000).toFixed(1) + 'k';
-    }
-    return totalSold.toString();
-  }
+
   return (
     <>
       <div
@@ -163,12 +158,12 @@ export default function ProductCard({product}: ProductCardProps) {
           <div className="flex flex-col">
             <div className={"flex flex-row items-center gap-2"}>
               <div className="text-sm text-grey-c600">
-                Đã bán <span className={"font-semibold"}>{renderSoldCount(product.totalSold) || 0}</span>
+                Đã bán <span className={"font-semibold"}>{formatNumber(product.totalSold) || 0}</span>
               </div>
               <div className="h-4 w-px bg-gray-300"></div>
               <div className="flex items-center gap-1 text-gray-600">
                 <ChatBubbleOutlineRoundedIcon className={"!w-4 !h-4"}/>
-                <span className="text-sm font-semibold">{renderSoldCount(product.numberOfReviews || 0)}</span>
+                <span className="text-sm font-semibold">{formatNumber(product.numberOfReviews || 0)}</span>
               </div>
             </div>
             <div className="flex items-center">

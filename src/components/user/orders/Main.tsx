@@ -9,7 +9,7 @@ import Title from "@/libs/Title";
 import TextField from "@/libs/TextField";
 import DropdownSelect from "@/libs/DropdownSelect";
 import {formatDate, formatPrice} from "@/util/FnCommon";
-import {AlertType, OrderStatus} from "@/types/enum";
+import {AlertType, ColorButton, OrderStatus} from "@/types/enum";
 import Divide from "@/libs/Divide";
 import OrderItemDetailModal from "@/components/user/orders/OrderItemDetailModal";
 import Chip, {ChipColor} from "@/libs/Chip";
@@ -24,6 +24,8 @@ import {useDispatch} from "react-redux";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import Image from "next/image";
 import Pagination from "@/libs/Pagination";
+import Button from "@/libs/Button";
+import StorefrontIcon from "@mui/icons-material/Storefront";
 
 interface ProductAttribute {
   attributeName: string;
@@ -366,10 +368,17 @@ export default function Main() {
                   </div>
                 </div>
                 <div className={"border border-primary-c400 rounded-lg p-4 "}>
-                  <div className="mb-3 pb-2 border-b border-grey-c300">
+                  <div className="mb-3 pb-2 border-b border-grey-c300 flex items-center justify-between">
                     <h3 className="font-semibold text-lg text-primary-c900">
                       🏪 {order.shopName}
                     </h3>
+                      <Button
+                          className={"!py-1"}
+                          color={ColorButton.PRIMARY}
+                          startIcon={<StorefrontIcon className="!w-5 !h-5"/>}>
+
+                          Xem Shop
+                      </Button>
                   </div>
                   {/* Order Items */}
                   <div className="space-y-3 mb-4">
