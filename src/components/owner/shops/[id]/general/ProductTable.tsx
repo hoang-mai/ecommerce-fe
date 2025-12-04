@@ -343,7 +343,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-grey-c200 p-6 hover:shadow-xl transition-shadow">
+    <div className="p-6">
       {isLoading && <Loading/>}
 
       <div className="flex items-center justify-between mb-6">

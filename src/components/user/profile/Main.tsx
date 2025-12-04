@@ -33,9 +33,7 @@ export interface ProfileData {
   userId: number;
   email: string | null;
   description: string | null;
-  firstName: string | null;
-  middleName: string | null;
-  lastName: string;
+  fullName: string;
   phoneNumber: string | null;
   dateOfBirth: string | null;
   avatarUrl: string | null;
@@ -108,7 +106,7 @@ export default function Main() {
             </button>
           </div>
           <div className={"text-2xl font-semibold text-grey-c800"}>
-            {`${data?.firstName || ''} ${data?.middleName || ''} ${data?.lastName || ''}`.trim() || 'Người dùng'}
+            {data?.fullName || 'Người dùng'}
           </div>
           <div className="text-grey-c600">{data?.role}</div>
           <div className="text-grey-c600">{data?.email}</div>
@@ -195,7 +193,7 @@ export default function Main() {
                 <InfoRow
                   icon={<PersonRoundedIcon/>}
                   label="Họ và tên"
-                  value={`${data?.firstName || ''} ${data?.middleName || ''} ${data?.lastName || ''}`.trim() || 'Người dùng'}
+                  value={data?.fullName || 'Người dùng'}
                 />
                 <InfoRow
                   icon={<WcRoundedIcon/>}

@@ -24,6 +24,7 @@ import useSWRMutation from "swr/mutation";
 import Divide from "@/libs/Divide";
 import {CartViewDTO} from "@/types/interface";
 import Empty from "@/libs/Empty";
+import {useCartData} from "@/components/provider/CartProvider";
 
 interface ResCreateProductOrderItemDTO {
   productId: number;
@@ -47,7 +48,7 @@ export default function Main() {
   const fetcherCreateOrder = (url: string, {arg}:{arg:ResCreateOrderDTO}) => post<BaseResponse<never>>(url,arg).then(res=>res.data);
   const fetcher = (url: string) => get<BaseResponse<CartViewDTO>>(url).then(res => res.data);
   const fetcherAddress = (url: string) => get<BaseResponse<ResInfoAddressDTO>>(url).then(res => res.data);
-
+  const {mutate} = useCartData();
   const {data, isLoading, error} = useSWR(CART_VIEW, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
@@ -134,6 +135,9 @@ export default function Main() {
     };
 
     trigger(reqCreateOrder)
+        .then(()=>{
+            mutate();
+        })
       .catch((err: ErrorResponse) => {
         const alert: AlertState = {
           isOpen: true,

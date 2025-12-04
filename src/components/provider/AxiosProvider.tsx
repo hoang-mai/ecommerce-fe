@@ -1,7 +1,7 @@
 'use client';
 import {createContext, useContext, useCallback, useMemo, FC, ReactNode} from 'react';
 import axios, {AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig} from 'axios';
-import {LOGIN, PRODUCT_VIEW, REFRESH_TOKEN, REGISTER, SHOP_VIEW} from '@/services/api';
+import {LOGIN, PRODUCT_VIEW, REFRESH_TOKEN, REGISTER, REVIEW_VIEW, SHOP_VIEW} from '@/services/api';
 import {isTokenExpired} from "@/util/FnCommon";
 import {clearAllLocalStorage} from "@/services/localStorage";
 
@@ -31,6 +31,7 @@ const ROUTER_NOT_AUTHS = [
   PRODUCT_VIEW,
   `${SHOP_VIEW}/`,
   REFRESH_TOKEN,
+  REVIEW_VIEW
 ];
 
 export const AxiosProvider: FC<{ children: ReactNode }> = ({children}) => {

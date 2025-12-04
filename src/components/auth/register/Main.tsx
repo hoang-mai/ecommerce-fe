@@ -23,24 +23,6 @@ import wardData from "@/util/ward.json";
 import {phoneRegex} from "@/util/regex";
 import {useAddressMapping} from "@/hooks/useAddressMapping";
 
-interface ProvinceData {
-  name: string;
-  slug: string;
-  type: string;
-  name_with_type: string;
-  code: string;
-}
-
-interface WardData {
-  name: string;
-  type: string;
-  slug: string;
-  name_with_type: string;
-  path: string;
-  path_with_type: string;
-  code: string;
-  parent_code: string;
-}
 
 const registerSchema = z.object({
   username: z.string()
@@ -52,18 +34,10 @@ const registerSchema = z.object({
     .nonempty('Mật khẩu không được để trống')
     .min(6, 'Mật khẩu phải có từ 6 đến 20 ký tự')
     .max(20, 'Mật khẩu phải có từ 6 đến 20 ký tự'),
-  firstName: z.string()
-    .max(10, 'Tên phải có từ 1 đến 10 ký tự')
-    .optional()
-    .or(z.literal('')),
-  middleName: z.string()
-    .max(10, 'Tên đệm không được quá 10 ký tự')
-    .optional()
-    .or(z.literal('')),
-  lastName: z.string()
-    .nonempty('Tên không được để trống')
-    .min(1, 'Họ phải có từ 1 đến 10 ký tự')
-    .max(10, 'Họ phải có từ 1 đến 10 ký tự'),
+  fullName: z.string()
+    .nonempty('Họ và tên không được để trống')
+    .min(1, 'Họ và tên phải có từ 1 đến 30 ký tự')
+    .max(30, 'Họ và tên phải có từ 1 đến 30 ký tự'),
   gender: z.enum(Gender).optional(),
   receiverName: z.string()
     .nonempty('Tên người nhận không được để trống'),
@@ -99,9 +73,7 @@ export default function Main() {
     defaultValues: {
       username: '',
       password: '',
-      firstName: '',
-      middleName: '',
-      lastName: '',
+      fullName: '',
       gender: undefined,
       receiverName: '',
       province: '',
@@ -199,61 +171,39 @@ export default function Main() {
               <h3 className="text-lg font-semibold text-grey-c800">Thông tin cá nhân</h3>
 
               {/* Name Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Controller control={control} name={"firstName"} render={({field}) =>
-                  <TextField htmlFor={"firstName"}
-                             id={"firstName"}
-                             label={"Họ"}
-                             placeholder={"Nhập họ"}
-                             disabled={isMutating}
-                             error={errors.firstName?.message}
-                             value={field.value}
-                             onChange={field.onChange}
-                  />
-                }/>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                <Controller control={control} name={"middleName"} render={({field}) =>
-                  <TextField htmlFor={"middleName"}
-                             id={"middleName"}
-                             label={"Tên đệm"}
-                             placeholder={"Nhập tên đệm"}
+                <Controller control={control} name={"fullName"} render={({field}) =>
+                  <TextField htmlFor={"fullName"}
+                             id={"fullName"}
+                             label={"Họ và tên"}
+                             placeholder={"Nhập họ và tên"}
                              disabled={isMutating}
-                             error={errors.middleName?.message}
-                             value={field.value}
-                             onChange={field.onChange}
-                  />
-                }/>
-
-                <Controller control={control} name={"lastName"} render={({field}) =>
-                  <TextField htmlFor={"lastName"}
-                             id={"lastName"}
-                             label={"Tên"}
-                             placeholder={"Nhập tên"}
-                             disabled={isMutating}
-                             error={errors.lastName?.message}
+                             error={errors.fullName?.message}
                              required={true}
                              value={field.value}
                              onChange={field.onChange}
                   />
                 }/>
+                {/* Gender Field */}
+                <Controller control={control} name={"gender"} render={({field}) =>
+                  <DropdownSelect htmlFor={"gender"}
+                                  id={"gender"}
+                                  label={"Giới tính"}
+                                  placeholder={"Chọn giới tính"}
+                                  disabled={isMutating}
+                                  error={errors.gender?.message}
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  options={[Gender.MALE, Gender.FEMALE, Gender.OTHER].map(gender => ({
+                                    id: gender,
+                                    label: GenderLabel[gender],
+                                  }))}
+                  />
+                }/>
               </div>
 
-              {/* Gender Field */}
-              <Controller control={control} name={"gender"} render={({field}) =>
-                <DropdownSelect htmlFor={"gender"}
-                                id={"gender"}
-                                label={"Giới tính"}
-                                placeholder={"Chọn giới tính"}
-                                disabled={isMutating}
-                                error={errors.gender?.message}
-                                value={field.value}
-                                onChange={field.onChange}
-                                options={[Gender.MALE, Gender.FEMALE, Gender.OTHER].map(gender => ({
-                                  id: gender,
-                                  label: GenderLabel[gender],
-                                }))}
-                />
-              }/>
+
             </div>
 
             {/* Thông tin địa chỉ */}

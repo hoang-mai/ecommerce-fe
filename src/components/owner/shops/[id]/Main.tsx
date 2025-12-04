@@ -15,7 +15,7 @@ import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
 import {formatDateTime} from "@/util/FnCommon";
 import {useRouter} from "next/navigation";
-import ProductTable from "./ProductTable";
+import ProductTable from "./general/ProductTable";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {SHOP_VIEW} from "@/services/api";
 import Loading from "@/components/modals/Loading";
@@ -28,23 +28,48 @@ import UpdateStatusShopModal from "@/components/owner/shops/UpdateStatusShopModa
 import UpdateShopModal from "@/components/owner/shops/UpdateShopModal";
 import {InfoRow} from "@/libs/InfoRow";
 import {ShopView} from "@/types/interface";
+import ScrollTab, {TabItem} from "@/libs/ScrollTab";
+import General from "@/components/owner/shops/[id]/general/General";
+import Orders from "@/components/owner/shops/[id]/orders/Orders";
+import Reviews from "@/components/owner/shops/[id]/reviews/Reviews";
 
 type Props = {
   id: string;
 }
-
+export const shopDefault: ShopView = {
+  shopId: "",
+  shopName: "",
+  description: "hello",
+  logoUrl: "",
+  bannerUrl: "",
+  shopStatus: ShopStatus.INACTIVE,
+  ownerId: "",
+  province: "",
+  ward: "",
+  detail: "",
+  phoneNumber: "",
+  totalProducts: 0,
+  activeProducts: 0,
+  totalSold: 0,
+  totalRevenue: 0,
+  rating: 0,
+  numberOfRatings: 0,
+  numberOfReviews: 0,
+  createdAt: new Date(0).toISOString(),
+  updatedAt: new Date(0).toISOString(),
+};
 export default function Main({id}: Props) {
   const {get} = useAxiosContext();
 
   const fetcher = (url: string) =>
     get<BaseResponse<ShopView>>(url, {isToken: true}).then(res => res.data.data);
-
+  const [activeTab, setActiveTab] = useState<string>('1');
   const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
-  const {getProvinceName, getWardName} = useAddressMapping();
-  const {data: shop, error, isLoading, mutate} = useSWR(
+
+  const {data, error, isLoading, mutate} = useSWR(
     `${SHOP_VIEW}/${id}?isOwner=true`,
     fetcher,
     {
@@ -52,6 +77,12 @@ export default function Main({id}: Props) {
       revalidateOnFocus: false,
     }
   );
+  const shop = data ?? shopDefault;
+  const tabs: TabItem[] = [
+    {key: '1', label: 'Tổng quan'},
+    {key: '2', label: 'Đơn hàng'},
+    {key: '3', label: 'Đánh giá'},
+  ];
 
   const getStatusColor = (status: ShopStatus): ChipColor => {
     switch (status) {
@@ -102,13 +133,10 @@ export default function Main({id}: Props) {
     }
   }, [dispatch, error]);
 
-  if (isLoading || !shop) {
-    return <Loading/>;
-  }
-
   return (
-    <div className="pb-8">
+    <div className="">
       {/* Header */}
+      {isLoading && <Loading/>}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <Button
@@ -148,13 +176,13 @@ export default function Main({id}: Props) {
       </div>
 
       {/* Banner với overlay gradient */}
-      <div className="relative w-full h-72 rounded-3xl overflow-hidden mb-8 shadow-2xl group">
-          <Image
-            src={shop.bannerUrl || "/imageBanner.jpg"}
-            alt={shop.shopName}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+      <div className="relative w-full h-72 rounded-3xl overflow-hidden mb-8 shadow-lg group">
+        <Image
+          src={shop.bannerUrl || "/imageBanner.jpg"}
+          alt={shop.shopName}
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
 
         {/* Shop info overlay on banner */}
@@ -200,74 +228,14 @@ export default function Main({id}: Props) {
           </div>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Shop Info */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Description Card */}
-          {shop.description && (
-            <div
-              className="bg-white rounded-2xl shadow-lg border border-grey-c200 p-6 hover:shadow-xl transition-shadow">
-              <h3 className="text-lg font-bold text-grey-c800 mb-4 flex items-center gap-2">
-                <div className="w-1 h-6 bg-primary-c700 rounded"></div>
-                Giới thiệu
-              </h3>
-              <div className="bg-grey-c50 rounded-lg p-4">
-                <p className="text-grey-c700 leading-relaxed">
-                  {shop.description}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Contact & Address Card */}
-          <div className="bg-white rounded-2xl shadow-lg border border-grey-c200 p-6 hover:shadow-xl transition-shadow">
-            <h3 className="text-lg font-bold text-grey-c800 mb-4 flex items-center gap-2">
-              <div className="w-1 h-6 bg-primary-c700 rounded"></div>
-              Thông tin liên hệ
-            </h3>
-            <div className="bg-grey-c50 rounded-lg p-4 space-y-0">
-              <InfoRow
-                icon={<LocationOnRoundedIcon/>}
-                label="Địa chỉ"
-                value={`${shop.detail}, ${getWardName(shop.ward)}, ${getProvinceName(shop.province)}`}
-              />
-              <InfoRow
-                icon={<PhoneRoundedIcon/>}
-                label="Số điện thoại"
-                value={shop.phoneNumber}
-              />
-            </div>
-          </div>
-
-
-          {/* Product Table */}
-          <ProductTable shopId={id}/>
-        </div>
-
-        {/* Right Column - Additional Info */}
-        <div className="space-y-6">
-          {/* Timeline Card */}
-          <div className="bg-white rounded-2xl shadow-lg border border-grey-c200 p-6 hover:shadow-xl transition-shadow">
-            <h3 className="text-lg font-bold text-grey-c800 mb-4 flex items-center gap-2">
-              <div className="w-1 h-6 bg-primary-c700 rounded"></div>
-              Lịch sử
-            </h3>
-            <div className="bg-grey-c50 rounded-lg p-4 space-y-0">
-              <InfoRow
-                icon={<CalendarTodayRoundedIcon/>}
-                label="Ngày tạo"
-                value={formatDateTime(shop.createdAt)}
-              />
-              <InfoRow
-                icon={<AccessTimeRoundedIcon/>}
-                label="Cập nhật gần nhất"
-                value={formatDateTime(shop.updatedAt)}
-              />
-            </div>
-          </div>
-        </div>
+      <div className={"px-4 py-2 bg-white mb-2 rounded-2xl shadow-lg border border-grey-c200"}>
+        <ScrollTab items={tabs} onChange={setActiveTab} activeKey={activeTab}/>
+        {activeTab === '1' ? <General shop={shop} id={id}/>
+          : activeTab === '2' ? <Orders id={id}/>
+            : activeTab === '3' ? <Reviews id={id}/> : null
+        }
       </div>
+
       {/* Update Status Shop Modal */}
       {isUpdateStatusOpen && shop && (
         <UpdateStatusShopModal

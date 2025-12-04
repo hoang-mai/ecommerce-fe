@@ -13,7 +13,7 @@ import {AlertType, ColorButton, ProductStatus, ProductVariantStatus, ShopStatus}
 import Button from "@/libs/Button";
 import {ProductVariant, ProductView,} from "@/types/interface";
 import ImagePreview from "@/libs/ImagePreview";
-import {formatPrice} from "@/util/FnCommon";
+import {formatNumber, formatPrice} from "@/util/FnCommon";
 import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
 import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
 import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRounded";
@@ -25,7 +25,7 @@ import Star from "@/libs/Star";
 
 const productDefault: ProductView = {
     productId: "prod_002",
-    shopId: "shop_samsung_official",
+    shopId: "",
     rating: 500,
     numberOfRatings: 200,
     numberOfReviews: 300,
@@ -241,12 +241,7 @@ export default function Main({id}: Props) {
         }
     }, [defaultVariant]);
 
-    const renderSoldCount = (totalSold: number) => {
-        if (totalSold >= 1000) {
-            return (totalSold / 1000).toFixed(1) + 'k';
-        }
-        return totalSold.toString();
-    }
+
     return (
         <div className="max-w-5xl mx-auto p-6">
             {isLoading && <Loading/>}
@@ -350,7 +345,7 @@ export default function Main({id}: Props) {
                                 </p>
                                 <p className="text-sm text-grey-c600">
                                     Đã bán: <span
-                                    className="font-semibold">{renderSoldCount(selectedVariant.sold || 0)}</span>
+                                    className="font-semibold">{formatNumber(selectedVariant.sold || 0)}</span>
                                 </p>
                             </div>
                         )}
@@ -396,7 +391,8 @@ export default function Main({id}: Props) {
                 onClose={() => setSelectedImage(null)}
                 alt="Product Image"
             />
-            <Shop id={id}/>
+            {product.shopId && <Shop id={product.shopId}/>}
+
             <Review id={id} product={product}/>
         </div>
     )

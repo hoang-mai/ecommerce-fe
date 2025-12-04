@@ -28,9 +28,7 @@ interface UserViewDto {
   username: string;
   email: string | null;
   accountStatus: AccountStatus;
-  firstName: string | null;
-  middleName: string | null;
-  lastName: string;
+  fullName: string;
   phoneNumber: string | null;
   role: Role;
   avatarUrl: string | null;
@@ -201,7 +199,7 @@ export default function Main() {
       ),
     },
     {
-      key: "lastName",
+      key: "fullName",
       label: "Họ và tên",
       sortable: true,
       render: (row) => (
@@ -216,7 +214,7 @@ export default function Main() {
             />
           </div>
           <div className="text-sm font-semibold text-grey-c900">
-            {highlightText(`${row.firstName} ${row.middleName} ${row.lastName}`.trim(), keyword)}
+            {highlightText(row.fullName, keyword)}
           </div>
         </div>
 

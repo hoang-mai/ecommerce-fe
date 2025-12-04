@@ -26,6 +26,7 @@ import Image from "next/image";
 import Pagination from "@/libs/Pagination";
 import Button from "@/libs/Button";
 import StorefrontIcon from "@mui/icons-material/Storefront";
+import {useRouter} from "next/navigation";
 
 interface ProductAttribute {
   attributeName: string;
@@ -46,10 +47,11 @@ export interface OrderItem {
   productAttributes: ProductAttribute[];
 }
 
-export interface Order {
+export interface OrderView {
   orderId: string;
   userId: string;
   shopId: string;
+  ownerId: string;
   shopName: string;
   shopLogoUrl: string;
   orderStatus: OrderStatus;
@@ -64,7 +66,7 @@ export interface Order {
 }
 
 // Mock data for testing
-const mockOrders: Order[] = [
+const mockOrders: OrderView[] = [
   {
     orderId: "ORDER-001",
     userId: "USER-001",
@@ -92,8 +94,8 @@ const mockOrders: Order[] = [
         totalDiscount: 0,
         totalFinalPrice: 1000000,
         productAttributes: [
-          { attributeName: "Màu sắc", attributeValue: "Đen" },
-          { attributeName: "Kích thước", attributeValue: "L" }
+          {attributeName: "Màu sắc", attributeValue: "Đen"},
+          {attributeName: "Kích thước", attributeValue: "L"}
         ]
       },
       {
@@ -108,11 +110,12 @@ const mockOrders: Order[] = [
         totalDiscount: 0,
         totalFinalPrice: 500000,
         productAttributes: [
-          { attributeName: "Màu sắc", attributeValue: "Xanh đậm" },
-          { attributeName: "Kích thước", attributeValue: "32" }
+          {attributeName: "Màu sắc", attributeValue: "Xanh đậm"},
+          {attributeName: "Kích thước", attributeValue: "32"}
         ]
       }
-    ]
+    ],
+    ownerId: ""
   },
   {
     orderId: "ORDER-002",
@@ -141,11 +144,12 @@ const mockOrders: Order[] = [
         totalDiscount: 0,
         totalFinalPrice: 15000000,
         productAttributes: [
-          { attributeName: "RAM", attributeValue: "16GB" },
-          { attributeName: "SSD", attributeValue: "512GB" }
+          {attributeName: "RAM", attributeValue: "16GB"},
+          {attributeName: "SSD", attributeValue: "512GB"}
         ]
       }
-    ]
+    ],
+    ownerId: ""
   },
   {
     orderId: "ORDER-003",
@@ -174,11 +178,12 @@ const mockOrders: Order[] = [
         totalDiscount: 0,
         totalFinalPrice: 750000,
         productAttributes: [
-          { attributeName: "Màu sắc", attributeValue: "Trắng" },
-          { attributeName: "Size", attributeValue: "42" }
+          {attributeName: "Màu sắc", attributeValue: "Trắng"},
+          {attributeName: "Size", attributeValue: "42"}
         ]
       }
-    ]
+    ],
+    ownerId: ""
   }
 ];
 
@@ -225,7 +230,8 @@ export const getStatusColor = (status: OrderStatus) => {
       return ChipColor.RETURNED;
   }
 };
-const statusOptions: Option[] = [
+
+export const statusOptions: Option[] = [
   {id: '', label: 'Tất cả trạng thái'},
   {id: OrderStatus.PENDING, label: 'Chờ xác nhận'},
   {id: OrderStatus.PAID, label: 'Đã thanh toán'},
@@ -244,9 +250,11 @@ export default function Main() {
   const [status, setStatus] = useState<string>("");
   const [keyword, setKeyword] = useState<string>('');
   const [selectOrderItem, setSelectOrderItem] = useState<OrderItem | null>(null);
+  const [selectOrder, setSelectOrder] = useState<OrderView | null>(null);
   const [selectedOrderStatus, setSelectedOrderStatus] = useState<OrderStatus | "">("");
   const debounce = useDebounce(keyword);
   const dispatch = useDispatch();
+  const router = useRouter();
   const url = useBuildUrl({
     baseUrl: ORDER_VIEW,
     queryParams: {
@@ -256,7 +264,7 @@ export default function Main() {
       pageSize: 5,
     }
   })
-  const fetcher = (url: string) => get<BaseResponse<PageResponse<Order>>>(url).then(res => res.data);
+  const fetcher = (url: string) => get<BaseResponse<PageResponse<OrderView>>>(url).then(res => res.data);
   const {data, isLoading, error} = useSWR(url, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
@@ -326,7 +334,7 @@ export default function Main() {
             Tìm thấy <strong className="text-primary-c800">{pageData?.totalElements || 0}</strong> đơn hàng
                 {keyword && <> với từ khóa &ldquo;<strong className="text-primary-c800">{keyword}</strong>&rdquo;</>}
                 {status && <> - Trạng thái: <strong
-                    className="text-primary-c800">{statusOptions.find(o => o.id === status)?.label}</strong></>}
+                  className="text-primary-c800">{statusOptions.find(o => o.id === status)?.label}</strong></>}
           </span>
               <button
                 onClick={handleClearSearch}
@@ -372,13 +380,14 @@ export default function Main() {
                     <h3 className="font-semibold text-lg text-primary-c900">
                       🏪 {order.shopName}
                     </h3>
-                      <Button
-                          className={"!py-1"}
-                          color={ColorButton.PRIMARY}
-                          startIcon={<StorefrontIcon className="!w-5 !h-5"/>}>
+                    <Button
+                      onClick={() => router.push(`/shops/${order.shopId}`)}
+                      className={"!py-1"}
+                      color={ColorButton.PRIMARY}
+                      startIcon={<StorefrontIcon className="!w-5 !h-5"/>}>
 
-                          Xem Shop
-                      </Button>
+                      Xem Shop
+                    </Button>
                   </div>
                   {/* Order Items */}
                   <div className="space-y-3 mb-4">
@@ -388,6 +397,7 @@ export default function Main() {
                              setSelectOrderItem(item)
                              setSelectedOrderStatus(order.orderStatus);
                              setIsOpen(true)
+                             setSelectOrder(order);
                            }}
                            className="flex gap-4 p-3 bg-grey-c50 rounded-lg hover:bg-grey-c100 cursor-pointer transition-colors">
                         <Image
@@ -447,10 +457,11 @@ export default function Main() {
       {/* Pagination Buttons */}
       <Pagination totalPages={totalPages} currentPage={pageNo} onPageChange={setPageNo}/>
       {/* Order Detail Modal */}
-      {selectOrderItem && isOpen && (
+      {selectOrderItem && isOpen && selectOrder && (
         <OrderItemDetailModal
           isOpen={isOpen}
           setIsOpen={setIsOpen}
+          selectedOrder={selectOrder}
           selectedOrderItem={selectOrderItem}
           orderStatus={selectedOrderStatus}
         />

@@ -1,66 +1,156 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import Image from 'next/image';
 import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
-import ImageIcon from '@mui/icons-material/Image';
 import MessageIcon from '@mui/icons-material/Message';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import Title from '@/libs/Title';
-import Button from '@/libs/Button';
-import Chip, { ChipSize, ChipVariant } from '@/libs/Chip';
+import Chip, {ChipSize, ChipVariant} from '@/libs/Chip';
 import Empty from '@/libs/Empty';
 import ImagePreview from '@/libs/ImagePreview';
 import DropdownSelect from '@/libs/DropdownSelect';
-import {ColorButton, RatingNumber} from '@/types/enum';
+import {AlertType, ColorButton, RatingNumber} from '@/types/enum';
 import {formatDateTime} from "@/util/FnCommon";
-import {ProductView} from "@/types/interface";
+import {ProductView, ReviewView} from "@/types/interface";
 import Star from "@/libs/Star";
+import {ratingOptions, sortOptions} from "@/components/owner/reviews/Main";
+import {useDispatch} from "react-redux";
+import {useBuildUrl} from "@/hooks/useBuildUrl";
+import {REVIEW_VIEW} from "@/services/api";
+import useSWR from "swr";
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
+import Pagination from "@/libs/Pagination";
+import {openAlert} from "@/redux/slice/alertSlice";
+import Loading from "@/components/modals/Loading";
 
 type Props = {
   id: string,
   product: ProductView;
 };
 
-interface ReviewReply  {
-  replyId: string;
-  replierName: string;
-  content: string;
-  createdAt: string;
-}
-
-interface Review {
-  reviewId: string;
-  userId: string;
-  userName: string;
-  avatarUrl?: string;
-  rating: RatingNumber;
-  comment: string;
-  imageUrls: string[];
-  attributes: Record<string, string>;
-  createdAt: string;
-  reviewReply?: ReviewReply | null;
-}
-
-type Filter = {
-  rating: string;
-  sortBy: string;
-};
+const mockReviews: ReviewView[] = [
+  {
+    reviewId: '1',
+    userId: 'user1',
+    fullName: 'Nguyễn Văn A',
+    avatarUrl: 'https://i.pravatar.cc/150?img=1',
+    rating: 5,
+    comment: 'Sản phẩm rất tốt, chất lượng vượt mong đợi. Giao hàng nhanh, đóng gói cẩn thận.',
+    imageUrls: ['https://picsum.photos/200/200?random=1', 'https://picsum.photos/200/200?random=2'],
+    attributes: {Mau: 'Đỏ', Size: 'L'},
+    createdAt: '2024-11-20T10:30:00',
+    reviewReplyView: {
+      replyId: 'r1',
+      content: 'Cảm ơn bạn đã tin tưởng sử dụng sản phẩm của shop!',
+      createdAt: '2024-11-21T09:00:00',
+      replierId: "",
+      updatedAt: ""
+    },
+    orderItemId: "",
+    productId: "",
+    productName: "",
+    productVariantId: "",
+    ownerId: "",
+    shopId: "",
+    updatedAt: "",
+    isUpdated: false
+  },
+  {
+    reviewId: '2',
+    userId: 'user2',
+    fullName: 'Trần Thị B',
+    avatarUrl: 'https://i.pravatar.cc/150?img=2',
+    rating: 4,
+    comment: 'Sản phẩm đẹp, đúng mô tả. Tuy nhiên giao hàng hơi lâu.',
+    imageUrls: ['https://picsum.photos/200/200?random=3'],
+    attributes: {Mau: 'Xanh', Size: 'M'},
+    createdAt: '2024-11-19T15:20:00',
+    reviewReplyView: null,
+    orderItemId: "",
+    productId: "",
+    productName: "",
+    productVariantId: "",
+    ownerId: "",
+    shopId: "",
+    updatedAt: "",
+    isUpdated: false
+  },
+  {
+    reviewId: '3',
+    userId: 'user3',
+    fullName: 'Lê Văn C',
+    avatarUrl: 'https://i.pravatar.cc/150?img=3',
+    rating: 5,
+    comment: 'Tuyệt vời, sẽ ủng hộ shop lần sau.',
+    imageUrls: [],
+    attributes: {Mau: 'Đen', Size: 'XL'},
+    createdAt: '2024-11-18T08:45:00',
+    reviewReplyView: null,
+    orderItemId: "",
+    productId: "",
+    productName: "",
+    productVariantId: "",
+    ownerId: "",
+    shopId: "",
+    updatedAt: "",
+    isUpdated: false
+  },
+  {
+    reviewId: '4',
+    userId: 'user4',
+    fullName: 'Phạm Thị D',
+    avatarUrl: 'https://i.pravatar.cc/150?img=4',
+    rating: 3,
+    comment: 'Sản phẩm bình thường, giá hơi cao.',
+    imageUrls: [],
+    attributes: {Mau: 'Trắng', Size: 'S'},
+    createdAt: '2024-11-17T14:30:00',
+    reviewReplyView: null,
+    orderItemId: "",
+    productId: "",
+    productName: "",
+    productVariantId: "",
+    ownerId: "",
+    shopId: "",
+    updatedAt: "",
+    isUpdated: false
+  }
+];
 
 export default function Review({id, product}: Props) {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [filter, setFilter] = useState<Filter>({
-    rating: '',
-    sortBy: 'newest'
-  });
-  const [pageNo, setPageNo] = useState<number>(0);
-  const [totalPages, setTotalPages] = useState<number>(0);
-  // Image preview state using shared ImagePreview component
+  const {get} = useAxiosContext();
+  const [rating, setRating] = useState<string>('');
+  const [sortLabel, setSortLabel] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState<number>(0);
+
+  const dispatch = useDispatch();
+  const url = useBuildUrl({
+    baseUrl: REVIEW_VIEW,
+    queryParams: {
+      productId: id,
+      stars: rating || undefined,
+      pageNo: currentPage,
+      pageSize: 25,
+      sortBy: sortBy || undefined,
+      sortDir: sortDir || undefined,
+    }
+  })
+  const fetcher = (url: string) => get<BaseResponse<PageResponse<ReviewView>>>(url).then(res => res.data);
+  const {data, isLoading, error} = useSWR(url, fetcher, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
+  const pageData = data?.data;
+  const reviews = pageData?.data || mockReviews;
+  const totalPages = pageData?.totalPages || 0;
+
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // Use product statistics instead of calculating from mock data
   const statistics = useMemo(() => {
     const totalReviews = product.numberOfReviews || 0;
     const totalRatings = product.numberOfRatings || 0;
-    const averageRating = product.rating/product.numberOfRatings || 0;
+    const averageRating = product.rating / product.numberOfRatings || 0;
     const ratingDistribution: Record<number, number> = {
       1: product.ratingStatistics?.[1] || 0,
       2: product.ratingStatistics?.[2] || 0,
@@ -68,127 +158,23 @@ export default function Review({id, product}: Props) {
       4: product.ratingStatistics?.[4] || 0,
       5: product.ratingStatistics?.[5] || 0,
     };
-
-    return { totalReviews,totalRatings, averageRating, ratingDistribution };
+    return {totalReviews, totalRatings, averageRating, ratingDistribution};
   }, [product]);
 
-  // Mock data - thay bằng API call thực tế
+
   useEffect(() => {
-    loadReviews();
-  }, [filter, pageNo, id]);
+    if (error) {
+      const alert: AlertState = {
+        isOpen: true,
+        message: error.message || "Đã có lỗi xảy ra",
+        type: AlertType.ERROR,
+        title: "Lỗi tải dữ liệu",
+      }
+      dispatch(openAlert(alert));
+    }
+  }, [dispatch, error]);
 
-  const loadReviews = () => {
-    setTimeout(() => {
-      const mockReviews: Review[] = [
-        {
-          reviewId: '1',
-          userId: 'user1',
-          userName: 'Nguyễn Văn A',
-          avatarUrl: 'https://i.pravatar.cc/150?img=1',
-          rating: 5,
-          comment: 'Sản phẩm rất tốt, chất lượng vượt mong đợi. Giao hàng nhanh, đóng gói cẩn thận.',
-          imageUrls: ['https://picsum.photos/200/200?random=1', 'https://picsum.photos/200/200?random=2'],
-          attributes: { Mau: 'Đỏ', Size: 'L' },
-          createdAt: '2024-11-20T10:30:00',
-          reviewReply: {
-            replyId: 'r1',
-            replierName: 'Shop',
-            content: 'Cảm ơn bạn đã tin tưởng sử dụng sản phẩm của shop!',
-            createdAt: '2024-11-21T09:00:00'
-          }
-        },
-        {
-          reviewId: '2',
-          userId: 'user2',
-          userName: 'Trần Thị B',
-          avatarUrl: 'https://i.pravatar.cc/150?img=2',
-          rating: 4,
-          comment: 'Sản phẩm đẹp, đúng mô tả. Tuy nhiên giao hàng hơi lâu.',
-          imageUrls: ['https://picsum.photos/200/200?random=3'],
-          attributes: { Mau: 'Xanh', Size: 'M' },
-          createdAt: '2024-11-19T15:20:00',
-          reviewReply: null
-        },
-        {
-          reviewId: '3',
-          userId: 'user3',
-          userName: 'Lê Văn C',
-          avatarUrl: 'https://i.pravatar.cc/150?img=3',
-          rating: 5,
-          comment: 'Tuyệt vời, sẽ ủng hộ shop lần sau.',
-          imageUrls: [],
-          attributes: { Mau: 'Đen', Size: 'XL' },
-          createdAt: '2024-11-18T08:45:00',
-          reviewReply: null
-        },
-        {
-          reviewId: '4',
-          userId: 'user4',
-          userName: 'Phạm Thị D',
-          avatarUrl: 'https://i.pravatar.cc/150?img=4',
-          rating: 3,
-          comment: 'Sản phẩm bình thường, giá hơi cao.',
-          imageUrls: [],
-          attributes: { Mau: 'Trắng', Size: 'S' },
-          createdAt: '2024-11-17T14:30:00',
-          reviewReply: null
-        }
-      ];
-
-      setReviews(mockReviews);
-      setTotalPages(3);
-    }, 500);
-  };
-
-  const FilterBar: React.FC = () => {
-    const ratingOptions: Option[] = [
-      { id: '', label: 'Tất cả' },
-      { id: '5', label: `5 Sao (${statistics.ratingDistribution[5]})` },
-      { id: '4', label: `4 Sao (${statistics.ratingDistribution[4]})` },
-      { id: '3', label: `3 Sao (${statistics.ratingDistribution[3]})` },
-      { id: '2', label: `2 Sao (${statistics.ratingDistribution[2]})` },
-      { id: '1', label: `1 Sao (${statistics.ratingDistribution[1]})` },
-    ];
-
-    const sortOptions: Option[] = [
-      { id: '', label: 'Mặc định' },
-      { id: 'newest', label: 'Mới nhất' },
-      { id: 'oldest', label: 'Cũ nhất' },
-      { id: 'highest', label: 'Đánh giá cao nhất' },
-      { id: 'lowest', label: 'Đánh giá thấp nhất' },
-    ];
-
-    return (
-      <div className="bg-white rounded-lg p-4  border border-grey-c100 hover:shadow-md transition-shadow">
-        <div className="flex items-center gap-2 mb-4">
-          <FilterListIcon className="w-5 h-5 text-grey-c500" />
-          <span className="text-sm font-medium text-grey-c700">Lọc và sắp xếp</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <DropdownSelect
-            label="Đánh giá"
-            placeholder="Chọn đánh giá"
-            value={filter.rating}
-            onChange={(value) => setFilter({ ...filter, rating: value })}
-            options={ratingOptions}
-          />
-
-          <DropdownSelect
-            label="Sắp xếp theo"
-            placeholder="Chọn cách sắp xếp"
-            value={filter.sortBy}
-            onChange={(value) => setFilter({ ...filter, sortBy: value })}
-            options={sortOptions}
-          />
-        </div>
-      </div>
-    );
-  };
-
-  const ReviewCard: React.FC<{ review: Review }> = ({ review }) => {
-    const [showAllImages, setShowAllImages] = useState<boolean>(false);
-    const displayImages = showAllImages ? review.imageUrls : review.imageUrls.slice(0, 3);
+  const ReviewCard: React.FC<{ review: ReviewView }> = ({review}) => {
 
     return (
       <div className="bg-white rounded-lg p-6 border border-grey-c100 hover:shadow-md transition-shadow">
@@ -196,19 +182,19 @@ export default function Review({id, product}: Props) {
           <div className="w-12 h-12 relative rounded-full overflow-hidden flex-shrink-0 border-2 border-grey-c100">
             <Image
               src={review.avatarUrl ?? '/avatar_hoat_hinh_db4e0e9cf4.webp'}
-              alt={review.userName}
+              alt={review.fullName}
               width={48}
               height={48}
               className="object-cover"
             />
           </div>
 
-           <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <h4 className="font-medium text-grey-c900">{review.userName}</h4>
+                <h4 className="font-medium text-grey-c900">{review.fullName}</h4>
                 <div className="flex items-center mt-1">
-                  <Star rating={review.rating}/>
+                  <Star rating={Number(RatingNumber[review.rating])}/>
                   <span className="text-sm text-grey-c500">{formatDateTime(review.createdAt)}</span>
                 </div>
               </div>
@@ -234,7 +220,7 @@ export default function Review({id, product}: Props) {
             {review.imageUrls && review.imageUrls.length > 0 && (
               <div className="mb-3">
                 <div className="flex gap-2 flex-wrap">
-                  {displayImages.map((url, index) => (
+                  {review.imageUrls.map((url, index) => (
                     <button
                       key={index}
                       type="button"
@@ -250,33 +236,24 @@ export default function Review({id, product}: Props) {
                       />
                     </button>
                   ))}
-                  {review.imageUrls.length > 3 && !showAllImages && (
-                    <button
-                      type="button"
-                      onClick={() => setShowAllImages(true)}
-                      className="w-20 h-20 bg-grey-c100 rounded-lg flex items-center justify-center text-sm font-medium text-grey-c600 hover:bg-grey-c200 transition-colors border-2 border-grey-c200"
-                    >
-                      +{review.imageUrls.length - 3}
-                    </button>
-                  )}
                 </div>
               </div>
             )}
 
-            {review.reviewReply && (
+            {review.reviewReplyView && (
               <div className="bg-primary-c50 rounded-lg p-4 mt-4 border-l-4 border-primary-c400">
                 <div className="flex items-start gap-3">
-                  <MessageIcon className="w-5 h-5 text-primary-c700 mt-0.5 flex-shrink-0" />
+                  <MessageIcon className="w-5 h-5 text-primary-c700 mt-0.5 flex-shrink-0"/>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="font-medium text-grey-c900">
-                        Phản hồi từ {review.reviewReply.replierName}
+                        Phản hồi từ shop
                       </span>
                       <span className="text-sm text-grey-c500">
-                        {formatDateTime(review.reviewReply.createdAt)}
+                        {formatDateTime(review.reviewReplyView.createdAt)}
                       </span>
                     </div>
-                    <p className="text-grey-c700 leading-relaxed">{review.reviewReply.content}</p>
+                    <p className="text-grey-c700 leading-relaxed">{review.reviewReplyView.content}</p>
                   </div>
                 </div>
               </div>
@@ -288,69 +265,112 @@ export default function Review({id, product}: Props) {
   };
 
 
-   return (
-     <div className="space-y-6">
+  return (
+    <div className="space-y-6">
+      {isLoading && <Loading/>}
+      <Title title="Đánh giá sản phẩm"/>
 
-      <Title title="Đánh giá sản phẩm" />
+      <div className="bg-white rounded-lg p-6 border border-grey-c100 hover:shadow-md transition-shadow">
+        <div className="flex items-start gap-8 flex-wrap">
+          <div className="text-center">
+            <div className="text-5xl font-bold text-grey-c900 mb-2">
+              {statistics.averageRating.toFixed(1)}
+            </div>
+            <Star rating={Number(statistics.averageRating)} fontSize={"medium"}/>
+            <div className="text-sm text-grey-c500 mt-2">
+              {statistics.totalReviews} đánh giá
+            </div>
+          </div>
 
-       <div className="bg-white rounded-lg p-6 border border-grey-c100 hover:shadow-md transition-shadow">
-         <div className="flex items-start gap-8 flex-wrap">
-           <div className="text-center">
-             <div className="text-5xl font-bold text-grey-c900 mb-2">
-               {statistics.averageRating.toFixed(1)}
-             </div>
-             <Star rating={Number(statistics.averageRating)} fontSize={"medium"}/>
-             <div className="text-sm text-grey-c500 mt-2">
-               {statistics.totalReviews} đánh giá
-             </div>
-           </div>
+          <div className="flex-1 space-y-2">
+            {(Object.values(RatingNumber).reverse().filter(v => typeof v === 'number') as number[]).map((rating) => {
+              const count = statistics.ratingDistribution[rating] || 0;
+              const percentage = statistics.totalRatings > 0 ? (count / statistics.totalRatings) * 100 : 0;
 
-           <div className="flex-1 space-y-2">
-             {(Object.values(RatingNumber).reverse().filter(v => typeof v === 'number') as number[]).map((rating) => {
-               const count = statistics.ratingDistribution[rating] || 0;
-               const percentage = statistics.totalRatings > 0 ? (count / statistics.totalRatings) * 100 : 0;
-
-               return (
-                 <div
-                   key={rating}
-                   className="w-full flex items-center gap-3 hover:bg-grey-c50 rounded p-2 transition-colors group"
-                 >
+              return (
+                <div
+                  key={rating}
+                  className="w-full flex items-center gap-3 hover:bg-grey-c50 rounded p-2 transition-colors group"
+                >
                    <span className="text-sm w-12 flex items-center gap-1 font-medium text-grey-c700">
-                     {rating} <StarRateRoundedIcon className="w-3 h-3 text-yellow-400" />
+                     {rating} <StarRateRoundedIcon className="w-3 h-3 text-yellow-400"/>
                    </span>
-                   <div className="flex-1 h-2.5 bg-grey-c200 rounded-full overflow-hidden">
-                     <div
-                       className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 transition-all duration-300 group-hover:opacity-90"
-                       style={{ width: `${percentage}%` }}
-                     />
-                   </div>
-                   <span className="text-sm text-grey-c600 w-16 text-right font-medium flex justify-start">
+                  <div className="flex-1 h-2.5 bg-grey-c200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 transition-all duration-300 group-hover:opacity-90"
+                      style={{width: `${percentage}%`}}
+                    />
+                  </div>
+                  <span className="text-sm text-grey-c600 w-16 text-right font-medium flex justify-start">
                      {count}
                    </span>
-                 </div>
-               );
-             })}
-           </div>
-         </div>
-       </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
-       <FilterBar />
+      <div className="bg-white rounded-lg p-4  border border-grey-c100 hover:shadow-md transition-shadow">
+        <div className="flex items-center gap-2 mb-4">
+          <FilterListIcon className="w-5 h-5 text-grey-c500"/>
+          <span className="text-sm font-medium text-grey-c700">Lọc và sắp xếp</span>
+        </div>
 
-       <div className="space-y-4">
-         {reviews.length > 0 ? (
-           reviews.map((review) => (
-             <ReviewCard key={review.reviewId} review={review} />
-           ))
-         ) : (
-           <div className="bg-white rounded-lg p-12 text-center border flex flex-col items-center justify-center border-grey-c100 hover:shadow-md transition-shadow">
-             <Empty />
-             <p className="text-grey-c500 mt-4 font-medium">Chưa có đánh giá nào</p>
-             <p className="text-grey-c400 text-sm mt-2">Hãy là người đầu tiên đánh giá sản phẩm này!</p>
-           </div>
-         )}
-       </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <DropdownSelect
+            label="Đánh giá"
+            placeholder="Chọn đánh giá"
+            value={rating}
+            onChange={(value) => setRating(value)}
+            options={ratingOptions}
+          />
 
-       {previewImage && <ImagePreview imageUrl={previewImage} onClose={() => setPreviewImage(null)} />}
-     </div>
-   );
- }
+          <DropdownSelect
+            label="Sắp xếp theo"
+            placeholder="Chọn cách sắp xếp"
+            value={sortLabel}
+            onChange={(value) => {
+              setSortLabel(value);
+              if (value === 'newest') {
+                setSortBy('createdAt');
+                setSortDir('desc');
+              } else if (value === 'oldest') {
+                setSortBy('createdAt');
+                setSortDir('asc');
+              } else if (value === 'highest') {
+                setSortBy('rating');
+                setSortDir('desc');
+              } else if (value === 'lowest') {
+                setSortBy('rating');
+                setSortDir('asc');
+              } else {
+                setSortBy('');
+                setSortDir('desc');
+              }
+            }}
+            options={sortOptions}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {reviews.length > 0 ? (
+          reviews.map((review) => (
+            <ReviewCard key={review.reviewId} review={review}/>
+          ))
+        ) : (
+          <div
+            className="bg-white rounded-lg p-12 text-center border flex flex-col items-center justify-center border-grey-c100 hover:shadow-md transition-shadow">
+            <Empty/>
+            <p className="text-grey-c500 mt-4 font-medium">Chưa có đánh giá nào</p>
+            <p className="text-grey-c400 text-sm mt-2">Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+          </div>
+        )}
+      </div>
+      <Pagination totalPages={totalPages} currentPage={currentPage} onPageChange={setCurrentPage}/>
+      {previewImage && <ImagePreview imageUrl={previewImage} onClose={() => setPreviewImage(null)}/>}
+    </div>
+  );
+}
+

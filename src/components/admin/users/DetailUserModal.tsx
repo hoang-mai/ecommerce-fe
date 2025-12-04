@@ -15,9 +15,7 @@ interface UserViewDto {
   username: string;
   email: string | null;
   accountStatus: AccountStatus;
-  firstName: string | null;
-  middleName: string | null;
-  lastName: string;
+  fullName: string;
   phoneNumber: string | null;
   role: Role;
   avatarUrl: string | null;
@@ -105,7 +103,7 @@ export default function DetailUserModal({isOpen, setIsOpen, user}: Props) {
                 />
               </div>
               <div >
-                {`${user.firstName} ${user.middleName} ${user.lastName}`.trim()}
+                {user.fullName}
               </div>
             </div>
           }/>

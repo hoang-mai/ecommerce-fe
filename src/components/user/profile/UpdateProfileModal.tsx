@@ -20,17 +20,10 @@ import {phoneRegex} from "@/util/regex";
 const profileSchema = z.object({
   email: z.email('Email không hợp lệ').optional().or(z.literal('')),
   description: z.string().max(500, 'Mô tả không được quá 500 ký tự').optional().or(z.literal('')),
-  firstName: z.string()
-    .max(10, 'Họ phải có từ 1 đến 10 ký tự')
-    .optional(),
-  middleName: z.string()
-    .max(10, 'Tên đệm không được quá 10 ký tự')
-    .optional()
-    .or(z.literal('')),
-  lastName: z.string()
-    .nonempty('Tên không được để trống')
-    .min(1, 'Tên phải có từ 1 đến 10 ký tự')
-    .max(10, 'Tên phải có từ 1 đến 10 ký tự'),
+  fullName: z.string()
+    .nonempty('Họ và tên không được để trống')
+    .min(1, 'Họ và tên phải có từ 1 đến 30 ký tự')
+    .max(30, 'Họ và tên phải có từ 1 đến 30 ký tự'),
   phoneNumber: z.string()
     .regex(phoneRegex, 'Số điện thoại không hợp lệ')
     .optional()
@@ -51,9 +44,7 @@ interface ProfileData {
   userId: number;
   email: string | null;
   description: string | null;
-  firstName: string | null;
-  middleName: string | null;
-  lastName: string;
+  fullName: string;
   phoneNumber: string | null;
   dateOfBirth: string | null;
   avatarUrl: string | null;
@@ -88,9 +79,7 @@ export default function UpdateProfileModal({
     defaultValues: {
       email: profileData.email || '',
       description: profileData.description || '',
-      firstName: profileData.firstName || '',
-      middleName: profileData.middleName || '',
-      lastName: profileData.lastName,
+      fullName: profileData.fullName,
       phoneNumber: profileData.phoneNumber || '',
       dateOfBirth: profileData.dateOfBirth ? new Date(profileData.dateOfBirth) : undefined,
       gender: profileData.gender || undefined,
@@ -155,42 +144,30 @@ export default function UpdateProfileModal({
         <h3 className="text-lg font-bold text-primary-c900">2. Thông tin cá nhân</h3>
 
         {/* Name Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Controller control={control} name={"firstName"} render={({field}) =>
-            <TextField
-              htmlFor={"firstName"}
-              id={"firstName"}
-              label={"Họ"}
-              placeholder={"Nhập họ"}
-              disabled={isMutating}
-              error={errors.firstName?.message}
-              value={field.value}
-              onChange={field.onChange}
-            />
-          }/>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-          <Controller control={control} name={"middleName"} render={({field}) =>
+          <Controller control={control} name={"fullName"} render={({field}) =>
             <TextField
-              htmlFor={"middleName"}
-              id={"middleName"}
-              label={"Tên đệm"}
-              placeholder={"Nhập tên đệm"}
+              htmlFor={"fullName"}
+              id={"fullName"}
+              label={"Họ và tên"}
+              placeholder={"Nhập họ và tên"}
               disabled={isMutating}
-              error={errors.middleName?.message}
-              value={field.value}
-              onChange={field.onChange}
-            />
-          }/>
-
-          <Controller control={control} name={"lastName"} render={({field}) =>
-            <TextField
-              htmlFor={"lastName"}
-              id={"lastName"}
-              label={"Tên"}
-              placeholder={"Nhập tên"}
-              disabled={isMutating}
-              error={errors.lastName?.message}
+              error={errors.fullName?.message}
               required={true}
+              value={field.value}
+              onChange={field.onChange}
+            />
+          }/>
+          {/* Phone Number */}
+          <Controller control={control} name={"phoneNumber"} render={({field}) =>
+            <TextField
+              htmlFor={"phoneNumber"}
+              id={"phoneNumber"}
+              label={"Số điện thoại"}
+              placeholder={"Nhập số điện thoại"}
+              disabled={isMutating}
+              error={errors.phoneNumber?.message}
               value={field.value}
               onChange={field.onChange}
             />
@@ -230,19 +207,7 @@ export default function UpdateProfileModal({
           }/>
         </div>
 
-        {/* Phone Number */}
-        <Controller control={control} name={"phoneNumber"} render={({field}) =>
-          <TextField
-            htmlFor={"phoneNumber"}
-            id={"phoneNumber"}
-            label={"Số điện thoại"}
-            placeholder={"Nhập số điện thoại"}
-            disabled={isMutating}
-            error={errors.phoneNumber?.message}
-            value={field.value}
-            onChange={field.onChange}
-          />
-        }/>
+
 
         {/* Description */}
         <Controller control={control} name={"description"} render={({field}) =>

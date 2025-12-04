@@ -2,7 +2,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
-import InsightsIcon from '@mui/icons-material/Insights';
 import GroupIcon from '@mui/icons-material/Group';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
@@ -11,8 +10,8 @@ import Button from "@/libs/Button";
 import {AlertType, ColorButton} from "@/types/enum";
 import {SvgIconComponent} from '@mui/icons-material';
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import PeopleIcon from "@mui/icons-material/People";
-import SettingsIcon from "@mui/icons-material/Settings";
+import ShoppingCartCheckoutIcon from "@mui/icons-material/ShoppingCartCheckout";
+import RateReviewIcon from "@mui/icons-material/RateReview";
 import useSWRMutation from "swr/mutation";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -38,9 +37,11 @@ export default function Sidebar() {
   })
   const pathname = usePathname();
   const menuItems: MenuItem[] = [
-    {name: "Tổng quan", link: "/owner/dashboard", icon: InsightsIcon},
+    {name: "Tổng quan", link: "/owner/dashboard", icon: DashboardIcon},
     {name: "Nhân viên", link: "/owner/employees", icon: GroupIcon},
-    {name: "Cửa hàng", link: "/owner/shops", icon: StorefrontIcon},
+    {name: "Quản lý cửa hàng", link: "/owner/shops", icon: StorefrontIcon},
+    {name: "Quản lý đơn hàng", link: "/owner/orders", icon: ShoppingCartCheckoutIcon},
+    {name: "Quản lý đánh giá", link: "/owner/reviews", icon: RateReviewIcon},
     {name: "Cài đặt", link: "/admin/settings", icon: ManageAccountsIcon},
   ];
 
@@ -77,7 +78,7 @@ export default function Sidebar() {
     {/* Menu Items */}
     <nav className="flex-1 flex flex-col gap-2">
       {menuItems.map((item) => {
-        const isActive = pathname === item.link;
+        const isActive = pathname.includes(item.link);
         const IconComponent = item.icon;
         return (
           <Link
@@ -116,7 +117,7 @@ export default function Sidebar() {
       </div>
       <div className="flex-1 overflow-hidden">
         <p
-          className="text-sm font-semibold text-grey-c800 truncate"> {`${dataUser?.firstName || ''} ${dataUser?.middleName || ''} ${dataUser?.lastName || ''}`.trim() || 'Người dùng'}</p>
+          className="text-sm font-semibold text-grey-c800 truncate"> {dataUser?.fullName || 'Người dùng'}</p>
         <p className="text-xs text-grey-c500 truncate">{dataUser?.email}</p>
       </div>
     </div>

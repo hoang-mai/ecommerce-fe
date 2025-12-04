@@ -7,7 +7,7 @@ import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import LockRoundedIcon from '@mui/icons-material/LockRounded';
 import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import {ReactNode, useState} from "react";
+import {ReactNode, useEffect, useState} from "react";
 import DropdownMenu from "@/libs/DropdownMenu";
 import {useRouter} from "next/navigation";
 import ChangePassword from "@/components/user/layout/header/ChangePassword";
@@ -58,7 +58,10 @@ export default function Information() {
   };
 
   const cartRef = useCartRef();
-
+  useEffect(() => {
+    localStorage.setItem('fullName', dataUser?.fullName || '');
+    localStorage.setItem('avatarUrl', dataUser?.avatarUrl || '');
+  }, [dataUser?.avatarUrl, dataUser?.fullName]);
   return (
     <div className="flex items-center gap-2">
       {/* Tin nhắn */}
@@ -132,7 +135,7 @@ export default function Information() {
               <div className="hidden lg:flex flex-col items-start">
                 <span className="text-xs text-grey-c600">Tài khoản</span>
                 <span className="text-sm font-semibold text-grey-c800 group-hover:text-primary-c700 truncate max-w-[100px]">
-                  {`${dataUser?.firstName || ''} ${dataUser?.middleName || ''} ${dataUser?.lastName || ''}`.trim() || 'Người dùng'}
+                  {dataUser?.fullName || 'Người dùng'}
                 </span>
               </div>
             </button>

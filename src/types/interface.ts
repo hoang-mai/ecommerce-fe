@@ -96,3 +96,32 @@ export interface CartViewDTO {
   cartId: string;
   cartItems: CartItemViewDTO[];
 }
+
+export interface ReviewReplyView {
+  replyId: string;
+  replierId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReviewView {
+  reviewId: string;
+  orderItemId: string;
+  isUpdated: boolean;
+  productId: string;
+  productName: string;
+  productVariantId: string;
+  userId: string;
+  fullName: string;
+  avatarUrl?: string;
+  ownerId: string;
+  shopId: string;
+  rating: RatingNumber;
+  comment: string;
+  imageUrls?: string[];
+  attributes?: Record<string, string>;
+  reviewReplyView?: ReviewReplyView | null;
+  createdAt: string;
+  updatedAt: string;
+}

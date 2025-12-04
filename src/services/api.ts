@@ -17,3 +17,5 @@ export const PRODUCT_VIEW = "/api/v1/product-view";
 export const SHOP_VIEW = "/api/v1/shop-view";
 export const ORDER_VIEW = "/api/v1/order-view";
 export const REVIEW = "/api/v1/review";
+export const REVIEW_VIEW = "/api/v1/review-view";
+export const REVIEW_REPLY= "/api/v1/review-reply";
