@@ -1,4 +1,5 @@
 import { Client, IFrame, IMessage, StompSubscription } from '@stomp/stompjs';
+import {ReqPrivateMessageDTO} from "@/types/interface";
 
 export interface WebSocketConfig {
   debug?: boolean;
@@ -66,7 +67,7 @@ class WebSocketService {
         try {
           const body = JSON.parse(message.body);
           callback(body);
-        } catch (e) {
+        } catch {
           callback(message.body);
         }
       });
@@ -104,7 +105,7 @@ class WebSocketService {
     this.subscriptions.delete(destination);
   }
 
-  send(destination: string, body: any): void {
+  send(destination: string, body: ReqPrivateMessageDTO): void {
     if (this.client && this.connected) {
       this.client.publish({
         destination: destination,

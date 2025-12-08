@@ -1,9 +1,11 @@
-import {format} from "date-fns";
+import {format, formatDistanceToNow} from "date-fns";
 import {jwtDecode, JwtPayload} from "jwt-decode";
 import {Role} from "@/types/enum";
+import {vi} from "date-fns/locale";
 
 interface JwtDecodedPayload extends JwtPayload {
   role: Role;
+  "user-id": string;
 }
 
 export function formatDateTime(date: string) {
@@ -19,8 +21,13 @@ export function getRoleFromJwtToken(token: string) {
   return decoded.role;
 }
 
+export function getCurrentUserId(token: string): string {
+  const decoded: JwtDecodedPayload = jwtDecode(token);
+  return decoded["user-id"];
+}
+
 export function formatPrice(price: number) {
-  return price.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
+  return price.toLocaleString("vi-VN", {style: "currency", currency: "VND"});
 }
 
 export function isTokenExpired(token: string) {
@@ -35,8 +42,15 @@ export function isTokenExpired(token: string) {
 }
 
 export function formatNumber(number: number) {
-    if (number >= 1000) {
-        return (number / 1000).toFixed(1) + 'k';
-    }
-    return number.toString();
+  if (number >= 1000) {
+    return (number / 1000).toFixed(1) + 'k';
+  }
+  return number.toString();
+}
+
+export function getTimeAgo(date: string) {
+  return formatDistanceToNow(new Date(date), {
+    addSuffix: true,
+    locale: vi,
+  });
 }

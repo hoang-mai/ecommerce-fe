@@ -96,3 +96,23 @@ export enum RatingNumber {
   FOUR = 4,
   FIVE = 5
 }
+
+export enum ChatType {
+  CUSTOMER_SUPPORT = "CUSTOMER_SUPPORT",
+  DIRECT = "DIRECT",
+}
+
+export enum MessageType {
+  TEXT = "TEXT",
+  IMAGE = "IMAGE",
+  VIDEO = "VIDEO",
+  AUDIO = "AUDIO",
+  FILE = "FILE",
+  LOCATION = "LOCATION",
+  STICKER = "STICKER",
+  GIF = "GIF",
+  POLL = "POLL",
+  REACTION = "REACTION",
+  LINK = "LINK",
+  OTHER = "OTHER",
+}

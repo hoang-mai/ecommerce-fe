@@ -11,11 +11,11 @@ import {ReactNode, useEffect, useState} from "react";
 import DropdownMenu from "@/libs/DropdownMenu";
 import {useRouter} from "next/navigation";
 import ChangePassword from "@/components/user/layout/header/ChangePassword";
-import {LOGOUT, USER} from "@/services/api";
+import {LOGOUT, MESSAGE, USER} from "@/services/api";
 import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import useSWRMutation from "swr/mutation";
 import {AlertType} from "@/types/enum";
-import {useDispatch} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import DisableAccount from "@/components/user/layout/header/DisableAccount";
 import {useCartData, useCartRef} from "@/components/provider/CartProvider";
@@ -24,15 +24,25 @@ import {Cart} from "@/components/user/layout/header/Cart";
 import useSWR from "swr";
 import {ProfileData} from "@/components/user/profile/Main";
 import Image from "next/image";
-
+import ChatPreviewList from "@/components/user/layout/header/ChatPreviewList";
+import {RootState} from "@/redux/store";
 export default function Information() {
+  const chatState = useSelector((state: RootState) => state.chat);
   const { get, post } = useAxiosContext();
   const fetcher = (url: string) => post<BaseResponse<never>>(url, {}, {withCredentials: true}).then(res => res.data);
   const fetcherUser = (url: string) => get<BaseResponse<ProfileData>>(url).then(res => res.data.data);
+  const fetcherCountChat = (url: string) => get<BaseResponse<number>>(url).then(res => res.data.data);
+
   const {data: dataUser} = useSWR(USER, fetcherUser, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   })
+
+  const {data: countChat, mutate} = useSWR(`${MESSAGE}/count-unread`, fetcherCountChat, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
+
   const {data} = useCartData();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isOpenDisableAccount, setIsOpenDisableAccount] = useState<boolean>(false);
@@ -40,6 +50,7 @@ export default function Information() {
   const {trigger} = useSWRMutation(LOGOUT, fetcher);
   const [isOpenCart, setIsOpenCart] = useState<boolean>(false);
   const dispatch = useDispatch();
+
 
   const handleLogout = () => {
     trigger().then(res => {
@@ -62,26 +73,29 @@ export default function Information() {
     localStorage.setItem('fullName', dataUser?.fullName || '');
     localStorage.setItem('avatarUrl', dataUser?.avatarUrl || '');
   }, [dataUser?.avatarUrl, dataUser?.fullName]);
+
+  useEffect(() => {
+    if(chatState.newMessage){
+      setTimeout(() => {
+        mutate();
+      }, 500);
+    }
+  }, [chatState.newMessage, mutate]);
   return (
     <div className="flex items-center gap-2">
       {/* Tin nhắn */}
       <DropdownMenu
-        label="Tin nhắn"
         trigger={
           <IconButton
             icon={<QuestionAnswerRoundedIcon/>}
-            badge={1}
+            badge={countChat}
             label="Tin nhắn"
           />
         }
         align="right"
-        items={[
-          {
-            id: 1, label: 'Không có tin nhắn mới', onClick: () => {
-            }
-          },
-        ]}
-      />
+      >
+        <ChatPreviewList/>
+      </DropdownMenu>
 
       {/* Thông báo */}
       <DropdownMenu

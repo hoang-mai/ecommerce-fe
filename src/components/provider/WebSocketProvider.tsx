@@ -4,7 +4,9 @@ import {useEffect, ReactNode, useState} from 'react';
 import WebSocketService from '@/services/webSocket';
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
+import {receiveMessage} from "@/redux/slice/chatSlice";
 import {useRouter} from "next/navigation";
+import {MessageDTO} from "@/types/interface";
 
 
 interface WebSocketProviderProps {
@@ -41,6 +43,11 @@ export default function WebSocketProvider({children}: WebSocketProviderProps) {
             console.log('New personal notification:', data);
             setNotification(data);
           });
+
+          WebSocketService.subscribe('/user/queue/messages', (data: MessageDTO)=>{
+            console.log('New personal message:', data);
+            dispatch(receiveMessage(data));
+          })
 
 
           WebSocketService.subscribe('/topic/messages', (data: NotificationState) => {

@@ -1,4 +1,12 @@
-import {ProductStatus, ProductVariantStatus, RatingNumber, ShopStatus} from "@/types/enum";
+import {
+  ProductStatus,
+  ProductVariantStatus,
+  RatingNumber,
+  ShopStatus,
+  ChatType,
+  MessageType,
+  AccountStatus
+} from "@/types/enum";
 
 export interface ProductImage {
   productImageId: string;
@@ -60,8 +68,8 @@ export interface ShopView {
   shopId: string;
   shopName: string;
   description: string;
-  logoUrl: string;
-  bannerUrl: string;
+  logoUrl: string | null;
+  bannerUrl: string | null;
   shopStatus: ShopStatus;
   ownerId: string;
   province: string;
@@ -124,4 +132,56 @@ export interface ReviewView {
   reviewReplyView?: ReviewReplyView | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface MessageDTO{
+  messageId: string;
+  chatId: string;
+  senderId: string;
+  shopId: string;
+  messageType: MessageType;
+  messageContent: string;
+  replyToMessageId?: string;
+  isEdited: boolean;
+  isDeleted: boolean;
+  deletedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  readBy: string[];
+}
+
+export interface ChatDTO {
+  chatId: string;
+  chatType: ChatType;
+  shopCache: ShopCache;
+  createdAt: string;
+  updatedAt: string;
+  userCacheList: UserCache[];
+  lastMessage: MessageDTO;
+}
+
+export interface ShopCache {
+  shopId: string;
+  shopName: string;
+  logoUrl: string;
+  ownerId: string;
+  isOnline: boolean;
+  shopStatus: ShopStatus;
+}
+export interface UserCache{
+  userId: string;
+  avatarUrl: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  accountStatus: AccountStatus;
+  isOnline: boolean;
+}
+
+export interface ReqPrivateMessageDTO{
+  receiverId : string;
+  chatId?: string;
+  messageContent : string;
+  messageType : MessageType;
+  shopId: string;
 }

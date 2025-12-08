@@ -1,4 +1,5 @@
 import {AlertType} from "@/types/enum";
+import {MessageDTO} from "@/types/interface";
 
 declare global {
   type ErrorResponse = {
@@ -45,6 +46,16 @@ declare global {
     sentRealtime :boolean;
     createdAt: string;
     updatedAt: string;
+  }
+
+  type ChatState = {
+    isOpen: boolean;
+    chatId?: string | null;
+    shopId?: string | null;
+    shopName?: string | null;
+    logoUrl?: string | null;
+    ownerId?: string | null;
+    newMessage?: MessageDTO | null;
   }
 
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import {useState, useRef, useEffect, ReactNode} from 'react';
+import {useState, useRef, useEffect, ReactNode, createContext, useContext} from 'react';
 import Animation from './Animation';
 
 interface MenuItem {
@@ -14,18 +14,34 @@ interface MenuItem {
 interface Props {
   label?: string;
   trigger: ReactNode;
-  items: MenuItem[];
+  items?: MenuItem[];
+  children?: ReactNode;
   className?: string;
   menuClassName?: string;
   disabled?: boolean;
   align?: 'left' | 'right';
 }
 
+interface DropdownContextType {
+  closeDropdown: () => void;
+}
+
+const DropdownContext = createContext<DropdownContextType | undefined>(undefined);
+
+export const useDropdownContext = () => {
+  const context = useContext(DropdownContext);
+  if (!context) {
+    throw new Error('useDropdownContext must be used within DropdownMenu');
+  }
+  return context;
+};
+
 export default function DropdownMenu(
   {
     label,
     trigger,
     items,
+    children,
     className = "",
     menuClassName = "",
     disabled = false,
@@ -63,6 +79,10 @@ export default function DropdownMenu(
     }
   };
 
+  const closeDropdown = () => {
+    setIsOpen(false);
+  };
+
   return (
     <div className={`relative inline-block ${className}`} ref={dropdownRef}>
       {/* Trigger Button */}
@@ -87,7 +107,7 @@ export default function DropdownMenu(
               {label}
             </div>
           )}
-          {items.map((item) => (
+          {items && items.map((item) => (
             <div key={item.id}>
               {item.divider ? (
                 <div className="border-t border-grey-c200 my-1" />
@@ -102,6 +122,9 @@ export default function DropdownMenu(
               )}
             </div>
           ))}
+          <DropdownContext.Provider value={{ closeDropdown }}>
+            {children}
+          </DropdownContext.Provider>
         </div>
       </Animation>
       }

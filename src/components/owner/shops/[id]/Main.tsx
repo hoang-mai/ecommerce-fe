@@ -134,7 +134,7 @@ export default function Main({id}: Props) {
   }, [dispatch, error]);
 
   return (
-    <div className="">
+    <div className="overflow-y-auto min-h-0">
       {/* Header */}
       {isLoading && <Loading/>}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">

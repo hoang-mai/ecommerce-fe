@@ -26,6 +26,8 @@ import TextField from "@/libs/TextField";
 import DropdownSelect from "@/libs/DropdownSelect";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {useDebounce} from "@/hooks/useDebounce";
+import {openChat} from "@/redux/slice/chatSlice";
+import StoreRoundedIcon from "@mui/icons-material/Storefront";
 
 // Sample Data
 const sampleShop: ShopView = {
@@ -142,13 +144,19 @@ export default function Main({id}: Props) {
                         <div className="absolute -top-12 left-0">
                             <div
                                 className="w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-white shadow-lg">
+                              {shop.logoUrl ? (
                                 <Image
-                                    src={shop.logoUrl}
-                                    alt={shop.shopName}
-                                    width={96}
-                                    height={96}
-                                    className="w-full h-full object-cover"
+                                  src={shop.logoUrl}
+                                  alt={shop.shopName}
+                                  width={64}
+                                  height={64}
+                                  className="w-full h-full object-cover"
                                 />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <StoreRoundedIcon style={{fontSize: '64px'}} className="text-primary-c700"/>
+                                </div>
+                              )}
                             </div>
                         </div>
 
@@ -162,6 +170,16 @@ export default function Main({id}: Props) {
                                     <p className="mt-2 text-grey-c600">{shop.description}</p>
                                 </div>
                                 <Button
+                                  onClick={() => {
+                                    const chatState: ChatState = {
+                                      isOpen: true,
+                                      shopId: shop.shopId,
+                                      shopName: shop.shopName,
+                                      logoUrl: shop.logoUrl,
+                                      ownerId: shop.ownerId,
+                                    }
+                                    dispatch(openChat(chatState));
+                                  }}
                                     color={ColorButton.PRIMARY}
                                     startIcon={<ChatBubbleOutlineIcon className=""/>}>
                                     Chat ngay

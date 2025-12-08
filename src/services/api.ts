@@ -19,3 +19,5 @@ export const ORDER_VIEW = "/api/v1/order-view";
 export const REVIEW = "/api/v1/review";
 export const REVIEW_VIEW = "/api/v1/review-view";
 export const REVIEW_REPLY= "/api/v1/review-reply";
+export const CHAT = "/api/v1/chat";
+export const MESSAGE = "/api/v1/message";
