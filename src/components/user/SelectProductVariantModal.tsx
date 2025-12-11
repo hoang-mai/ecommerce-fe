@@ -1,7 +1,6 @@
 import {ReqAddToCartDTO} from "@/components/user/ProductCard";
 import Modal from "@/libs/Modal";
 import React, {useEffect, useMemo, useState} from "react";
-import Image from "next/image";
 import {formatPrice} from "@/util/FnCommon";
 import ImagePreview from "@/libs/ImagePreview";
 import Button from "@/libs/Button";
@@ -33,7 +32,6 @@ export default function SelectProductVariantModal({isOpen, setIsOpen, product}: 
   const {mutate} = useCartData();
   const defaultVariant = useMemo(() => product.productVariants.find(v => v.isDefault) ?? product.productVariants[0], [product.productVariants]);
   const dispatch = useDispatch();
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>(() => {
@@ -47,15 +45,8 @@ export default function SelectProductVariantModal({isOpen, setIsOpen, product}: 
   });
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(defaultVariant || null);
+  const [currentTime] = useState(() => Date.now());
   const {trigger, isMutating} = useSWRMutation(`${CART}`, fetcher);
-  const calculateFinalPrice = () => {
-    if (!selectedVariant) return 0;
-    const basePrice = selectedVariant.price || 0;
-    if (product.discount) {
-      return Math.round(basePrice * (1 - (product.discount || 0) / 100));
-    }
-    return basePrice;
-  };
 
   const handleAttributeSelect = (productAttributeId: string, productAttributeValueId: string) => {
     setSelectedAttributes(prev => ({
@@ -109,7 +100,15 @@ export default function SelectProductVariantModal({isOpen, setIsOpen, product}: 
       dispatch(openAlert(alert));
     }
   };
+  const isDiscountActive = useMemo(() => {
+    if (Number(product.discount) <= 0) return false;
+    if (!product.discountStartDate || !product.discountEndDate) return false;
 
+    const startTime = new Date(product.discountStartDate).getTime();
+    const endTime = new Date(product.discountEndDate).getTime();
+
+    return startTime < currentTime && endTime > currentTime;
+  }, [product.discount, product.discountStartDate, product.discountEndDate, currentTime]);
 
   useEffect(() => {
     if (Object.keys(selectedAttributes).length === 0) return;
@@ -154,7 +153,7 @@ export default function SelectProductVariantModal({isOpen, setIsOpen, product}: 
         {/* Product Info */}
         <div>
           <div className={"flex gap-2"}><h3 className="text-2xl font-bold truncate">{product.name}</h3>
-            {Number(product.discount) > 0 && (
+            {isDiscountActive && (
               <div
                 className=" bg-gradient-to-r from-support-c900 to-support-c800 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-md flex items-center gap-1">
                 <span className="text-xs">-</span>
@@ -164,25 +163,26 @@ export default function SelectProductVariantModal({isOpen, setIsOpen, product}: 
           </div>
           {/* Price */}
           <div className="mb-6">
-            <div className="flex items-baseline gap-2">
-                  <span
-                    className={`text-3xl font-bold text-primary-c900`}>
-                    {formatPrice(calculateFinalPrice())}
+            {isDiscountActive ? (
+              <div className={"flex flex-col gap-1"}>
+                <div className={"flex items-center gap-3"}>
+                    <span className="text-primary-c900 font-bold text-3xl">
+                      {formatPrice((selectedVariant?.price ?? 0) * (100 - (product.discount || 0)) / 100)}
+                    </span>
+                  <span className="text-gray-400 text-sm line-through">
+                      {formatPrice(selectedVariant?.price ?? 0)}
+                    </span>
+                </div>
+                <span className="text-xs text-green-600 font-medium ">
+                    Tiết kiệm {formatPrice((selectedVariant?.price ?? 0) - (selectedVariant?.price ?? 0) * (100 - (product.discount || 0)) / 100)}
                   </span>
-              {Number(product.discount) > 0 && (
-                <>
-                      <span className="text-lg text-gray-400 line-through">
-                        {formatPrice(selectedVariant?.price || 0)}
-                      </span>
-                </>
-              )}
-            </div>
-            <div className={"flex gap-2"}>
-              <span className="text-xs text-green-600 font-medium ">
-                Tiết kiệm {formatPrice(defaultVariant.price - defaultVariant.price * (100 - (product.discount || 0)) / 100)}
-              </span>
-              {product.discountEndDate && <CountdownTimer endDate={product.discountEndDate}/>}
-            </div>
+                {product.discountEndDate && <CountdownTimer endDate={product.discountEndDate}/>}
+              </div>
+            ) : (
+              <div className="text-primary-c900 font-bold text-3xl mb-10.5">
+                {formatPrice(selectedVariant?.price ?? 0)}
+              </div>
+            )}
           </div>
 
           {/* Attributes Selection */}

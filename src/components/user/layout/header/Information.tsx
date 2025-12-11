@@ -70,11 +70,6 @@ export default function Information() {
 
   const cartRef = useCartRef();
   useEffect(() => {
-    localStorage.setItem('fullName', dataUser?.fullName || '');
-    localStorage.setItem('avatarUrl', dataUser?.avatarUrl || '');
-  }, [dataUser?.avatarUrl, dataUser?.fullName]);
-
-  useEffect(() => {
     if(chatState.newMessage){
       setTimeout(() => {
         mutate();

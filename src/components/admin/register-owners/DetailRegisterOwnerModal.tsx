@@ -19,7 +19,7 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import RejectReasonModal from "./RejectReasonModal";
 import Loading from "@/components/modals/Loading";
-import {InfoRow} from "@/libs/InfoRow";
+import InfoRow from "@/libs/InfoRow";
 
 interface ResUserVerificationDTO {
   userVerificationId: number;

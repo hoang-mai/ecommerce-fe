@@ -7,7 +7,23 @@ import {
   MessageType,
   AccountStatus
 } from "@/types/enum";
+export interface DateRange {
+  start: Date | null;
+  end: Date | null;
+}
+export interface OrderViewStatisticDTO {
+  localDate: string;
+  newOrders: number;
+  [key: string]: string | number;
+}
 
+export interface ProductViewStatisticDTO{
+  productId: number;
+  productName: string;
+  totalSold: number;
+  totalRevenue: number;
+  [key: string]: string | number;
+}
 export interface ProductImage {
   productImageId: string;
   imageUrl: string;
@@ -46,7 +62,7 @@ export interface ProductView {
   rating: number;
   numberOfRatings: number;
   numberOfReviews: number;
-  ratingStatistics: Record<RatingNumber, number>;
+  ratingStatistics: Record<string, number>;
   name: string;
   description: string;
   productStatus: ProductStatus;
@@ -80,6 +96,7 @@ export interface ShopView {
   activeProducts: number;
   totalSold: number;
   totalRevenue: number;
+  totalOrder: number;
   rating: number;
   numberOfRatings: number;
   numberOfReviews: number;

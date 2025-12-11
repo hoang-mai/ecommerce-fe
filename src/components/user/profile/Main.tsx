@@ -27,7 +27,7 @@ import CameraAltRoundedIcon from '@mui/icons-material/CameraAltRounded';
 import UpdateAvatarModal from "@/components/user/profile/UpdateAvatarModal";
 import RegisterOwnerModal from "@/components/user/profile/RegisterOwnerModal";
 import HistoryRegisterOwnerModal from "@/components/user/profile/HistoryRegisterOwnerModal";
-import {InfoRow} from "@/libs/InfoRow";
+import InfoRow from "@/libs/InfoRow";
 
 export interface ProfileData {
   userId: number;

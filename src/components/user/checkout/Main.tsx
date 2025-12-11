@@ -4,7 +4,7 @@ import useSWR from "swr";
 import {ADDRESS, CART_VIEW, ORDER} from "@/services/api";
 import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import {useDispatch} from "react-redux";
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {AlertType} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
@@ -22,7 +22,7 @@ import {ColorButton} from "@/types/enum";
 import {useRouter} from "next/navigation";
 import useSWRMutation from "swr/mutation";
 import Divide from "@/libs/Divide";
-import {CartViewDTO} from "@/types/interface";
+import {CartViewDTO, ProductView} from "@/types/interface";
 import Empty from "@/libs/Empty";
 import {useCartData} from "@/components/provider/CartProvider";
 
@@ -64,6 +64,7 @@ export default function Main() {
   })
   const dispatch = useDispatch();
   const [isOpenAddressModal, setIsOpenAddressModal] = useState(false);
+  const [currentTime] = useState(() => Date.now());
   const {getFullAddress} = useAddressMapping();
   const {trigger} = useSWRMutation(ORDER,fetcherCreateOrder);
   const router = useRouter();
@@ -88,7 +89,19 @@ export default function Main() {
     }
 
   }, [dispatch, error, errorAddress]);
-  const address = dataAddress?.data
+
+  const address = dataAddress?.data;
+
+  // Function to check if a product's discount is active
+  const isDiscountActive = useCallback((productView: ProductView) => {
+    if (Number(productView.discount) <= 0) return false;
+    if (!productView.discountStartDate || !productView.discountEndDate) return false;
+
+    const startTime = new Date(productView.discountStartDate).getTime();
+    const endTime = new Date(productView.discountEndDate).getTime();
+
+    return startTime < currentTime && endTime > currentTime;
+  }, [currentTime]);
   const handleCreateOrder = () => {
     if (!address) {
       const alert: AlertState = {
@@ -106,17 +119,12 @@ export default function Main() {
         .map(pci => {
           const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
           if (!variant) return null;
-
-          const price = variant.price || 0;
-          const discount = pci.productView.discount || 0;
-          const discountedPrice = Math.round(price * (1 - discount / 100));
-
           return {
             productId: Number(pci.productView.productId),
-            discount: discount,
             productVariantId: Number(pci.productVariantId),
             quantity: pci.quantity,
-            price: discountedPrice,
+            price: variant.price || 0,
+            discount: isDiscountActive(pci.productView) ? (pci.productView.discount || 0) : 0,
           };
         })
         .filter((x): x is ResCreateProductOrderItemDTO => x !== null);
@@ -163,15 +171,18 @@ export default function Main() {
   ), [cartData]);
   const totalPrice = useMemo(() => cartData.cartItems.reduce((sum, item) => {
     const itemTotal = item.productCartItems.reduce((itemSum, pci) => {
-      const discount = pci.productView.discount || 0;
       const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
       if (!variant || variant.stockQuantity === 0) return itemSum;
+
       const price = variant.price || 0;
-      const discountedPrice = Math.round(price * (1 - discount / 100));
+      const discount = pci.productView.discount || 0;
+      const hasDiscount = isDiscountActive(pci.productView);
+      const discountedPrice = hasDiscount ? Math.round(price * (100 - discount) / 100) : price;
+
       return itemSum + discountedPrice * pci.quantity;
     }, 0);
     return sum + itemTotal;
-  }, 0), [cartData]);
+  }, 0), [cartData, isDiscountActive]);
   return <div className="max-w-6xl mx-auto p-4">
     {isLoading && isLoadingAddress && <Loading/>}
     <Title title={"Thanh toán & Giao hàng"}/>
@@ -190,11 +201,11 @@ export default function Main() {
               <div className="space-y-3">
                 {item.productCartItems.map(pci => {
                   const productView = pci.productView;
-                  const discount = productView.discount;
-                  const hasDiscount = !!(discount && productView.discountEndDate && productView.discountStartDate);
+                  const discount = productView.discount ?? 0;
                   const variant = productView.productVariants.find(v => v.productVariantId === pci.productVariantId) ?? productView.productVariants[0];
                   const price = variant?.price || 0;
-                  const discountedPrice = hasDiscount ? Math.round(price * (1 - discount / 100)) : price;
+                  const hasDiscount = isDiscountActive(productView);
+                  const discountedPrice = hasDiscount ? Math.round(price * (100 - discount) / 100) : price;
                   const itemTotal = discountedPrice * pci.quantity;
 
                   return (

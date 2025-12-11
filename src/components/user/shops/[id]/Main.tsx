@@ -211,9 +211,13 @@ export default function Main({id}: Props) {
                                     <StarIcon className="w-5 h-5 text-yellow-500"/>
                                     <div className="flex items-baseline gap-1">
                                         <span className="text-sm text-grey-c600">Đánh giá:</span>
-                                        <span className="text-base font-semibold text-grey-c900">
-                                            {shop.rating}/5 ({formatNumber(shop.numberOfRatings || 0)})
-                                        </span>
+                                        {shop.numberOfRatings && shop.numberOfRatings > 0 ? (
+                                            <span className="text-base font-semibold text-grey-c900">
+                                                {(Number(shop.rating || 0) / shop.numberOfRatings).toFixed(1)}/5 ({formatNumber(shop.numberOfRatings)})
+                                            </span>
+                                        ) : (
+                                            <span className="text-base font-semibold text-grey-c900">Chưa có đánh giá</span>
+                                        )}
                                     </div>
                                 </div>
 

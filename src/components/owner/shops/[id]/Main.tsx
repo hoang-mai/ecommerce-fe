@@ -7,31 +7,24 @@ import {AlertType, ColorButton, ShopStatus} from "@/types/enum";
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import StoreRoundedIcon from '@mui/icons-material/Storefront';
-import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded';
-import PhoneRoundedIcon from '@mui/icons-material/PhoneRounded';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
-import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
-import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
-import {formatDateTime} from "@/util/FnCommon";
 import {useRouter} from "next/navigation";
-import ProductTable from "./general/ProductTable";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {SHOP_VIEW} from "@/services/api";
 import Loading from "@/components/modals/Loading";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
 import {useDispatch} from "react-redux";
-import {useAddressMapping} from "@/hooks/useAddressMapping";
 import ChangeCircleRoundedIcon from "@mui/icons-material/ChangeCircleRounded";
 import UpdateStatusShopModal from "@/components/owner/shops/UpdateStatusShopModal";
 import UpdateShopModal from "@/components/owner/shops/UpdateShopModal";
-import {InfoRow} from "@/libs/InfoRow";
 import {ShopView} from "@/types/interface";
 import ScrollTab, {TabItem} from "@/libs/ScrollTab";
 import General from "@/components/owner/shops/[id]/general/General";
 import Orders from "@/components/owner/shops/[id]/orders/Orders";
 import Reviews from "@/components/owner/shops/[id]/reviews/Reviews";
+import Statistics from "@/components/owner/shops/[id]/statistics/Statistics";
 
 type Props = {
   id: string;
@@ -82,6 +75,7 @@ export default function Main({id}: Props) {
     {key: '1', label: 'Tổng quan'},
     {key: '2', label: 'Đơn hàng'},
     {key: '3', label: 'Đánh giá'},
+    {key: '4', label: 'Thống kê'},
   ];
 
   const getStatusColor = (status: ShopStatus): ChipColor => {
@@ -214,7 +208,9 @@ export default function Main({id}: Props) {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
                   <StarRoundedIcon className="text-yellow-400"/>
-                  <span className="text-xl font-bold">{shop.rating?.toFixed(1) || "0.0"}</span>
+                  <span className="text-xl font-bold">
+                    {shop.numberOfRatings > 0 ? (shop.rating / shop.numberOfRatings).toFixed(1) : "0.0"}
+                  </span>
                   <span className="text-sm opacity-90">/ 5.0</span>
                 </div>
                 <Chip
@@ -232,7 +228,8 @@ export default function Main({id}: Props) {
         <ScrollTab items={tabs} onChange={setActiveTab} activeKey={activeTab}/>
         {activeTab === '1' ? <General shop={shop} id={id}/>
           : activeTab === '2' ? <Orders id={id}/>
-            : activeTab === '3' ? <Reviews id={id}/> : null
+            : activeTab === '3' ? <Reviews id={id}/>
+              : activeTab === '4' ? <Statistics shop={shop} id={id}/> : null
         }
       </div>
 

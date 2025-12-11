@@ -1,6 +1,6 @@
 import {AccountStatus, Role} from "@/types/enum";
 import Modal from "@/libs/Modal";
-import {InfoRow} from "@/libs/InfoRow";
+import InfoRow from "@/libs/InfoRow";
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import WorkRoundedIcon from '@mui/icons-material/WorkRounded';
 import EmailRoundedIcon from '@mui/icons-material/EmailRounded';

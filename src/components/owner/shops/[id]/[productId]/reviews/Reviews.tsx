@@ -16,6 +16,7 @@ import DropdownSelect from "@/libs/DropdownSelect";
 import TextField from "@/libs/TextField";
 import Button from "@/libs/Button";
 import {AlertType, ColorButton, RatingNumber} from "@/types/enum";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import {useDispatch} from "react-redux";
 import {useBuildUrl} from "@/hooks/useBuildUrl";
 import {REVIEW_REPLY, REVIEW_VIEW} from "@/services/api";
@@ -165,13 +166,6 @@ const ReviewCard: React.FC<ReviewCardProps> = React.memo(function ReviewCard({
             )}
           </div>
 
-          <div className="text-grey-c900 mb-1">
-            <span className="text-sm text-grey-c700 block truncate" title={review.productName}>
-              <span className="font-medium mr-1">Tên sản phẩm:</span>
-              <span className="text-primary-c700 font-semibold">{review.productName}</span>
-            </span>
-          </div>
-
           {review.attributes && Object.keys(review.attributes).length > 0 && (
             <div className="flex items-center gap-2 mb-3 text-sm text-grey-c600 flex-wrap">
               <span className="text-xs text-grey-c500">Phân loại:</span>
@@ -276,9 +270,9 @@ const ReviewCard: React.FC<ReviewCardProps> = React.memo(function ReviewCard({
   );
 });
 type Props = {
-  id: string;
+  productId: string;
 }
-export default function Reviews({id}: Props) {
+export default function Reviews({productId}: Props) {
   const {get, post} = useAxiosContext();
   const [rating, setRating] = useState<string>('');
   const [sortLabel, setSortLabel] = useState<string>('');
@@ -291,7 +285,7 @@ export default function Reviews({id}: Props) {
   const url = useBuildUrl({
     baseUrl: REVIEW_VIEW,
     queryParams: {
-      shopId: id,
+      productId: productId,
       isOwner: true,
       isReply: status === 'with_reply' ? true : status === 'without_reply' ? false : undefined,
       status: status || undefined,

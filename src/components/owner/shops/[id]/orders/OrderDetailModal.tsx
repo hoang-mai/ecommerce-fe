@@ -5,7 +5,7 @@ import Modal from '@/libs/Modal';
 import Chip from '@/libs/Chip';
 import { formatDateTime, formatPrice } from '@/util/FnCommon';
 import { getLabelStatusColor, getStatusColor, OrderView } from '@/components/user/orders/Main';
-import {InfoRow} from "@/libs/InfoRow";
+import InfoRow from "@/libs/InfoRow";
 
 interface Props {
   isOpen: boolean;

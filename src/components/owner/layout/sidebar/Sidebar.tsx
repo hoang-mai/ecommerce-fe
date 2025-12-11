@@ -48,12 +48,10 @@ export default function Sidebar() {
   const pathname = usePathname();
   const menuItems: MenuItem[] = [
     {name: "Tổng quan", link: "/owner/dashboard", icon: DashboardIcon},
-    {name: "Nhân viên", link: "/owner/employees", icon: GroupIcon},
     {name: "Quản lý cửa hàng", link: "/owner/shops", icon: StorefrontIcon},
     {name: "Quản lý đơn hàng", link: "/owner/orders", icon: ShoppingCartCheckoutIcon},
     {name: "Quản lý đánh giá", link: "/owner/reviews", icon: RateReviewIcon},
     {name: "Tin nhắn", link: "/owner/chats", icon: ChatRoundedIcon},
-    {name: "Cài đặt", link: "/admin/settings", icon: ManageAccountsIcon},
   ];
 
   const router = useRouter();

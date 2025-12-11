@@ -1,6 +1,6 @@
 import {useAddressMapping} from "@/hooks/useAddressMapping";
 import {ShopView} from "@/types/interface";
-import {InfoRow} from "@/libs/InfoRow";
+import InfoRow from "@/libs/InfoRow";
 import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import ProductTable from "@/components/owner/shops/[id]/general/ProductTable";

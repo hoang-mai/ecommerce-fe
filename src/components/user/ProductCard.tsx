@@ -1,4 +1,4 @@
-import React, {ReactNode, useRef, useState} from "react";
+import React, {useMemo, useRef, useState} from "react";
 import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRounded";
 import {formatNumber, formatPrice} from "@/util/FnCommon";
 import Button from "@/libs/Button";
@@ -13,11 +13,8 @@ import {openAlert} from "@/redux/slice/alertSlice";
 import {useDispatch} from "react-redux";
 import {useRouter} from "next/navigation";
 import {ProductView} from "@/types/interface";
-import StarHalfRoundedIcon from '@mui/icons-material/StarHalfRounded';
 import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 import CountdownTimer from "@/libs/CountDownTime";
-import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
 import Star from "@/libs/Star";
 
 interface ProductCardProps {
@@ -37,13 +34,24 @@ export default function ProductCard({product}: ProductCardProps) {
   const defaultVariant = product.productVariants.find(v => v.isDefault) ?? product.productVariants[0];
   const imageRef = useRef<HTMLImageElement | null>(null);
   const cartRef = useCartRef();
-
+  const [currentTime] = useState(() => Date.now());
   const router = useRouter();
   const dispatch = useDispatch();
   const {post} = useAxiosContext();
   const fetcher = (url: string, {arg}: { arg: ReqAddToCartDTO }) =>
     post<BaseResponse<never>>(url, arg, {}).then(res => res.data);
   const {trigger, isMutating} = useSWRMutation(`${CART}`, fetcher);
+
+  const isDiscountActive = useMemo(() => {
+    if (Number(product.discount) <= 0) return false;
+    if (!product.discountStartDate || !product.discountEndDate) return false;
+
+    const startTime = new Date(product.discountStartDate).getTime();
+    const endTime = new Date(product.discountEndDate).getTime();
+
+    return startTime < currentTime && endTime > currentTime;
+  }, [product.discount, product.discountStartDate, product.discountEndDate, currentTime]);
+
   const handleAddToCart = () => {
     if (product.productVariants.length > 1) {
       setOpenProductSelectVariant(true);
@@ -143,7 +151,7 @@ export default function ProductCard({product}: ProductCardProps) {
             loading="eager"
             className="w-full h-48 object-cover group-hover:scale-110 transition duration-300"
           />
-          {Number(product.discount) > 0 && (
+          {isDiscountActive && (
             <div
               className="absolute top-3 left-3 bg-gradient-to-r from-support-c900 to-support-c800 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
               <span className="text-xs">-</span>
@@ -166,15 +174,21 @@ export default function ProductCard({product}: ProductCardProps) {
                 <span className="text-sm font-semibold">{formatNumber(product.numberOfReviews || 0)}</span>
               </div>
             </div>
-            <div className="flex items-center">
-              <Star rating={Number(product.rating)}/>
-              <span className="text-sm text-gray-600 font-medium">{Number(product.rating).toFixed(1)}</span>
-            </div>
+            {Number(product.numberOfRatings) > 0 ? <div className="flex items-center">
+                <Star rating={Number(product.rating / product.numberOfRatings)}/>
+                <span
+                  className="text-sm text-gray-600 font-medium">{Number(product.rating / product.numberOfRatings).toFixed(1)}</span>
+              </div> :
+              <div className="flex items-center">
+                <Star rating={0}/>
+                <span className="text-sm text-gray-600 font-medium">0.0</span>
+              </div>
+            }
 
           </div>
 
           <div className="mb-3">
-            {Number(product.discount) > 0 ? (
+            {isDiscountActive ? (
               <div className={"flex flex-col"}>
                 <div className={"flex items-center gap-2"}>
                       <span className="text-primary-c900 font-bold text-lg">
@@ -213,8 +227,8 @@ export default function ProductCard({product}: ProductCardProps) {
         </div>
       </div>
       {isOpenProductSelectVariant &&
-          <SelectProductVariantModal isOpen={isOpenProductSelectVariant} product={product}
-                                     setIsOpen={setOpenProductSelectVariant}/>
+        <SelectProductVariantModal isOpen={isOpenProductSelectVariant} product={product}
+                                   setIsOpen={setOpenProductSelectVariant}/>
       }
     </>
   );

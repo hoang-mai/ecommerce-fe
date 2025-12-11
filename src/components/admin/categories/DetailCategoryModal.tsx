@@ -14,7 +14,7 @@ import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
-import {InfoRow} from "@/libs/InfoRow";
+import InfoRow from "@/libs/InfoRow";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 
 interface ResCategoryDTO {

@@ -226,7 +226,7 @@ export default function Main() {
         <div className="flex items-center gap-1">
           <span className="text-yellow-500">★</span>
           <span className="text-sm font-semibold text-grey-c900">
-            {row.rating != null ? row.rating.toFixed(1) : "0.0"}
+            {row.rating != null ? Number(row.rating/row.numberOfRatings).toFixed(1) : "0.0"}
           </span>
         </div>
       ),
@@ -314,7 +314,7 @@ export default function Main() {
   const totalPages = pageData?.totalPages || 0;
 
   return (
-    <div>
+    <div className={"overflow-y-auto"}>
       {isLoading && <Loading/>}
       <Title title="Quản lý cửa hàng" isDivide={true}/>
 

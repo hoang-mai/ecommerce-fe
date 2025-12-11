@@ -21,6 +21,8 @@ import DropdownSelect from "@/libs/DropdownSelect";
 import Loading from "@/components/modals/Loading";
 import CheckBox from "@/libs/CheckBox";
 import {ProductView} from "@/types/interface";
+import DateTimePicker from "@/libs/DateTimePicker";
+import {toLocalISOString} from "@/util/FnCommon";
 
 const productAttributeSchema = z.object({
   productAttributeId: z.string().optional(),
@@ -43,6 +45,9 @@ const updateProductSchema = z.object({
   name: z.string().min(1, "Tên sản phẩm không được để trống"),
   description: z.string().optional(),
   categoryId: z.string().min(1, "Danh mục không được để trống"),
+  discount: z.number().min(0, "Phần trăm giả giá phải lớn hơn 0").max(100, "Phần trăm giảm giá phải nhỏ hơn 100").optional(),
+  discountStartDate: z.date().optional(),
+  discountEndDate: z.date().optional(),
   imageUrls: z.array(z.union([z.instanceof(File), z.string()]))
     .min(1, "Vui lòng tải lên ít nhất 1 ảnh")
     .refine((files) => files.every(file =>
@@ -66,7 +71,7 @@ interface UpdateProductModalProps {
 
 export default function UpdateProductModal({isOpen, onClose, reload, productData}: UpdateProductModalProps) {
   const dispatch = useDispatch();
-  const { patch, get } = useAxiosContext();
+  const {patch, get} = useAxiosContext();
 
   const fetcher = (url: string, {arg}: { arg: FormData }) =>
     patch<BaseResponse<never>>(url, arg, {
@@ -86,7 +91,9 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
   const [hasMore, setHasMore] = useState(false);
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
   // State to manage variant attribute values locally
-  const [variantAttributeValues, setVariantAttributeValues] = useState<{[variantIndex: number]: {[attrName: string]: string}}>({});
+  const [variantAttributeValues, setVariantAttributeValues] = useState<{
+    [variantIndex: number]: { [attrName: string]: string }
+  }>({});
 
   const {data: categoriesData, isLoading: isLoadingCategories} = useSWR(
     isOpen ? `${CATEGORY}/search?keyword=${searchKeyword}&pageNo=${pageNo}&pageSize=10` : null,
@@ -141,6 +148,9 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
       name: productData.name,
       description: productData.description,
       categoryId: productData.categoryId.toString(),
+      discount: productData.discount || undefined,
+      discountStartDate: productData.discountStartDate ? new Date(productData.discountStartDate) : undefined,
+      discountEndDate: productData.discountEndDate ? new Date(productData.discountEndDate) : undefined,
       imageUrls: productData.productImages.map(img => img.imageUrl),
       productAttributes: productData.productAttributes.map(attr => ({
         productAttributeId: attr.productAttributeId,
@@ -172,6 +182,10 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
     name: "productAttributes",
   });
 
+  const discount = useWatch({
+    control,
+    name: "discount",
+  });
   const handleAddAttributeValue = (attrIndex: number) => {
     const currentValue = tempAttributeValue[attrIndex];
     if (!currentValue?.trim()) return;
@@ -268,12 +282,14 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
     }
   };
 
+
+
   const onSubmit = (data: UpdateProductFormData) => {
     const formData = new FormData();
 
     // Clean up attributeValues - only keep defined values
     const cleanedVariants = data.productVariants.map((variant, index) => {
-      const cleanedAttributeValues: {[key: string]: string} = {};
+      const cleanedAttributeValues: { [key: string]: string } = {};
 
       // Get attribute values from local state instead of form
       const localAttrValues = variantAttributeValues[index] || {};
@@ -300,6 +316,9 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
       name: data.name,
       description: data.description || "",
       categoryId: parseInt(data.categoryId),
+      discount: data.discount,
+      discountStartDate: toLocalISOString(data.discountStartDate),
+      discountEndDate: toLocalISOString(data.discountEndDate),
       productAttributes: data.productAttributes || [],
       productVariants: cleanedVariants,
       deletedImageIds: deletedImageIds,
@@ -336,10 +355,10 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
 
   // Initialize variantAttributeValues from existing data
   useEffect(() => {
-    const initialValues: {[variantIndex: number]: {[attrName: string]: string}} = {};
+    const initialValues: { [variantIndex: number]: { [attrName: string]: string } } = {};
 
     // Build a lookup map from attributeId -> { name, valuesMap(valueId -> valueString) }
-    const attributeLookup: Record<string, {name: string; valuesMap: Record<string, string>}> = {};
+    const attributeLookup: Record<string, { name: string; valuesMap: Record<string, string> }> = {};
     productData.productAttributes.forEach(attr => {
       const valuesMap: Record<string, string> = {};
       attr.productAttributeValues.forEach(v => {
@@ -350,7 +369,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
 
     productData.productVariants.forEach((variant, index) => {
 
-      const mapping: {[attrName: string]: string} = {};
+      const mapping: { [attrName: string]: string } = {};
       variant.productVariantAttributeValues?.forEach((pva) => {
         const attrEntry = attributeLookup[pva.productAttributeId];
         if (attrEntry) {
@@ -366,7 +385,6 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
 
     setVariantAttributeValues(initialValues);
   }, [productData.productAttributes, productData.productVariants]);
-
   return (
     <>
       <Modal
@@ -396,7 +414,78 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
               />
             )}
           />
+          <div className={"grid gird-cols-1 md:grid-cols-2 gap-4"}>
+            <Controller
+              name="categoryId"
+              control={control}
+              render={({field}) => {
+                const selectedOption = categoryOptions.find(opt => opt.id === field.value);
+                return (
+                  <TextSearch
+                    label="Danh mục"
+                    placeholder="Tìm kiếm danh mục"
+                    options={categoryOptions}
+                    value={selectedOption?.label || productData.categoryName}
+                    onSearch={(keyword) => setSearchKeyword(keyword)}
+                    onSelect={(id) => {
+                      setValue("categoryId", id);
+                    }}
+                    error={errors.categoryId?.message}
+                    disabled={isMutating}
+                    isLoading={isLoadingCategories}
+                    debounceTime={300}
+                    hasMore={hasMore}
+                    onLoadMore={handleLoadMore}
+                    required
+                  />
+                );
+              }}
+            />
+            <Controller name={"discount"} control={control} render={({field}) => (
+              <TextField
+                value={field.value}
+                onChange={(value) => {
+                  const numericValue = parseFloat(value);
+                  if (isNaN(numericValue)) {
+                    field.onChange(undefined);
+                  } else {
+                    field.onChange(numericValue);
+                  }
+                }}
+                label="Giảm giá (%)"
+                placeholder="Nhập phần trăm giảm giá"
+                type="number"
+                error={errors.discount?.message}
+              />
+            )}/>
+          </div>
+          <div className={"grid gird-cols-1 md:grid-cols-2 gap-4"}>
 
+            <Controller
+              name="discountStartDate"
+              control={control}
+              render={({field}) => (
+                <DateTimePicker
+                  label="Ngày bắt đầu giảm giá"
+                  value={field.value || null}
+                  onChange={(date) => field.onChange(date || undefined)}
+                  error={errors.discountStartDate?.message}
+                />
+              )}
+            />
+            <Controller
+              name="discountEndDate"
+              control={control}
+              render={({field}) => (
+                <DateTimePicker
+                  label="Ngày kết thúc giảm giá"
+                  value={field.value || null}
+                  onChange={(date) => field.onChange(date || undefined)}
+                  error={errors.discountEndDate?.message}
+                />
+              )}
+            />
+          </div>
           <Controller
             name="description"
             control={control}
@@ -413,32 +502,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
             )}
           />
 
-          <Controller
-            name="categoryId"
-            control={control}
-            render={({field}) => {
-              const selectedOption = categoryOptions.find(opt => opt.id === field.value);
-              return (
-                <TextSearch
-                  label="Danh mục"
-                  placeholder="Tìm kiếm danh mục"
-                  options={categoryOptions}
-                  value={selectedOption?.label || productData.categoryName}
-                  onSearch={(keyword) => setSearchKeyword(keyword)}
-                  onSelect={(id) => {
-                    setValue("categoryId", id);
-                  }}
-                  error={errors.categoryId?.message}
-                  disabled={isMutating}
-                  isLoading={isLoadingCategories}
-                  debounceTime={300}
-                  hasMore={hasMore}
-                  onLoadMore={handleLoadMore}
-                  required
-                />
-              );
-            }}
-          />
+
         </div>
 
         {/* Product Images */}

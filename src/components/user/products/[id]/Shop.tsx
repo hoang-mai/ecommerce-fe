@@ -124,10 +124,13 @@ export default function Shop({id}: Props) {
       {/* Shop Stats */}
       <div className="grid grid-cols-4 gap-4 py-4">
         <div className="text-center">
-          <div className="flex items-center justify-center gap-1 mb-1">
+          {Number(shopData.numberOfRatings) > 0 ? <div className="flex items-center justify-center gap-1 mb-1">
             <StarIcon className="w-4 h-4 text-yellow-500"/>
-            <span className="font-semibold text-grey-c900">{shopData.rating}</span>
-          </div>
+            <span className="font-semibold text-grey-c900">{Number(shopData.rating/shopData.numberOfRatings).toFixed(1)}</span>
+          </div> : <div className="flex items-center justify-center gap-1 mb-1">
+            <StarIcon className="w-4 h-4 text-yellow-500"/>
+            <span className="font-semibold text-grey-c900">0.0</span>
+          </div>}
           <p className="text-xs text-grey-c600">{formatNumber(shopData.numberOfRatings || 0)} đánh giá</p>
         </div>
         <div className="text-center border-l border-r border-grey-c100">

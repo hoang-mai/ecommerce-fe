@@ -5,7 +5,7 @@ import Modal from '@/libs/Modal';
 import Chip from '@/libs/Chip';
 import { formatDateTime, formatPrice } from '@/util/FnCommon';
 import { getLabelStatusColor, getStatusColor, OrderView } from '@/components/user/orders/Main';
-import {InfoRow} from "@/libs/InfoRow";
+import InfoRow from "@/libs/InfoRow";
 
 interface Props {
   isOpen: boolean;
@@ -82,7 +82,6 @@ export default function OrderDetailModal({ isOpen, setIsOpen, order }: Props) {
                     <div>Thanh toán: <span className="font-semibold text-primary-c900">{formatPrice(item.totalFinalPrice)}</span></div>
                   </div>
                 </div>
-                <div className="mt-2 md:mt-0 md:ml-4 font-semibold">{formatPrice(item.price * item.quantity)}</div>
               </div>
             ))}
           </div>

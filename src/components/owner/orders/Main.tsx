@@ -205,6 +205,66 @@ const mockOrders: OrderView[] = [
         productAttributes: []
       }
     ]
+  },
+  {
+    orderId: 'ORD005',
+    userId: 'USER-5',
+    shopId: '2',
+    shopName: 'Shop Điện Tử XYZ',
+    shopLogoUrl: '',
+    orderStatus: OrderStatus.CANCELLED,
+    reason: 'Khách hàng hủy - Đổi ý',
+    totalPrice: 850000,
+    paymentId: 'COD',
+    receiverName: 'Hoàng Văn E',
+    address: '555 Pasteur, Q.1, TP.HCM',
+    phoneNumber: '0945678901',
+    createdAt: '2024-11-29 11:20',
+    orderItems: [
+      {
+        orderItemId: 'i7',
+        productId: 'p7',
+        productName: 'Chuột gaming Logitech',
+        productImageUrl: '',
+        productVariantId: 'v7',
+        price: 850000,
+        quantity: 1,
+        totalPrice: 850000,
+        totalDiscount: 0,
+        totalFinalPrice: 850000,
+        productAttributes: []
+      }
+    ]
+  },
+  {
+    orderId: 'ORD005',
+    userId: 'USER-5',
+    shopId: '2',
+    shopName: 'Shop Điện Tử XYZ',
+    shopLogoUrl: '',
+    orderStatus: OrderStatus.CANCELLED,
+    reason: 'Khách hàng hủy - Đổi ý',
+    totalPrice: 850000,
+    paymentId: 'COD',
+    receiverName: 'Hoàng Văn E',
+    address: '555 Pasteur, Q.1, TP.HCM',
+    phoneNumber: '0945678901',
+    createdAt: '2024-11-29 11:20',
+    orderItems: [
+      {
+        orderItemId: 'i7',
+        productId: 'p7',
+        productName: 'Chuột gaming Logitech',
+        productImageUrl: '',
+        productVariantId: 'v7',
+        price: 850000,
+        quantity: 1,
+        totalPrice: 850000,
+        totalDiscount: 0,
+        totalFinalPrice: 850000,
+        productAttributes: []
+      }
+    ]
   }
 ];
 export default function Main() {
@@ -407,7 +467,7 @@ export default function Main() {
   ];
 
   return (
-    <div>
+    <div className={"overflow-y-auto min-h-0"}>
       {isLoading && isMutating && <Loading/>}
       <Title title="Quản lý đơn hàng" isDivide/>
 

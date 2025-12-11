@@ -124,7 +124,7 @@ export default function Chip({
   const getSizeClasses = () => {
     const sizeMap = {
       [ChipSize.SMALL]: 'px-2 py-1.5 text-xs gap-1',
-      [ChipSize.MEDIUM]: 'px-3 py-1.5 text-xs gap-1.5',
+      [ChipSize.MEDIUM]: 'px-3 py-1.5 text-xs',
       [ChipSize.LARGE]: 'px-4 py-2 text-sm gap-2',
     };
 

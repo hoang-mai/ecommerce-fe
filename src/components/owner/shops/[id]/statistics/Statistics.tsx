@@ -6,133 +6,36 @@ import {ResponsiveBar} from '@nivo/bar';
 import {ResponsivePie} from '@nivo/pie';
 import useSWR from 'swr';
 import {useAxiosContext} from '@/components/provider/AxiosProvider';
-import {ORDER_VIEW, PRODUCT_VIEW, SHOP_VIEW} from '@/services/api';
+import {ORDER_VIEW, PRODUCT_VIEW} from '@/services/api';
 import {OrderStatus} from '@/types/enum';
 import Loading from '@/components/modals/Loading';
 import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import AttachMoneyRoundedIcon from '@mui/icons-material/AttachMoneyRounded';
-import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
+import InventoryRoundedIcon from '@mui/icons-material/InventoryRounded';
 import {format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths} from 'date-fns';
 import {vi} from 'date-fns/locale';
 import Card from '@/libs/Card';
 import Title from '@/libs/Title';
 import {formatNumber, formatPrice} from "@/util/FnCommon";
 import MonthRangePicker from "@/libs/MonthRangePicker";
-import {DateRange, OrderViewStatisticDTO, ProductViewStatisticDTO} from "@/types/interface";
+import {DateRange, OrderViewStatisticDTO, ShopView,ProductViewStatisticDTO} from "@/types/interface";
 import {useBuildUrl} from "@/hooks/useBuildUrl";
 import Empty from "@/libs/Empty";
 
-interface OwnerViewStatisticDTO {
-  totalRevenue: number;
-  totalOrders: number;
-  totalProducts: number;
-  totalSold: number;
+interface Props {
+  shop: ShopView;
+  id: string;
 }
 
-// Mock Data
-const MOCK_SHOPS = [
-  {shopId: '1', shopName: 'Shop Thời Trang ABC', totalProducts: 45, totalSold: 230, totalRevenue: 45000000},
-  {shopId: '2', shopName: 'Shop Điện Tử XYZ', totalProducts: 67, totalSold: 450, totalRevenue: 89000000},
-  {shopId: '3', shopName: 'Shop Mỹ Phẩm Beauty', totalProducts: 89, totalSold: 670, totalRevenue: 123000000},
-];
 
-const generateMockOrders = () => {
-  const orders = [];
-  const now = new Date();
-  const statuses = [
-    OrderStatus.PENDING,
-    OrderStatus.CONFIRMED,
-    OrderStatus.PAID,
-    OrderStatus.SHIPPED,
-    OrderStatus.DELIVERED,
-    OrderStatus.COMPLETED,
-    OrderStatus.RETURNED,
-    OrderStatus.CANCELLED,
-  ];
-
-  // Generate orders for the last 6 months
-  for (let monthOffset = 0; monthOffset < 6; monthOffset++) {
-    const month = subMonths(now, monthOffset);
-    const ordersInMonth = Math.floor(Math.random() * 30) + 20; // 20-50 orders per month
-
-    for (let i = 0; i < ordersInMonth; i++) {
-      const orderDate = new Date(
-        month.getFullYear(),
-        month.getMonth(),
-        Math.floor(Math.random() * 28) + 1,
-        Math.floor(Math.random() * 24),
-        Math.floor(Math.random() * 60)
-      );
-
-      const orderStatus = statuses[Math.floor(Math.random() * statuses.length)];
-      const numItems = Math.floor(Math.random() * 3) + 1; // 1-3 items per order
-      const orderItems = [];
-      let totalPrice = 0;
-
-      for (let j = 0; j < numItems; j++) {
-        const price = Math.floor(Math.random() * 1000000) + 50000; // 50k - 1M
-        const quantity = Math.floor(Math.random() * 3) + 1; // 1-3 quantity
-        const totalFinalPrice = price * quantity;
-        totalPrice += totalFinalPrice;
-
-        orderItems.push({
-          orderItemId: `OI-${monthOffset}-${i}-${j}`,
-          productId: `P-${Math.floor(Math.random() * 50) + 1}`,
-          productName: `Sản phẩm ${Math.floor(Math.random() * 50) + 1}`,
-          productVariantId: `PV-${Math.floor(Math.random() * 100) + 1}`,
-          quantity,
-          price,
-          totalFinalPrice,
-        });
-      }
-
-      orders.push({
-        orderId: `ORD-${monthOffset}-${i}`,
-        userId: `USER-${Math.floor(Math.random() * 20) + 1}`,
-        shopId: MOCK_SHOPS[Math.floor(Math.random() * MOCK_SHOPS.length)].shopId,
-        shopName: MOCK_SHOPS[Math.floor(Math.random() * MOCK_SHOPS.length)].shopName,
-        shopLogoUrl: '',
-        orderStatus,
-        reason: orderStatus === OrderStatus.CANCELLED ? 'Khách hàng hủy' : '',
-        totalPrice,
-        paymentId: Math.random() > 0.5 ? 'VNPAY' : 'COD',
-        receiverName: `Khách hàng ${Math.floor(Math.random() * 100) + 1}`,
-        address: 'Hà Nội, Việt Nam',
-        phoneNumber: '0987654321',
-        createdAt: orderDate.toISOString(),
-        orderItems,
-      });
-    }
-  }
-
-  return orders;
-};
-
-const MOCK_ORDERS = generateMockOrders();
-
-const MOCK_PRODUCTS = Array.from({length: 50}, (_, i) => ({
-  productId: `P-${i + 1}`,
-  productName: `Sản phẩm ${i + 1}`,
-  totalSold: Math.floor(Math.random() * 100) + 10,
-  price: Math.floor(Math.random() * 1000000) + 50000,
-}));
-
-interface DashboardStats {
-  totalRevenue: number;
-  totalOrders: number;
-  totalProducts: number;
-  totalShops: number;
-  revenueGrowth: number;
-  ordersGrowth: number;
-}
 
 interface MonthlyRevenue {
   month: string;
   revenue: number;
   orders: number;
 
-  [key: string]: string | number; // Index signature for Nivo Bar chart compatibility
+  [key: string]: string | number;
 }
 
 interface OrderStatusCount {
@@ -143,18 +46,7 @@ interface OrderStatusCount {
 }
 
 
-// Set to true to use mock data
-const USE_MOCK_DATA = true;
-
-interface MockShop {
-  shopId: string;
-  shopName: string;
-  totalProducts: number;
-  totalSold: number;
-  totalRevenue: number;
-}
-
-interface MockOrderItem {
+interface OrderItem {
   orderItemId: string;
   productId: string;
   productName: string;
@@ -164,107 +56,67 @@ interface MockOrderItem {
   totalFinalPrice: number;
 }
 
-interface MockOrder {
+interface Order {
   orderId: string;
   userId: string;
   shopId: string;
   shopName: string;
-  shopLogoUrl: string;
   orderStatus: OrderStatus;
-  reason: string;
   totalPrice: number;
-  paymentId: string;
-  receiverName: string;
-  address: string;
-  phoneNumber: string;
   createdAt: string;
-  orderItems: MockOrderItem[];
+  orderItems: OrderItem[];
 }
 
-interface MockProduct {
-  productId: string;
-  productName: string;
-  totalSold: number;
-  price: number;
-}
-
-export default function Main() {
+export default function Statistics({shop, id}: Props) {
   const {get} = useAxiosContext();
-
   const [selectRangeDate, setSelectRangeDate] = useState<DateRange | null>({
-    start: subMonths(new Date(), 12),
+    start : subMonths(new Date(), 12),
     end: new Date(),
   });
   const urlNewOrder = useBuildUrl({
     baseUrl: `${ORDER_VIEW}/statistic/date-range`,
-    queryParams: {
-      isOwner: true,
+    queryParams:{
+      shopId: id,
       fromDate: selectRangeDate ? selectRangeDate.start?.toISOString() : undefined,
-      toDate: selectRangeDate ? selectRangeDate.end?.toISOString() : undefined,
+      toDate: selectRangeDate ? selectRangeDate.end?.toISOString()  : undefined,
     }
   })
   const fetcherNewOrder = (url: string) => get<BaseResponse<OrderViewStatisticDTO[]>>(url).then((res) => res.data);
-  const {data: newOrderData, isLoading: isLoadingNewOrder} = useSWR(urlNewOrder, fetcherNewOrder, {
+  const {data: newOrderData, isLoading : isLoadingNewOrder} = useSWR(urlNewOrder, fetcherNewOrder, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   })
 
   const urlTopProduct = useBuildUrl({
     baseUrl: `${PRODUCT_VIEW}/statistic`,
-    queryParams: {
-      isOwner: true,
+    queryParams:{
+      shopId: id,
     }
   })
-  const fetcherTopProduct = (url: string) => get<BaseResponse<ProductViewStatisticDTO[]>>(url, {isToken: true}).then((res) => res.data);
-  const {data: topProducts, isLoading: isLoadingTopProducts} = useSWR(urlTopProduct, fetcherTopProduct, {
+  const fetcherTopProduct = (url: string) => get<BaseResponse<ProductViewStatisticDTO[]>>(url).then((res) => res.data);
+  const {data: topProducts, isLoading : isLoadingTopProducts} = useSWR(urlTopProduct, fetcherTopProduct, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   })
-
-  const fetcherOwnerStatistic = (url: string) => get<BaseResponse<OwnerViewStatisticDTO>>(url, {isToken: true}).then((res) => res.data);
-  const {
-    data: ownerStatsData,
-    isLoading: isLoadingOwnerStats
-  } = useSWR(`${SHOP_VIEW}/statistic`, fetcherOwnerStatistic, {
-    refreshInterval: 0,
-    revalidateOnFocus: false,
-  });
-
 
 
   const [monthlyData, setMonthlyData] = useState<MonthlyRevenue[]>([]);
   const [orderStatusData, setOrderStatusData] = useState<OrderStatusCount[]>([]);
 
-  // Fetch shops data
-  const {data: shopsData} = useSWR(
-    USE_MOCK_DATA ? null : `${SHOP_VIEW}?pageSize=1000`,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (url: string) => get<BaseResponse<PageResponse<any>>>(url).then((res) => res.data),
-    {revalidateOnFocus: false}
-  );
 
-  // Fetch orders data
+  // Fetch orders data for this shop
   const {data: ordersData} = useSWR(
-    USE_MOCK_DATA ? null : `${ORDER_VIEW}?isOwner=true&pageSize=1000`,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (url: string) => get<BaseResponse<PageResponse<any>>>(url).then((res) => res.data),
+    `${ORDER_VIEW}?isOwner=true&shopId=${id}&pageSize=1000`,
+    (url: string) => get<BaseResponse<PageResponse<Order>>>(url, {isToken: true}).then((res) => res.data),
     {revalidateOnFocus: false}
   );
 
-  // Fetch products data
-  const {data: productsData} = useSWR(
-    USE_MOCK_DATA ? null : `${PRODUCT_VIEW}?isOwner=true&pageSize=1000`,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (url: string) => get<BaseResponse<PageResponse<any>>>(url).then((res) => res.data),
-    {revalidateOnFocus: false}
-  );
+  const processData = (orders: Order[]) => {
 
-  const processData = (orders: MockOrder[], shops: MockShop[], products: MockProduct[]) => {
 
 
     // Calculate growth (last month vs current month)
     const now = new Date();
-
 
 
 
@@ -285,7 +137,7 @@ export default function Main() {
 
       return {
         month: format(month, 'MM/yyyy', {locale: vi}),
-        revenue: monthOrders.reduce((sum: number, o) => sum + (o.totalPrice || 0), 0),
+        revenue: monthOrders.reduce((sum, o) => sum + (o.totalPrice || 0), 0),
         orders: monthOrders.length,
       };
     });
@@ -333,22 +185,15 @@ export default function Main() {
     setOrderStatusData(orderStatusData);
 
 
+
+
   };
 
   useEffect(() => {
-    if (USE_MOCK_DATA) {
-      // Use mock data immediately
-      processData(MOCK_ORDERS, MOCK_SHOPS, MOCK_PRODUCTS);
-    } else if (ordersData && shopsData && productsData) {
-      // Use real API data
-      processData(
-        ordersData?.data?.data || [],
-        shopsData?.data?.data || [],
-        productsData?.data?.data || []
-      );
+    if (ordersData) {
+      processData(ordersData?.data?.data || []);
     }
-  }, [ordersData, shopsData, productsData]);
-
+  }, [ordersData]);
 
   // Chart data for revenue
   const revenueChartData = [
@@ -361,20 +206,22 @@ export default function Main() {
       })),
     },
   ];
+
+
   return (
-    <div className="space-y-6 overflow-y-auto">
+    <div className="space-y-6 py-4">
       {/* Header */}
-      {isLoadingNewOrder && isLoadingTopProducts && isLoadingOwnerStats && <Loading/>}
+      {isLoadingNewOrder && isLoadingTopProducts && <Loading/>}
       <div>
-        <Title title={"Bảng Điều Khiển Chủ Cửa Hàng"} isDivide={true}/>
+        <Title title={"Thống Kê Cửa Hàng"} isDivide={true}/>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card
           isStats
           title="Tổng Doanh Thu"
-          value={formatPrice(ownerStatsData?.data?.totalRevenue || 0)}
+          value={formatPrice(shop.totalRevenue || 0)}
           icon={<AttachMoneyRoundedIcon className="text-4xl"/>}
           iconBg="bg-primary-c200"
           iconColor="text-primary-c700"
@@ -383,7 +230,7 @@ export default function Main() {
         <Card
           isStats
           title="Tổng Đơn Hàng"
-          value={formatNumber(ownerStatsData?.data?.totalOrders || 0)}
+          value={formatNumber(shop.totalOrder || 0)}
           icon={<ShoppingCartRoundedIcon className="text-4xl"/>}
           iconBg="bg-success-c100"
           iconColor="text-success-c600"
@@ -392,17 +239,17 @@ export default function Main() {
         <Card
           isStats
           title="Tổng Sản Phẩm"
-          value={formatNumber(ownerStatsData?.data?.totalProducts || 0)}
-          icon={<TrendingUpRoundedIcon className="text-4xl"/>}
+          value={formatNumber(shop.totalProducts || 0)}
+          icon={<InventoryRoundedIcon className="text-4xl"/>}
           iconBg="bg-purple-100"
           iconColor="text-purple-600"
           baseClasses={"bg-gradient-to-br from-purple-50 to-white rounded-2xl shadow-sm border border-purple-100"}
         />
         <Card
           isStats
-          title="Tổng Sản Phẩm Đã Bán"
-          value={formatNumber(ownerStatsData?.data?.totalSold || 0)}
-          icon={<StorefrontRoundedIcon className="text-4xl"/>}
+          title="Tổng Đã Bán"
+          value={formatNumber(shop.totalSold || 0)}
+          icon={<TrendingUpRoundedIcon className="text-4xl"/>}
           iconBg="bg-orange-100"
           iconColor="text-orange-600"
           baseClasses={"bg-gradient-to-br from-orange-50 to-white rounded-2xl shadow-sm border border-orange-100"}
@@ -426,7 +273,6 @@ export default function Main() {
               legendPosition: 'middle',
               format: (value) => formatNumber(value)
             }}
-
             colors={"#2D7D9F"}
             pointSize={10}
             pointColor="#ffffff"
@@ -441,7 +287,6 @@ export default function Main() {
                 <div className="bg-primary-c600 text-white px-4 py-2">
                   <div className="text-sm font-semibold">{point.data.xFormatted}</div>
                 </div>
-
                 <div className="bg-white px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-primary-c600"></div>
@@ -452,7 +297,6 @@ export default function Main() {
                   </div>
                 </div>
               </div>
-
             )}
           />
         </div>
@@ -465,7 +309,9 @@ export default function Main() {
           <MonthRangePicker
             value={selectRangeDate}
             onChange={setSelectRangeDate}
-            maxRange={12}/>
+            maxRange={12}
+            required={true}
+          />
         </div>
         {newOrderData && newOrderData.data && newOrderData.data.length > 0 ?
           <div style={{height: '400px'}}>
@@ -491,12 +337,9 @@ export default function Main() {
               enableLabel={false}
               tooltip={({indexValue, value}) => (
                 <div className="border border-grey-c200 rounded-xl shadow-lg overflow-hidden">
-                  {/* header */}
                   <div className="bg-primary-c600 text-white px-4 py-2">
                     <div className="text-sm font-semibold">{indexValue}</div>
                   </div>
-
-                  {/* body */}
                   <div className="bg-white px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-primary-c600"></div>
@@ -509,12 +352,13 @@ export default function Main() {
               )}
             />
           </div>
-          :
+         :
           <div className={"flex items-center justify-center h-100 flex-col"}>
             <Empty/>
             <div className={"text-grey-c600"}>Không có dữ liệu đơn hàng</div>
           </div>
         }
+
       </div>
 
       {/* Order Status & Top Products */}
@@ -541,12 +385,9 @@ export default function Main() {
               arcLabelsTextColor={{from: 'color', modifiers: [['darker', 2]]}}
               tooltip={({datum}) => (
                 <div className="border border-grey-c200 rounded-xl shadow-lg overflow-hidden">
-                  {/* header */}
                   <div className="bg-primary-c600 text-white px-4 py-2">
                     <div className="text-sm font-semibold">{datum.label}</div>
                   </div>
-
-                  {/* body */}
                   <div className="bg-white px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full" style={{backgroundColor: datum.color}}></div>
@@ -577,7 +418,6 @@ export default function Main() {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-grey-c900 truncate">{product.productName}</h3>
                   <p className="text-sm text-grey-c600">Đã bán: {formatNumber(product.totalSold)} sản phẩm</p>
-                  <p className="text-xs text-grey-c500 mt-1 truncate">Cửa hàng: {product.shopName}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="font-bold text-grey-c900">{formatPrice(product.totalRevenue)}</p>

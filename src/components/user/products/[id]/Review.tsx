@@ -152,11 +152,11 @@ export default function Review({id, product}: Props) {
     const totalRatings = product.numberOfRatings || 0;
     const averageRating = product.rating / product.numberOfRatings || 0;
     const ratingDistribution: Record<number, number> = {
-      1: product.ratingStatistics?.[1] || 0,
-      2: product.ratingStatistics?.[2] || 0,
-      3: product.ratingStatistics?.[3] || 0,
-      4: product.ratingStatistics?.[4] || 0,
-      5: product.ratingStatistics?.[5] || 0,
+      1: product.ratingStatistics?.["ONE"] || 0,
+      2: product.ratingStatistics?.["TWO"] || 0,
+      3: product.ratingStatistics?.["THREE"] || 0,
+      4: product.ratingStatistics?.["FOUR"] || 0,
+      5: product.ratingStatistics?.["FIVE"] || 0,
     };
     return {totalReviews, totalRatings, averageRating, ratingDistribution};
   }, [product]);

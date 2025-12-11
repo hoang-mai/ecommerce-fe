@@ -5,7 +5,7 @@ interface Props {
   htmlFor?: string;
   label?: string;
   placeholder?: string;
-  value?: string;
+  value?: string | number;
   onChange?: (value: string) => void;
   disabled?: boolean;
   error?: string;
@@ -71,7 +71,7 @@ export default function TextField(
             className={`${className} w-full px-5 py-3 border-2 rounded-xl outline-0 text-grey-c700 transition-all ease-linear resize-none
             ${disabled ? "bg-grey-c50 cursor-not-allowed" : error ? "bg-support-c300 border-support-c500 hover:border-support-c700 focus:border-support-c900" : "bg-white border-primary-c300 hover:border-primary-c500 focus:border-primary-c700"} `}
           />
-          {maxLength && (
+          {maxLength && typeof value === "string" && (
             <div className="absolute bottom-2 right-3 text-xs text-grey-c500 bg-white px-2 py-1 rounded">
               {value?.length || 0} / {maxLength}
             </div>

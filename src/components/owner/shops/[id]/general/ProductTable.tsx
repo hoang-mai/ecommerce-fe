@@ -14,7 +14,6 @@ import {formatDateTime, formatPrice} from "@/util/FnCommon";
 import CreateProductModal from "./CreateProductModal";
 import UpdateProductModal from "./UpdateProductModal";
 import UpdateStatusProductModal from "./UpdateStatusProductModal";
-import DetailProductModal from "./DetailProductModal";
 import useSWR from "swr";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {PRODUCT_VIEW} from "@/services/api";
@@ -27,6 +26,7 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {ProductView} from "@/types/interface";
 import { useBuildUrl } from "@/hooks/useBuildUrl";
+import {useRouter} from "next/navigation";
 
 interface ProductTableProps {
   shopId: string;
@@ -36,7 +36,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
   const {get} = useAxiosContext();
   const productFetcher = (url: string) =>
     get<BaseResponse<PageResponse<ProductView>>>(url, {isToken : true}).then((res) => res.data);
-
+  const router = useRouter();
   const [pageNo, setPageNo] = useState(0);
   const [pageSize, setPageSize] = useState("10");
   const [sortBy, setSortBy] = useState("");
@@ -51,8 +51,6 @@ export default function ProductTable({shopId}: ProductTableProps) {
   const [selectedProduct, setSelectedProduct] = useState<ProductView | null>(null);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const url = useBuildUrl({
     baseUrl: PRODUCT_VIEW,
@@ -309,8 +307,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
         <div className="flex gap-2 justify-center">
           <button
             onClick={() => {
-              setSelectedProduct(row);
-              setIsDetailModalOpen(true);
+              router.push(`/owner/shops/${shopId}/${row.productId}`);
             }}
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
@@ -471,17 +468,6 @@ export default function ProductTable({shopId}: ProductTableProps) {
         />
       )}
 
-      {/* Detail Product Modal */}
-      {isDetailModalOpen && selectedProduct && (
-        <DetailProductModal
-          isOpen={isDetailModalOpen}
-          onClose={() => {
-            setIsDetailModalOpen(false);
-            setSelectedProduct(null);
-          }}
-          productData={selectedProduct}
-        />
-      )}
     </div>
   );
 }

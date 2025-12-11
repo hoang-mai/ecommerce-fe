@@ -2,16 +2,16 @@ import Image from "next/image";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import ImageRoundedIcon from "@mui/icons-material/ImageRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import React, {useEffect, useRef, useState} from "react";
 import {ChatDTO, MessageDTO, UserCache} from "@/types/interface";
-import {AlertType, ColorButton, MessageType} from "@/types/enum";
+import {AlertType, MessageType} from "@/types/enum";
 import {getTimeAgo} from "@/util/FnCommon";
-import Button from "@/libs/Button";
 import TextField from "@/libs/TextField";
 
 import WebSocketService from "@/services/webSocket";
 import useSWR from "swr";
-import {MESSAGE} from "@/services/api";
+import {CHAT, MESSAGE} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useBuildUrl} from "@/hooks/useBuildUrl";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -37,7 +37,7 @@ export default function Chat({
                                selectedChat,
                                currentUserId,
                              }: Props) {
-  const {get} = useAxiosContext();
+  const {get, post} = useAxiosContext();
   const [message, setMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -49,11 +49,24 @@ export default function Chat({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(false);
   const previousScrollHeight = useRef<number>(0);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const fetcherIsRead = (url: string, {arg}: {
     arg: string
   }) => get<BaseResponse<never>>(`${url}?chatId=${arg}`).then(res => res.data.data);
 
   const {trigger} = useSWRMutation(`${MESSAGE}/make-as-read`, fetcherIsRead);
+
+  const fetcherUploadImage = (url: string, {arg}: { arg: FormData }) =>
+    post<BaseResponse<ChatDTO>>(url, arg, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
+
+  const {trigger: triggerUploadImage} = useSWRMutation(CHAT, fetcherUploadImage);
 
   const customer = selectedChat.userCacheList.find(user => user.userId !== currentUserId);
   const messagesFetcher = (url: string) =>
@@ -174,6 +187,92 @@ export default function Chat({
     setCurrentPage(0);
   }, [selectedChat.chatId]);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      const alert: AlertState = {
+        isOpen: true,
+        message: "Chỉ chấp nhận định dạng ảnh JPEG, PNG, GIF, WEBP",
+        type: AlertType.ERROR,
+        title: "Lỗi",
+      };
+      dispatch(openAlert(alert));
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      const alert: AlertState = {
+        isOpen: true,
+        message: "Kích thước file không được vượt quá 5MB",
+        type: AlertType.ERROR,
+        title: "Lỗi",
+      };
+      dispatch(openAlert(alert));
+      return;
+    }
+
+    setSelectedImage(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset input value
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
+
+  const handleSendImage = async () => {
+    if (!selectedImage || isSending) return;
+
+    const customer = selectedChat.userCacheList.find(user => user.userId !== currentUserId);
+    if (!customer?.userId) return;
+
+    setIsSending(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedImage);
+
+      const data = {
+        shopId: selectedChat.shopCache.shopId,
+        receiverId: customer.userId,
+        messageType: MessageType.IMAGE,
+        chatId: selectedChat.chatId,
+      };
+
+      formData.append('data', new Blob([JSON.stringify(data)], {type: 'application/json'}));
+
+      await triggerUploadImage(formData);
+      handleRemoveImage();
+    } catch (error) {
+      console.error('Error sending image:', error);
+      const alert: AlertState = {
+        isOpen: true,
+        message: "Gửi hình ảnh thất bại. Vui lòng thử lại!",
+        type: AlertType.ERROR,
+        title: "Lỗi",
+      };
+      dispatch(openAlert(alert));
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const handleSendMessage = () => {
     if (!customer?.userId || !message.trim()) return;
@@ -291,12 +390,45 @@ export default function Chat({
 
     {/* Input Area */}
     <div className="border-t border-grey-c200 p-4 bg-white flex-shrink-0">
-      <div className="flex items-center gap-3">
+      {/* Image Preview */}
+      {imagePreview && (
+        <div className="mb-3 relative inline-block">
+          <div className="relative rounded-lg overflow-hidden border-2 border-primary-c700">
+            <Image
+              src={imagePreview}
+              alt="Preview"
+              width={200}
+              height={200}
+              className="object-cover"
+            />
+            <button
+              onClick={handleRemoveImage}
+              className="absolute top-2 right-2 p-1 bg-support-c500 text-white rounded-full hover:bg-support-c700 transition-colors"
+              title="Xóa ảnh"
+            >
+              <CloseRoundedIcon fontSize="small"/>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center gap-2">
+        {/* Hidden File Input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageSelect}
+          className="hidden"
+        />
+
         <button
-          className="p-2 text-grey-c600 hover:text-primary-c700 hover:bg-primary-c50 rounded-full transition-colors flex-shrink-0 cursor-pointer"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isSending}
+          className="p-2 text-grey-c600 hover:text-primary-c700 hover:bg-primary-c50 rounded-full transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           title="Gửi hình ảnh"
         >
-          <ImageRoundedIcon/>
+          <ImageRoundedIcon className="!text-xl"/>
         </button>
 
         <div className="flex-1 relative">
@@ -305,18 +437,19 @@ export default function Chat({
             onChange={(e) => setMessage(e)}
             onKeyDown={handleKeyPress}
             placeholder="Nhập tin nhắn..."
+            className="pr-10"
+            disabled={!!selectedImage}
           />
         </div>
 
-        <Button
-          onClick={handleSendMessage}
-          disabled={!message.trim() || isSending}
-          color={ColorButton.PRIMARY}
-          title="Gửi"
+        <button
+          onClick={selectedImage ? handleSendImage : handleSendMessage}
+          disabled={(selectedImage ? false : !message.trim()) || isSending}
+          className="p-2 bg-primary-c700 text-white rounded-full hover:bg-primary-c800 disabled:bg-grey-c300 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+          title={selectedImage ? "Gửi ảnh" : "Gửi tin nhắn"}
         >
-          <SendRoundedIcon/>
-          Gửi
-        </Button>
+          <SendRoundedIcon className="!text-xl"/>
+        </button>
       </div>
     </div>
   </div>

@@ -2,7 +2,7 @@ import {useMemo} from "react";
 
 type Props ={
   baseUrl: string;
-  queryParams?: Record<string, string | number | boolean | undefined | null>;
+  queryParams?: Record<string, string | number | boolean | Date | undefined | null>;
 }
 export const useBuildUrl = ({baseUrl,queryParams}:Props) => {
   return useMemo(() => {

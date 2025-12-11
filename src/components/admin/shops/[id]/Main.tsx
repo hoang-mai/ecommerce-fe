@@ -25,7 +25,7 @@ import {useAddressMapping} from "@/hooks/useAddressMapping";
 import ChangeCircleRoundedIcon from "@mui/icons-material/ChangeCircleRounded";
 import UpdateStatusShopModal from "@/components/owner/shops/UpdateStatusShopModal";
 import UpdateShopModal from "@/components/owner/shops/UpdateShopModal";
-import {InfoRow} from "@/libs/InfoRow";
+import InfoRow from "@/libs/InfoRow";
 
 interface ResShopDTO {
   shopId: number;

@@ -1,14 +1,14 @@
 import Modal from "@/libs/Modal";
-import {formatPrice} from "@/util/FnCommon";
+import {formatDateTime, formatPrice} from "@/util/FnCommon";
 import Divide from "@/libs/Divide";
 import React, {useState} from "react";
-import {InfoRow} from "@/libs/InfoRow";
+import InfoRow from "@/libs/InfoRow";
 import {OrderItem, OrderView} from "@/components/user/orders/Main";
 import Image from "next/image";
 import TextField from "@/libs/TextField";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
-import {RatingNumber, OrderStatus} from "@/types/enum";
+import {RatingNumber, OrderStatus, ColorButton} from "@/types/enum";
 import {z} from "zod";
 import {useForm, Controller} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
@@ -24,6 +24,19 @@ import {ReviewView} from "@/types/interface";
 import useSWR from "swr";
 import Loading from "@/components/modals/Loading";
 import Star from "@/libs/Star";
+import Button from "@/libs/Button";
+
+const mapRating = (rating: number | null | undefined): string | null => {
+  const map: Record<number, string> = {
+    5: "FIVE",
+    4: "FOUR",
+    3: "THREE",
+    2: "TWO",
+    1: "ONE",
+  };
+  return rating ? map[rating] ?? null : null;
+};
+
 
 type Props = {
   isOpen: boolean;
@@ -36,7 +49,7 @@ type Props = {
 const ReviewSchema = z.object({
   rating: z.number().int().min(1, "Vui lòng chọn đánh giá").max(5, "Vui lòng chọn đánh giá").optional(),
   comment: z.string().min(1, "Vui lòng nhập nhận xét").max(500, "Nhận xét tối đa 500 ký tự"),
-  images: z.array(z.union([z.instanceof(File)])).optional(),
+  images: z.array(z.union([z.instanceof(File), z.string()])).optional(),
 });
 
 type ReviewForm = z.infer<typeof ReviewSchema>;
@@ -49,8 +62,9 @@ export default function OrderItemDetailModal({
                                                orderStatus
                                              }: Props) {
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
-  const {get, post} = useAxiosContext();
-
+  const [isEditMode, setIsEditMode] = useState(false);
+  const {get, post, patch} = useAxiosContext();
+  const [deleteImages, setDeleteImages] = useState<number[]>([]);
   const fetcherGetReview = (url: string) => get<BaseResponse<ReviewView>>(url).then(res => res.data);
   const {
     data: reviewResponse,
@@ -60,18 +74,35 @@ export default function OrderItemDetailModal({
     revalidateOnFocus: false,
   });
   const existingReview = reviewResponse?.data;
-  const fetcher = (url: string, {arg}: { arg: FormData }) => post<BaseResponse<unknown>>(url, arg, {
+
+  // Fetcher for creating new review
+  const fetcherCreate = (url: string, {arg}: { arg: FormData }) => post<BaseResponse<unknown>>(url, arg, {
     headers: {
       'Content-Type': 'multipart/form-data',
     }
   }).then(res => res.data);
+
+  // Fetcher for updating review
+  const fetcherUpdate = (url: string, {arg}: { arg: FormData }) => patch<BaseResponse<unknown>>(url, arg, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    }
+  }).then(res => res.data);
+
   const dispatch = useDispatch();
-  const {trigger, isMutating} = useSWRMutation(REVIEW, fetcher);
+  const {trigger: triggerCreate, isMutating: isCreating} = useSWRMutation(REVIEW, fetcherCreate);
+  const {trigger: triggerUpdate, isMutating: isUpdating} = useSWRMutation(
+    existingReview ? `${REVIEW}/${existingReview.reviewId}` : null,
+    fetcherUpdate
+  );
 
   const {
     control,
     handleSubmit,
-    formState: {errors, isDirty}
+    formState: {errors, isDirty},
+    reset,
+    watch,
+    setValue
   } = useForm<ReviewForm>({
     resolver: zodResolver(ReviewSchema),
     defaultValues: {
@@ -80,22 +111,52 @@ export default function OrderItemDetailModal({
       images: [],
     }
   });
+const handleOnRemove= (indexOrId: number | string)=>{
+    const currentImages = watch("images") || [];
+  if (typeof indexOrId === 'string') {
+
+    const imageIndex = existingReview?.imageUrls?.findIndex(img => img === indexOrId);
+    if (typeof imageIndex === 'number' && imageIndex >= 0) {
+      setDeleteImages(prev => [...prev, imageIndex]);
+    }
+
+    setValue('images', currentImages.filter(img => img !== indexOrId), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+  } else {
+    // It's a new File index
+    setValue('images', currentImages.filter((_, i) => i !== indexOrId));
+  }
+}
+  // Reset form when entering edit mode or when existingReview changes
+  React.useEffect(() => {
+    if (isEditMode && existingReview) {
+      reset({
+        rating: Number(RatingNumber[existingReview.rating]),
+        comment: existingReview.comment,
+        images: existingReview.imageUrls || [],
+      });
+    } else if (!isEditMode) {
+      reset({
+        rating: undefined,
+        comment: "",
+        images: [],
+      });
+    }
+  }, [isEditMode, existingReview, reset]);
   const onSubmit = (data: ReviewForm) => {
     const formData = new FormData();
     const reviewData = {
-      rating: data.rating,
+      rating: mapRating(data.rating),
       comment: data.comment,
       productName: selectedOrderItem.productName,
       ownerId: selectedOrder.ownerId,
       orderItemId: selectedOrderItem.orderItemId,
       productId: selectedOrderItem.productId,
       productVariantId: selectedOrderItem.productVariantId,
-      fullName: localStorage.getItem('fullName') || '',
-      avatarUrl: localStorage.getItem('avatarUrl') || '',
       shopId: selectedOrder.shopId,
       attributes: Object.fromEntries(
         selectedOrderItem.productAttributes.map(attr => [attr.attributeName, attr.attributeValue])
-      )
+      ),
+      deletedImageUrls: deleteImages
     };
 
     formData.append('reqReviewDTO', new Blob([JSON.stringify(reviewData)], {type: 'application/json'}));
@@ -104,20 +165,26 @@ export default function OrderItemDetailModal({
         formData.append('imageUrls', file);
       });
     }
-    trigger(formData).then((res) => {
+
+    const apiCall = isEditMode && existingReview
+      ? triggerUpdate(formData)
+      : triggerCreate(formData);
+
+    apiCall.then((res) => {
       const alert: AlertState = {
         isOpen: true,
         type: AlertType.SUCCESS,
-        message: res.message || "Gửi đánh giá thành công",
+        message: res.message || (isEditMode ? "Cập nhật đánh giá thành công" : "Gửi đánh giá thành công"),
         title: "Thành công"
       };
       dispatch(openAlert(alert));
+      setIsEditMode(false);
       setIsOpen(false);
     }).catch((error: ErrorResponse) => {
       const alert: AlertState = {
         isOpen: true,
         type: AlertType.ERROR,
-        message: error.message || "Gửi đánh giá thất bại",
+        message: error.message || (isEditMode ? "Cập nhật đánh giá thất bại" : "Gửi đánh giá thất bại"),
         title: "Thất bại"
       };
       dispatch(openAlert(alert));
@@ -127,14 +194,16 @@ export default function OrderItemDetailModal({
 
   return <Modal
     isOpen={isOpen}
-    onClose={() => setIsOpen(false)}
+    onClose={() => {
+      setIsOpen(false);
+      setIsEditMode(false);
+    }}
     title={`Chi tiết sản phẩm #${selectedOrderItem.orderItemId}`}
     onSave={handleSubmit(onSubmit)}
-    isLoading={isMutating}
+    isLoading={isCreating || isUpdating}
     disableSave={!isDirty}
-    saveButtonText={"Gửi đánh giá"}
-    // only show save button when order completed AND there is no existing review (or fetch error)
-    showSaveButton={orderStatus === OrderStatus.COMPLETED && !existingReview}
+    saveButtonText={isEditMode ? "Cập nhật đánh giá" : "Gửi đánh giá"}
+    showSaveButton={orderStatus === OrderStatus.COMPLETED && (!existingReview || isEditMode)}
     childrenFooter={
       <div className="p-4">
         <Divide/>
@@ -233,25 +302,37 @@ export default function OrderItemDetailModal({
           <div className="border border-grey-c200 rounded-xl p-5">
             {isReviewLoading ? (
               <Loading/>
-            ) : (existingReview) ? (
+            ) : (existingReview && !isEditMode) ? (
               <div className="space-y-3">
-                <div className="flex items-center gap-1">
-                  <Star rating={Number(RatingNumber[existingReview.rating])}/>
-                  <Chip
-                    label={
-                      Number(RatingNumber[existingReview.rating]) === 5 ? "Tuyệt vời" :
-                        Number(RatingNumber[existingReview.rating]) === 4 ? "Hài lòng" :
-                          Number(RatingNumber[existingReview.rating]) === 3 ? "Bình thường" :
-                            Number(RatingNumber[existingReview.rating]) === 2 ? "Không hài lòng" :
-                              "Rất tệ"
-                    }
-                    variant={ChipVariant.SOFT}
-                    color={ChipColor.PRIMARY}
-                    size={ChipSize.SMALL}
-                    className="ml-2"
-                  />
-                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <Star rating={Number(RatingNumber[existingReview.rating])}/>
+                    <Chip
+                      label={
+                        Number(RatingNumber[existingReview.rating]) === 5 ? "Tuyệt vời" :
+                          Number(RatingNumber[existingReview.rating]) === 4 ? "Hài lòng" :
+                            Number(RatingNumber[existingReview.rating]) === 3 ? "Bình thường" :
+                              Number(RatingNumber[existingReview.rating]) === 2 ? "Không hài lòng" :
+                                "Rất tệ"
+                      }
+                      variant={ChipVariant.SOFT}
+                      color={ChipColor.PRIMARY}
+                      size={ChipSize.SMALL}
+                      className="ml-2"
+                    />
+                  </div>
 
+                  {/* Show edit button only if review has not been updated */}
+                  {!existingReview.isUpdated && (
+                    <Button
+                      type="button"
+                      onClick={() => setIsEditMode(true)}
+                      color={ColorButton.PRIMARY}
+                    >
+                      Chỉnh sửa
+                    </Button>
+                  )}
+                </div>
 
                 <p className="text-grey-c700 whitespace-pre-line">{existingReview.comment}</p>
 
@@ -273,7 +354,7 @@ export default function OrderItemDetailModal({
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium text-grey-c900">Phản hồi từ Shop</span>
-                          <span className="text-sm text-grey-c500">{existingReview.reviewReplyView.createdAt}</span>
+                          <span className="text-sm text-grey-c500">{formatDateTime(existingReview.reviewReplyView.createdAt)}</span>
                         </div>
                         <p className="text-grey-c700 leading-relaxed">{existingReview.reviewReplyView.content}</p>
                       </div>
@@ -282,8 +363,21 @@ export default function OrderItemDetailModal({
                 )}
               </div>
             ) : (
-              // review form (same controllers as before)
+              // review form (for both creating new review and editing existing review)
               <>
+                {isEditMode && (
+                  <div className="mb-4 flex items-center justify-between bg-primary-c50 p-3 rounded-lg">
+                    <span className="text-sm text-primary-c700 font-medium">Chế độ chỉnh sửa đánh giá (chỉ được sửa 1 lần)</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditMode(false)}
+                      className="text-sm text-primary-c600 hover:text-primary-c800 font-medium"
+                    >
+                      Hủy
+                    </button>
+                  </div>
+                )}
+
                 {/* Star Rating */}
                 <div className="mb-4">
                   <Controller
@@ -326,6 +420,7 @@ export default function OrderItemDetailModal({
                       </div>
                     )}
                   />
+                  {errors.rating && <p className="text-red-500 text-sm mt-1">{errors.rating.message}</p>}
                 </div>
 
                 <Controller control={control} name="comment" render={({field}) => (
@@ -354,6 +449,7 @@ export default function OrderItemDetailModal({
                         maxFiles={5}
                         preview={true}
                         error={errors.images?.message}
+                        onRemove={handleOnRemove}
                       />
                     )}
                   />

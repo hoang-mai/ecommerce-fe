@@ -24,11 +24,15 @@ export default function ChatPreviewList() {
   const {get} = useAxiosContext();
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [keyword, setKeyword] = useState<string>("");
+  const [allChats, setAllChats] = useState<ChatDTO[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const debounce = useDebounce(keyword);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
   const urlChats= useBuildUrl({
     baseUrl: CHAT,
     queryParams:{
-      page: currentPage,
+      pageNo: currentPage,
       pageSize: 10,
       keyword: debounce || undefined,
     }
@@ -40,10 +44,48 @@ export default function ChatPreviewList() {
   });
 
   const pageData = dataChats?.data;
-  const chats= pageData?.data || [];
+  const chats = pageData?.data || [];
+  const totalPages = pageData?.totalPages || 0;
+
+  // Update allChats when new data arrives
+  useEffect(() => {
+    if (chats.length > 0) {
+      if (currentPage === 0) {
+        setAllChats(chats);
+      } else {
+        setAllChats(prev => [...prev, ...chats]);
+      }
+      setIsLoading(false);
+    }
+  }, [chats, currentPage]);
+
+  // Reset when keyword changes
+  useEffect(() => {
+    setCurrentPage(0);
+    setAllChats([]);
+  }, [debounce]);
+
+  // Handle scroll event
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const scrollTop = target.scrollTop;
+    const scrollHeight = target.scrollHeight;
+    const clientHeight = target.clientHeight;
+
+    // Check if scrolled to bottom (with 10px threshold)
+    if (scrollHeight - scrollTop <= clientHeight + 10) {
+      if (!isLoading && currentPage < totalPages - 1) {
+        setIsLoading(true);
+        setCurrentPage(prev => prev + 1);
+      }
+    }
+  };
 
   return (
-    <div className="w-[350px] max-h-[400px] overflow-y-auto">
+    <div
+      ref={scrollContainerRef}
+      onScroll={handleScroll}
+      className="w-[350px] max-h-[400px] overflow-y-auto">
       <div className={"p-4"}>
         <TextField
         value={keyword}
@@ -55,7 +97,7 @@ export default function ChatPreviewList() {
           }
         }}
       /></div>
-      {(!chats || chats.length === 0) ? (
+      {(!allChats || allChats.length === 0) ? (
           <div className="flex flex-col items-center justify-center py-8 px-4">
             <div className="text-grey-c400 mb-2">
               <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,12 +108,19 @@ export default function ChatPreviewList() {
             <p className="text-grey-c600 text-sm">Chưa có tin nhắn nào</p>
           </div>
         ) :
-        (chats.map((chat) => (
-          <ChatPreviewItem
-            key={chat.chatId}
-            chat={chat}
-          />
-        )))}
+        (<>
+          {allChats.map((chat) => (
+            <ChatPreviewItem
+              key={chat.chatId}
+              chat={chat}
+            />
+          ))}
+          {isLoading && (
+            <div className="flex items-center justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-c700"></div>
+            </div>
+          )}
+        </>)}
 
     </div>
   );
