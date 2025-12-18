@@ -1,25 +1,28 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import {ResponsiveLine} from '@nivo/line';
 import {ResponsiveBar} from '@nivo/bar';
-import {ResponsivePie} from '@nivo/pie';
 import useSWR from 'swr';
 import {useAxiosContext} from '@/components/provider/AxiosProvider';
 import {ORDER_VIEW, PRODUCT_VIEW, SHOP_VIEW} from '@/services/api';
-import {OrderStatus} from '@/types/enum';
 import Loading from '@/components/modals/Loading';
 import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import AttachMoneyRoundedIcon from '@mui/icons-material/AttachMoneyRounded';
 import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
-import {format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths} from 'date-fns';
-import {vi} from 'date-fns/locale';
+import {subMonths} from 'date-fns';
 import Card from '@/libs/Card';
 import Title from '@/libs/Title';
 import {formatNumber, formatPrice} from "@/util/FnCommon";
 import MonthRangePicker from "@/libs/MonthRangePicker";
-import {DateRange, OrderViewStatisticDTO, ProductViewStatisticDTO} from "@/types/interface";
+import {
+  DateRange,
+  OrderViewStatisticDTO,
+  OrderViewStatisticRevenueDTO,
+  ProductViewStatisticDTO,
+  ShopViewStatisticDTO
+} from "@/types/interface";
 import {useBuildUrl} from "@/hooks/useBuildUrl";
 import Empty from "@/libs/Empty";
 
@@ -30,163 +33,6 @@ interface OwnerViewStatisticDTO {
   totalSold: number;
 }
 
-// Mock Data
-const MOCK_SHOPS = [
-  {shopId: '1', shopName: 'Shop Thời Trang ABC', totalProducts: 45, totalSold: 230, totalRevenue: 45000000},
-  {shopId: '2', shopName: 'Shop Điện Tử XYZ', totalProducts: 67, totalSold: 450, totalRevenue: 89000000},
-  {shopId: '3', shopName: 'Shop Mỹ Phẩm Beauty', totalProducts: 89, totalSold: 670, totalRevenue: 123000000},
-];
-
-const generateMockOrders = () => {
-  const orders = [];
-  const now = new Date();
-  const statuses = [
-    OrderStatus.PENDING,
-    OrderStatus.CONFIRMED,
-    OrderStatus.PAID,
-    OrderStatus.SHIPPED,
-    OrderStatus.DELIVERED,
-    OrderStatus.COMPLETED,
-    OrderStatus.RETURNED,
-    OrderStatus.CANCELLED,
-  ];
-
-  // Generate orders for the last 6 months
-  for (let monthOffset = 0; monthOffset < 6; monthOffset++) {
-    const month = subMonths(now, monthOffset);
-    const ordersInMonth = Math.floor(Math.random() * 30) + 20; // 20-50 orders per month
-
-    for (let i = 0; i < ordersInMonth; i++) {
-      const orderDate = new Date(
-        month.getFullYear(),
-        month.getMonth(),
-        Math.floor(Math.random() * 28) + 1,
-        Math.floor(Math.random() * 24),
-        Math.floor(Math.random() * 60)
-      );
-
-      const orderStatus = statuses[Math.floor(Math.random() * statuses.length)];
-      const numItems = Math.floor(Math.random() * 3) + 1; // 1-3 items per order
-      const orderItems = [];
-      let totalPrice = 0;
-
-      for (let j = 0; j < numItems; j++) {
-        const price = Math.floor(Math.random() * 1000000) + 50000; // 50k - 1M
-        const quantity = Math.floor(Math.random() * 3) + 1; // 1-3 quantity
-        const totalFinalPrice = price * quantity;
-        totalPrice += totalFinalPrice;
-
-        orderItems.push({
-          orderItemId: `OI-${monthOffset}-${i}-${j}`,
-          productId: `P-${Math.floor(Math.random() * 50) + 1}`,
-          productName: `Sản phẩm ${Math.floor(Math.random() * 50) + 1}`,
-          productVariantId: `PV-${Math.floor(Math.random() * 100) + 1}`,
-          quantity,
-          price,
-          totalFinalPrice,
-        });
-      }
-
-      orders.push({
-        orderId: `ORD-${monthOffset}-${i}`,
-        userId: `USER-${Math.floor(Math.random() * 20) + 1}`,
-        shopId: MOCK_SHOPS[Math.floor(Math.random() * MOCK_SHOPS.length)].shopId,
-        shopName: MOCK_SHOPS[Math.floor(Math.random() * MOCK_SHOPS.length)].shopName,
-        shopLogoUrl: '',
-        orderStatus,
-        reason: orderStatus === OrderStatus.CANCELLED ? 'Khách hàng hủy' : '',
-        totalPrice,
-        paymentId: Math.random() > 0.5 ? 'VNPAY' : 'COD',
-        receiverName: `Khách hàng ${Math.floor(Math.random() * 100) + 1}`,
-        address: 'Hà Nội, Việt Nam',
-        phoneNumber: '0987654321',
-        createdAt: orderDate.toISOString(),
-        orderItems,
-      });
-    }
-  }
-
-  return orders;
-};
-
-const MOCK_ORDERS = generateMockOrders();
-
-const MOCK_PRODUCTS = Array.from({length: 50}, (_, i) => ({
-  productId: `P-${i + 1}`,
-  productName: `Sản phẩm ${i + 1}`,
-  totalSold: Math.floor(Math.random() * 100) + 10,
-  price: Math.floor(Math.random() * 1000000) + 50000,
-}));
-
-interface DashboardStats {
-  totalRevenue: number;
-  totalOrders: number;
-  totalProducts: number;
-  totalShops: number;
-  revenueGrowth: number;
-  ordersGrowth: number;
-}
-
-interface MonthlyRevenue {
-  month: string;
-  revenue: number;
-  orders: number;
-
-  [key: string]: string | number; // Index signature for Nivo Bar chart compatibility
-}
-
-interface OrderStatusCount {
-  id: string;
-  label: string;
-  value: number;
-  color: string;
-}
-
-
-// Set to true to use mock data
-const USE_MOCK_DATA = true;
-
-interface MockShop {
-  shopId: string;
-  shopName: string;
-  totalProducts: number;
-  totalSold: number;
-  totalRevenue: number;
-}
-
-interface MockOrderItem {
-  orderItemId: string;
-  productId: string;
-  productName: string;
-  productVariantId: string;
-  quantity: number;
-  price: number;
-  totalFinalPrice: number;
-}
-
-interface MockOrder {
-  orderId: string;
-  userId: string;
-  shopId: string;
-  shopName: string;
-  shopLogoUrl: string;
-  orderStatus: OrderStatus;
-  reason: string;
-  totalPrice: number;
-  paymentId: string;
-  receiverName: string;
-  address: string;
-  phoneNumber: string;
-  createdAt: string;
-  orderItems: MockOrderItem[];
-}
-
-interface MockProduct {
-  productId: string;
-  productName: string;
-  totalSold: number;
-  price: number;
-}
 
 export default function Main() {
   const {get} = useAxiosContext();
@@ -195,6 +41,28 @@ export default function Main() {
     start: subMonths(new Date(), 12),
     end: new Date(),
   });
+
+
+  const [selectRangeRevenueDate, setSelectRangeRevenueDate] = useState<DateRange | null>({
+    start: subMonths(new Date(), 12),
+    end: new Date(),
+  });
+
+  const urlRevenue = useBuildUrl({
+    baseUrl: `${ORDER_VIEW}/statistic/revenue`,
+    queryParams: {
+      isOwner: true,
+      fromDate: selectRangeRevenueDate ? selectRangeRevenueDate.start?.toISOString() : undefined,
+      toDate: selectRangeRevenueDate ? selectRangeRevenueDate.end?.toISOString() : undefined,
+    }
+  })
+  const fetcherRevenue = (url: string) => get<BaseResponse<OrderViewStatisticRevenueDTO[]>>(url).then((res) => res.data);
+  const {data: revenue, isLoading: isLoadingRevenue} = useSWR(urlRevenue, fetcherRevenue, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
+
+
   const urlNewOrder = useBuildUrl({
     baseUrl: `${ORDER_VIEW}/statistic/date-range`,
     queryParams: {
@@ -209,14 +77,66 @@ export default function Main() {
     revalidateOnFocus: false,
   })
 
-  const urlTopProduct = useBuildUrl({
+  const urlTopRevenueShop = useBuildUrl({
+    baseUrl: `${SHOP_VIEW}/statistic/top-revenue`,
+    queryParams: {
+      isOwner: true,
+      type: "revenue"
+    }
+  })
+  const fetcherTopRevenueShop = (url: string) => get<BaseResponse<ShopViewStatisticDTO[]>>(url, {isToken: true}).then((res) => res.data);
+  const {
+    data: topRevenueShops,
+    isLoading: isLoadingTopRevenueShops
+  } = useSWR(urlTopRevenueShop, fetcherTopRevenueShop, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
+
+  const urlTopSellingShop = useBuildUrl({
+    baseUrl: `${SHOP_VIEW}/statistic/top-revenue`,
+    queryParams: {
+      isOwner: true,
+      type: "sold"
+    }
+  })
+  const fetcherTopSellingShop = (url: string) => get<BaseResponse<ShopViewStatisticDTO[]>>(url, {isToken: true}).then((res) => res.data);
+  const {
+    data: topSellingShops,
+    isLoading: isLoadingTopSellingShops
+  } = useSWR(urlTopSellingShop, fetcherTopSellingShop, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
+
+  const urlTopRevenueProduct = useBuildUrl({
     baseUrl: `${PRODUCT_VIEW}/statistic`,
     queryParams: {
       isOwner: true,
+      type: "revenue"
+    }
+  })
+  const fetcherTopRevenueProduct = (url: string) => get<BaseResponse<ProductViewStatisticDTO[]>>(url, {isToken: true}).then((res) => res.data);
+  const {
+    data: topRevenueProducts,
+    isLoading: isLoadingTopRevenueProducts
+  } = useSWR(urlTopRevenueProduct, fetcherTopRevenueProduct, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
+
+  const urlTopProductSold = useBuildUrl({
+    baseUrl: `${PRODUCT_VIEW}/statistic`,
+    queryParams: {
+      isOwner: true,
+      type: "sold"
     }
   })
   const fetcherTopProduct = (url: string) => get<BaseResponse<ProductViewStatisticDTO[]>>(url, {isToken: true}).then((res) => res.data);
-  const {data: topProducts, isLoading: isLoadingTopProducts} = useSWR(urlTopProduct, fetcherTopProduct, {
+  const {
+    data: topSellingProducts,
+    isLoading: isLoadingTopSellingProducts
+  } = useSWR(urlTopProductSold, fetcherTopProduct, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   })
@@ -231,140 +151,11 @@ export default function Main() {
   });
 
 
-
-  const [monthlyData, setMonthlyData] = useState<MonthlyRevenue[]>([]);
-  const [orderStatusData, setOrderStatusData] = useState<OrderStatusCount[]>([]);
-
-  // Fetch shops data
-  const {data: shopsData} = useSWR(
-    USE_MOCK_DATA ? null : `${SHOP_VIEW}?pageSize=1000`,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (url: string) => get<BaseResponse<PageResponse<any>>>(url).then((res) => res.data),
-    {revalidateOnFocus: false}
-  );
-
-  // Fetch orders data
-  const {data: ordersData} = useSWR(
-    USE_MOCK_DATA ? null : `${ORDER_VIEW}?isOwner=true&pageSize=1000`,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (url: string) => get<BaseResponse<PageResponse<any>>>(url).then((res) => res.data),
-    {revalidateOnFocus: false}
-  );
-
-  // Fetch products data
-  const {data: productsData} = useSWR(
-    USE_MOCK_DATA ? null : `${PRODUCT_VIEW}?isOwner=true&pageSize=1000`,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (url: string) => get<BaseResponse<PageResponse<any>>>(url).then((res) => res.data),
-    {revalidateOnFocus: false}
-  );
-
-  const processData = (orders: MockOrder[], shops: MockShop[], products: MockProduct[]) => {
-
-
-    // Calculate growth (last month vs current month)
-    const now = new Date();
-
-
-
-
-    // Process monthly data (last 6 months)
-    const months = eachMonthOfInterval({
-      start: subMonths(now, 5),
-      end: now,
-    });
-
-    const monthlyRevenue: MonthlyRevenue[] = months.map((month) => {
-      const monthStart = startOfMonth(month);
-      const monthEnd = endOfMonth(month);
-
-      const monthOrders = orders.filter((o) => {
-        const orderDate = new Date(o.createdAt);
-        return orderDate >= monthStart && orderDate <= monthEnd && o.orderStatus !== OrderStatus.CANCELLED;
-      });
-
-      return {
-        month: format(month, 'MM/yyyy', {locale: vi}),
-        revenue: monthOrders.reduce((sum: number, o) => sum + (o.totalPrice || 0), 0),
-        orders: monthOrders.length,
-      };
-    });
-
-    setMonthlyData(monthlyRevenue);
-
-    // Process order status data
-    const statusCounts = new Map<OrderStatus, number>();
-    orders.forEach((order) => {
-      const status = order.orderStatus;
-      statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
-    });
-
-    const statusColors: Record<string, string> = {
-      [OrderStatus.PENDING]: '#FFA726',
-      [OrderStatus.CONFIRMED]: '#42A5F5',
-      [OrderStatus.PAID]: '#66BB6A',
-      [OrderStatus.SHIPPED]: '#AB47BC',
-      [OrderStatus.DELIVERED]: '#26A69A',
-      [OrderStatus.COMPLETED]: '#4CAF50',
-      [OrderStatus.RETURNED]: '#EF5350',
-      [OrderStatus.CANCELLED]: '#757575',
-    };
-
-    const statusLabels: Record<string, string> = {
-      [OrderStatus.PENDING]: 'Chờ xác nhận',
-      [OrderStatus.CONFIRMED]: 'Đã xác nhận',
-      [OrderStatus.PAID]: 'Đã thanh toán',
-      [OrderStatus.SHIPPED]: 'Đang giao',
-      [OrderStatus.DELIVERED]: 'Đã giao',
-      [OrderStatus.COMPLETED]: 'Hoàn thành',
-      [OrderStatus.RETURNED]: 'Trả hàng',
-      [OrderStatus.CANCELLED]: 'Đã hủy',
-    };
-
-    const orderStatusData: OrderStatusCount[] = Array.from(statusCounts.entries()).map(
-      ([status, count]) => ({
-        id: status,
-        label: statusLabels[status] || status,
-        value: count,
-        color: statusColors[status] || '#999',
-      })
-    );
-
-    setOrderStatusData(orderStatusData);
-
-
-  };
-
-  useEffect(() => {
-    if (USE_MOCK_DATA) {
-      // Use mock data immediately
-      processData(MOCK_ORDERS, MOCK_SHOPS, MOCK_PRODUCTS);
-    } else if (ordersData && shopsData && productsData) {
-      // Use real API data
-      processData(
-        ordersData?.data?.data || [],
-        shopsData?.data?.data || [],
-        productsData?.data?.data || []
-      );
-    }
-  }, [ordersData, shopsData, productsData]);
-
-
-  // Chart data for revenue
-  const revenueChartData = [
-    {
-      id: 'Doanh thu',
-      color: '#4F46E5',
-      data: monthlyData.map((m) => ({
-        x: m.month,
-        y: m.revenue,
-      })),
-    },
-  ];
   return (
     <div className="space-y-6 overflow-y-auto">
       {/* Header */}
-      {isLoadingNewOrder && isLoadingTopProducts && isLoadingOwnerStats && <Loading/>}
+      {isLoadingNewOrder && isLoadingTopSellingProducts && isLoadingRevenue && isLoadingTopRevenueProducts && isLoadingTopSellingShops && isLoadingOwnerStats && isLoadingTopRevenueShops &&
+        <Loading/>}
       <div>
         <Title title={"Bảng Điều Khiển Chủ Cửa Hàng"} isDivide={true}/>
       </div>
@@ -411,51 +202,72 @@ export default function Main() {
 
       {/* Revenue Chart */}
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-xl font-bold text-primary-c600 mb-4">Doanh Thu Theo Tháng</h2>
-        <div style={{height: '400px'}}>
-          <ResponsiveLine
-            data={revenueChartData}
-            margin={{top: 50, right: 40, bottom: 50, left: 100}}
-            yScale={{type: 'linear', min: 0, max: 'auto', stacked: true, reverse: false}}
-            curve="monotoneX"
-            axisLeft={{
-              tickSize: 1,
-              tickPadding: 10,
-              legend: 'Doanh thu (VNĐ)',
-              legendOffset: -70,
-              legendPosition: 'middle',
-              format: (value) => formatNumber(value)
-            }}
+        <div className={"flex items-center justify-between mb-4"}>
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Doanh Thu Theo Tháng</h2>
+          <MonthRangePicker
+            value={selectRangeRevenueDate}
+            onChange={setSelectRangeRevenueDate}
+            maxRange={12}/>
+        </div>
+        {revenue && revenue.data && revenue.data.length > 0 ?
 
-            colors={"#2D7D9F"}
-            pointSize={10}
-            pointColor="#ffffff"
-            pointBorderWidth={2}
-            pointBorderColor={{from: 'seriesColor', modifiers: []}}
-            pointLabelYOffset={-12}
-            enableArea={true}
-            enableTouchCrosshair={true}
-            useMesh={true}
-            tooltip={({point}) => (
-              <div className="border border-grey-c200 rounded-xl shadow-lg overflow-hidden">
-                <div className="bg-primary-c600 text-white px-4 py-2">
-                  <div className="text-sm font-semibold">{point.data.xFormatted}</div>
-                </div>
+          <div style={{height: '400px'}}>
+            <ResponsiveLine
+              data={[
+                {
+                  id: 'Doanh thu',
+                  data: revenue.data.map((item) => ({
+                    x: item.localDate,
+                    y: item.totalRevenue,
+                  })),
+                },
+              ]}
+              margin={{top: 50, right: 40, bottom: 50, left: 100}}
+              yScale={{type: 'linear', min: 0, max: 'auto', stacked: true, reverse: false}}
+              curve="monotoneX"
+              axisLeft={{
+                tickSize: 1,
+                tickPadding: 10,
+                legend: 'Doanh thu (VNĐ)',
+                legendOffset: -70,
+                legendPosition: 'middle',
+                format: (value) => formatNumber(value)
+              }}
 
-                <div className="bg-white px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-primary-c600"></div>
-                    <div className="text-grey-c800 font-medium whitespace-nowrap">
-                      Doanh thu: <span
-                      className="text-primary-c700 font-bold">{formatPrice(Number(point.data.y))}</span>
+              colors={"#2D7D9F"}
+              pointSize={10}
+              pointColor="#ffffff"
+              pointBorderWidth={2}
+              pointBorderColor={{from: 'seriesColor', modifiers: []}}
+              pointLabelYOffset={-12}
+              enableArea={true}
+              enableTouchCrosshair={true}
+              useMesh={true}
+              tooltip={({point}) => (
+                <div className="border border-grey-c200 rounded-xl shadow-lg overflow-hidden">
+                  <div className="bg-primary-c600 text-white px-4 py-2">
+                    <div className="text-sm font-semibold">{point.data.xFormatted}</div>
+                  </div>
+
+                  <div className="bg-white px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-primary-c600"></div>
+                      <div className="text-grey-c800 font-medium whitespace-nowrap">
+                        Doanh thu: <span
+                        className="text-primary-c700 font-bold">{formatPrice(Number(point.data.y))}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-            )}
-          />
-        </div>
+              )}
+            />
+          </div> :
+          <div className={"flex items-center justify-center h-100 flex-col"}>
+            <Empty/>
+            <div className={"text-grey-c600"}>Không có dữ liệu doanh thu</div>
+          </div>
+        }
       </div>
 
       {/* Orders Chart */}
@@ -517,55 +329,79 @@ export default function Main() {
         }
       </div>
 
-      {/* Order Status & Top Products */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Order Status Chart */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-bold text-primary-c600 mb-4">Trạng Thái Đơn Hàng</h2>
-          <div style={{height: '400px'}}>
-            <ResponsivePie
-              data={orderStatusData}
-              margin={{top: 20, right: 80, bottom: 80, left: 80}}
-              innerRadius={0.5}
-              padAngle={0.7}
-              cornerRadius={3}
-              activeOuterRadiusOffset={8}
-              colors={{datum: 'data.color'}}
-              borderWidth={1}
-              borderColor={{from: 'color', modifiers: [['darker', 0.2]]}}
-              arcLinkLabelsSkipAngle={10}
-              arcLinkLabelsTextColor="#333333"
-              arcLinkLabelsThickness={2}
-              arcLinkLabelsColor={{from: 'color'}}
-              arcLabelsSkipAngle={10}
-              arcLabelsTextColor={{from: 'color', modifiers: [['darker', 2]]}}
-              tooltip={({datum}) => (
-                <div className="border border-grey-c200 rounded-xl shadow-lg overflow-hidden">
-                  {/* header */}
-                  <div className="bg-primary-c600 text-white px-4 py-2">
-                    <div className="text-sm font-semibold">{datum.label}</div>
-                  </div>
-
-                  {/* body */}
-                  <div className="bg-white px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{backgroundColor: datum.color}}></div>
-                      <div className="text-grey-c800 font-medium whitespace-nowrap">
-                        Số lượng: <span className="text-primary-c700 font-bold">{datum.value}</span>
-                      </div>
-                    </div>
-                  </div>
+      {/* Top Shop */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-120">
+        {/* Revenue */}
+        <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col">
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Top 5 Cửa Hàng Doanh Thu</h2>
+          <div className="space-y-3">
+            {topRevenueShops && topRevenueShops.data && topRevenueShops.data.map((shop, index) => (
+              <div
+                key={shop.shopId}
+                className="flex items-center gap-4 p-4 bg-grey-c50 rounded-lg hover:bg-grey-c100 transition-colors"
+              >
+                <div
+                  className="flex-shrink-0 w-10 h-10 bg-primary-c600 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  {index + 1}
                 </div>
-              )}
-            />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-grey-c900 truncate">{shop.shopName}</h3>
+                  <p className="text-sm text-grey-c600">Đã bán: {formatNumber(shop.totalSold)} sản phẩm</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-bold text-grey-c900">{formatPrice(shop.totalRevenue)}</p>
+                </div>
+              </div>
+            ))}
+
           </div>
+          {topRevenueShops && topRevenueShops.data && topRevenueShops.data.length === 0 && (
+            <div className={"flex flex-col items-center justify-center flex-1"}>
+              <Empty/>
+              <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
+            </div>
+          )}
         </div>
 
-        {/* Top Products */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-bold text-primary-c600 mb-4">Top 5 Sản Phẩm Bán Chạy</h2>
+        {/* Top Products Sold */}
+        <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col">
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Top 5 Cửa Hàng Bán Chạy</h2>
           <div className="space-y-3">
-            {topProducts && topProducts.data && topProducts.data.map((product, index) => (
+            {topSellingShops && topSellingShops.data && topSellingShops.data.map((shop, index) => (
+              <div
+                key={shop.shopId}
+                className="flex items-center gap-4 p-4 bg-grey-c50 rounded-lg hover:bg-grey-c100 transition-colors"
+              >
+                <div
+                  className="flex-shrink-0 w-10 h-10 bg-primary-c600 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  {index + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-grey-c900 truncate">{shop.shopName}</h3>
+                  <p className="text-sm text-grey-c600">Đã bán: {formatNumber(shop.totalSold)} sản phẩm</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-bold text-grey-c900">{formatPrice(shop.totalRevenue)}</p>
+                </div>
+              </div>
+            ))}
+            {topSellingShops && topSellingShops.data && topSellingShops.data.length === 0 && (
+              <div className={"flex flex-col items-center justify-center flex-1"}>
+                <Empty/>
+                <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Top Products */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-120">
+        {/* Revenue */}
+        <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col">
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Top 5 Sản Phẩm Doanh Thu</h2>
+          <div className="space-y-3">
+            {topRevenueProducts && topRevenueProducts.data && topRevenueProducts.data.map((product, index) => (
               <div
                 key={product.productId}
                 className="flex items-center gap-4 p-4 bg-grey-c50 rounded-lg hover:bg-grey-c100 transition-colors"
@@ -577,15 +413,49 @@ export default function Main() {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-grey-c900 truncate">{product.productName}</h3>
                   <p className="text-sm text-grey-c600">Đã bán: {formatNumber(product.totalSold)} sản phẩm</p>
-                  <p className="text-xs text-grey-c500 mt-1 truncate">Cửa hàng: {product.shopName}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="font-bold text-grey-c900">{formatPrice(product.totalRevenue)}</p>
                 </div>
               </div>
             ))}
-            {topProducts && topProducts.data && topProducts.data.length === 0 && (
-              <div className="text-center py-8 text-grey-c500">Chưa có dữ liệu sản phẩm</div>
+
+          </div>
+          {topRevenueProducts && topRevenueProducts.data && topRevenueProducts.data.length === 0 && (
+            <div className={"flex flex-col items-center justify-center flex-1"}>
+              <Empty/>
+              <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
+            </div>
+          )}
+        </div>
+
+        {/* Top Products Sold */}
+        <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col">
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Top 5 Sản Phẩm Bán Chạy</h2>
+          <div className="space-y-3">
+            {topSellingProducts && topSellingProducts.data && topSellingProducts.data.map((product, index) => (
+              <div
+                key={product.productId}
+                className="flex items-center gap-4 p-4 bg-grey-c50 rounded-lg hover:bg-grey-c100 transition-colors"
+              >
+                <div
+                  className="flex-shrink-0 w-10 h-10 bg-primary-c600 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  {index + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-grey-c900 truncate">{product.productName}</h3>
+                  <p className="text-sm text-grey-c600">Đã bán: {formatNumber(product.totalSold)} sản phẩm</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-bold text-grey-c900">{formatPrice(product.totalRevenue)}</p>
+                </div>
+              </div>
+            ))}
+            {topSellingProducts && topSellingProducts.data && topSellingProducts.data.length === 0 && (
+              <div className={"flex flex-col items-center justify-center flex-1"}>
+                <Empty/>
+                <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
+              </div>
             )}
           </div>
         </div>

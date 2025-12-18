@@ -66,8 +66,8 @@ export default function ScrollTab({
       if (ro) {
         try {
           ro.disconnect();
-        } catch (e) {
-          // ignore
+        } catch  {
+
         }
       }
     };
@@ -154,8 +154,8 @@ export default function ScrollTab({
       if (ro2) {
         try {
           ro2.disconnect();
-        } catch (e) {
-          // ignore
+        } catch {
+
         }
       }
     };

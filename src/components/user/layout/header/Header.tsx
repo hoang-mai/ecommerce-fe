@@ -39,7 +39,7 @@ export default function Header() {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-9 text-sm">
             <div className="flex items-center gap-4">
-              <span className="hidden md:block">📞 Hotline: 1900-xxxx</span>
+              <span className="hidden md:block">📞 Hotline: 0867254603</span>
               <span className="hidden lg:block">|</span>
               <span className="hidden lg:block">📧 support@evoway.com</span>
             </div>

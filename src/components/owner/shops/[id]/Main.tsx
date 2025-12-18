@@ -50,6 +50,7 @@ export const shopDefault: ShopView = {
   numberOfReviews: 0,
   createdAt: new Date(0).toISOString(),
   updatedAt: new Date(0).toISOString(),
+  totalOrder: 0,
 };
 export default function Main({id}: Props) {
   const {get} = useAxiosContext();

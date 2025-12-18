@@ -5,6 +5,7 @@ import ReduxProvider from "@/components/provider/ReduxProvider";
 import Alert from "@/components/modals/Alert";
 import WebSocketProvider from "@/components/provider/WebSocketProvider";
 import {AxiosProvider} from "@/components/provider/AxiosProvider";
+import WebPushProvider from "@/components/provider/WebPushProvider";
 
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function RootLayout({
       <Alert/>
       <AxiosProvider>
         <WebSocketProvider>
+          <WebPushProvider/>
           {children}
         </WebSocketProvider>
       </AxiosProvider>

@@ -3,16 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
 import CategoryRoundedIcon from '@mui/icons-material/CategoryRounded';
-import GroupIcon from '@mui/icons-material/Group';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Button from "@/libs/Button";
 import {AlertType, ColorButton} from "@/types/enum";
 import {SvgIconComponent} from '@mui/icons-material';
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
-import SettingsIcon from "@mui/icons-material/Settings";
 import useSWRMutation from "swr/mutation";
 import {LOGOUT} from "@/services/api";
 import {useDispatch} from "react-redux";
@@ -34,7 +31,6 @@ export default function Sidebar() {
     {name: "Cửa hàng", link: "/admin/shops", icon: StorefrontIcon},
     {name: "Đăng ký bán hàng", link: "/admin/register-owners", icon: StorefrontIcon},
     {name: "Loại mặt hàng", link: "/admin/categories", icon: CategoryRoundedIcon},
-    {name: "Cài đặt", link: "/admin/settings", icon: SettingsIcon},
   ];
   const router = useRouter();
   const {trigger} = useSWRMutation(LOGOUT, fetcher);

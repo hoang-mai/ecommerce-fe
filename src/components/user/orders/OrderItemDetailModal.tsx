@@ -10,7 +10,7 @@ import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
 import {RatingNumber, OrderStatus, ColorButton} from "@/types/enum";
 import {z} from "zod";
-import {useForm, Controller} from "react-hook-form";
+import {useForm, Controller, useWatch} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {REVIEW, REVIEW_VIEW} from "@/services/api";
@@ -75,14 +75,12 @@ export default function OrderItemDetailModal({
   });
   const existingReview = reviewResponse?.data;
 
-  // Fetcher for creating new review
   const fetcherCreate = (url: string, {arg}: { arg: FormData }) => post<BaseResponse<unknown>>(url, arg, {
     headers: {
       'Content-Type': 'multipart/form-data',
     }
   }).then(res => res.data);
 
-  // Fetcher for updating review
   const fetcherUpdate = (url: string, {arg}: { arg: FormData }) => patch<BaseResponse<unknown>>(url, arg, {
     headers: {
       'Content-Type': 'multipart/form-data',
@@ -101,7 +99,6 @@ export default function OrderItemDetailModal({
     handleSubmit,
     formState: {errors, isDirty},
     reset,
-    watch,
     setValue
   } = useForm<ReviewForm>({
     resolver: zodResolver(ReviewSchema),
@@ -111,8 +108,12 @@ export default function OrderItemDetailModal({
       images: [],
     }
   });
+  const images = useWatch({
+    control,
+    name: "images",
+  }) || [];
 const handleOnRemove= (indexOrId: number | string)=>{
-    const currentImages = watch("images") || [];
+    const currentImages = images;
   if (typeof indexOrId === 'string') {
 
     const imageIndex = existingReview?.imageUrls?.findIndex(img => img === indexOrId);

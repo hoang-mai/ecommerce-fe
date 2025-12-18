@@ -10,6 +10,7 @@ const initialState: ChatState = {
   logoUrl: null,
   ownerId: null,
   newMessage: null,
+  shopStatus: null,
 }
 
 export const chatSlice = createSlice({
@@ -23,6 +24,7 @@ export const chatSlice = createSlice({
       state.shopName = null
       state.logoUrl = null
       state.ownerId = null
+      state.shopStatus= null
     },
     openChat: (state, action: PayloadAction<ChatState>) => {
       state.isOpen = true
@@ -31,6 +33,7 @@ export const chatSlice = createSlice({
       state.shopName = action.payload.shopName
       state.logoUrl = action.payload.logoUrl
       state.ownerId = action.payload.ownerId
+      state.shopStatus= action.payload.shopStatus
     },
     receiveMessage: (state, action: PayloadAction<MessageDTO>) => {
       state.newMessage = action.payload

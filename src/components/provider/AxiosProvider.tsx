@@ -1,9 +1,19 @@
 'use client';
 import {createContext, useContext, useCallback, useMemo, FC, ReactNode} from 'react';
 import axios, {AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig} from 'axios';
-import {LOGIN, PRODUCT_VIEW, REFRESH_TOKEN, REGISTER, REVIEW_VIEW, SHOP_VIEW} from '@/services/api';
+import {
+  LOGIN,
+  PRODUCT_VIEW,
+  PUSH_SUBSCRIPTION,
+  REFRESH_TOKEN,
+  REGISTER,
+  REVIEW_VIEW,
+  SHOP_VIEW,
+  USER_VIEW
+} from '@/services/api';
 import {isTokenExpired} from "@/util/FnCommon";
 import {clearAllLocalStorage} from "@/services/localStorage";
+import {clearAllCookie} from "@/services/cookie";
 
 type RefreshTokenResponse = {
   accessToken: string;
@@ -31,7 +41,9 @@ const ROUTER_NOT_AUTHS = [
   PRODUCT_VIEW,
   `${SHOP_VIEW}/`,
   REFRESH_TOKEN,
-  REVIEW_VIEW
+  REVIEW_VIEW,
+  `${USER_VIEW}/search-address`,
+  `${PUSH_SUBSCRIPTION}/unsubscribe`,
 ];
 
 export const AxiosProvider: FC<{ children: ReactNode }> = ({children}) => {
@@ -75,11 +87,13 @@ export const AxiosProvider: FC<{ children: ReactNode }> = ({children}) => {
               return Promise.resolve(config);
             }
           } catch {
+            clearAllCookie();
             clearAllLocalStorage();
             return Promise.reject(new Error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ.'));
           }
         } else {
           clearAllLocalStorage();
+          clearAllCookie();
           return Promise.reject(new Error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ.'));
         }
       }

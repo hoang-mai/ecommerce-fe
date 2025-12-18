@@ -139,7 +139,6 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
   const {
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: {errors},
   } = useForm<UpdateProductFormData>({
@@ -162,7 +161,6 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
         price: variant.price,
         stockQuantity: variant.stockQuantity,
         isDefault: variant.isDefault,
-        // attributeValues are managed locally via `variantAttributeValues` state (mapped by attribute name)
         attributeValues: undefined,
       })),
     },
@@ -177,20 +175,21 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
     name: "productVariants",
   });
 
+  // Watch fields using useWatch
+  const imageUrls = useWatch({control, name: 'imageUrls'});
+  const productAttributes = useWatch({control, name: 'productAttributes'});
+  const productVariants = useWatch({control, name: 'productVariants'});
+
   const attributes = useWatch({
     control,
     name: "productAttributes",
   });
 
-  const discount = useWatch({
-    control,
-    name: "discount",
-  });
   const handleAddAttributeValue = (attrIndex: number) => {
     const currentValue = tempAttributeValue[attrIndex];
     if (!currentValue?.trim()) return;
 
-    const currentValues = watch(`productAttributes.${attrIndex}.productAttributeValues`) || [];
+    const currentValues = attributes?.[attrIndex]?.productAttributeValues || [];
 
     // Allow adding new values to both new and existing attributes
     setValue(`productAttributes.${attrIndex}.productAttributeValues`, [
@@ -201,7 +200,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
   };
 
   const handleRemoveAttributeValue = (attrIndex: number, valueIndex: number) => {
-    const currentValues = watch(`productAttributes.${attrIndex}.productAttributeValues`) || [];
+    const currentValues = attributes?.[attrIndex]?.productAttributeValues || [];
     const valueToRemove = currentValues[valueIndex];
 
     // Prevent removing existing attribute values
@@ -220,7 +219,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
   };
 
   const handleRemoveAttribute = (index: number) => {
-    const attr = watch(`productAttributes.${index}`);
+    const attr = attributes?.[index];
 
     // Prevent removing existing attributes
     if (attr?.productAttributeId) {
@@ -249,9 +248,8 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
       return;
     }
 
-    const variant = watch(`productVariants.${index}`);
+    const variant = productVariants[index];
 
-    // Prevent removing existing variants
     if (variant?.productVariantId) {
       const alert: AlertState = {
         isOpen: true,
@@ -267,7 +265,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
   };
 
   const handleRemoveImage = (indexOrId: number | string) => {
-    const currentImages = watch('imageUrls') || [];
+    const currentImages = imageUrls || [];
 
     if (typeof indexOrId === 'string') {
 
@@ -549,7 +547,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
           ) : (
             <div className="space-y-4">
               {attributeFields.map((field, index) => {
-                const currentAttribute = watch(`productAttributes.${index}`);
+                const currentAttribute = productAttributes?.[index];
                 const isExistingAttribute = !!currentAttribute?.productAttributeId;
 
                 return (
@@ -622,7 +620,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
 
                       {/* Display added values */}
                       <div className="flex flex-wrap gap-2">
-                        {watch(`productAttributes.${index}.productAttributeValues`)?.map((value, valueIndex) => {
+                        {productAttributes?.[index]?.productAttributeValues?.map((value, valueIndex) => {
                           const isExistingValue = !!value?.productAttributeValueId;
                           return (
                             <div
@@ -683,7 +681,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
 
           <div className="space-y-4">
             {variantFields.map((field, index) => {
-              const currentVariant = watch(`productVariants.${index}`);
+              const currentVariant = productVariants?.[index];
               const isExistingVariant = !!currentVariant?.productVariantId;
 
               return (

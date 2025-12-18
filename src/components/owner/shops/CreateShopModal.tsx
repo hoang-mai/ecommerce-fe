@@ -9,13 +9,16 @@ import {Controller, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import useSWRMutation from "swr/mutation";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {SHOP} from "@/services/api";
+import {SHOP, USER_VIEW} from "@/services/api";
 import {useDispatch} from "react-redux";
 import {AlertType} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
 import {useAddressMapping} from "@/hooks/useAddressMapping";
 import {phoneRegex} from "@/util/regex";
+import TextSearch from "@/libs/TextSearch";
+import {useBuildUrl} from "@/hooks/useBuildUrl";
+import useSWR from "swr";
 
 const createShopSchema = z.object({
   shopName: z.string().min(1, "Tên cửa hàng không được để trống"),
@@ -49,7 +52,7 @@ export default function CreateShopModal({
                                           onClose,
                                           reload,
                                         }: CreateShopModalProps) {
-  const { post } = useAxiosContext();
+  const { post, get } = useAxiosContext();
 
   const fetcher = (url: string, {arg}: { arg: FormData }) =>
     post<BaseResponse<never>>(url, arg, {
@@ -62,6 +65,19 @@ export default function CreateShopModal({
   const dispatch = useDispatch();
 
   const {provinceOptions, wardOptions} = useAddressMapping(selectedProvince);
+
+  const [keyword, setKeyword] = useState('');
+  const url = useBuildUrl({
+    baseUrl: `${USER_VIEW}/search-address`,
+    queryParams: {
+      keyword: keyword
+    },
+  })
+  const fetcherAddressDetail = (url: string) => get<BaseResponse<string[]>>(url).then(res => res.data.data);
+  const {data: addressDetails, isLoading} = useSWR(keyword ? url : null, fetcherAddressDetail, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  });
 
   const {
     control,
@@ -301,17 +317,29 @@ export default function CreateShopModal({
               <Controller
                 control={control}
                 name="detail"
-                render={({field}) => (
-                  <TextField
-                    label="Địa chỉ chi tiết"
-                    placeholder="Nhập số nhà, tên đường..."
-                    value={field.value}
-                    onChange={field.onChange}
-                    error={errors.detail?.message}
-                    required
+                render={({field}) => {
+                  const options: Option[] = addressDetails
+                    ? addressDetails.map(address => ({
+                      id: address,
+                      label: address,
+                    }))
+                    : [];
+
+                  return <TextSearch
+                    id={"detail"}
+                    label={"Địa chỉ chi tiết"}
+                    placeholder={"Nhập địa chỉ chi tiết"}
                     disabled={isMutating}
+                    isLoading={isLoading}
+                    error={errors.detail?.message}
+                    required={true}
+                    value={field.value}
+                    onSelect={field.onChange}
+                    options={options}
+                    onSearch={(value) => setKeyword(value)}
+                    debounceTime={1000}
                   />
-                )}
+                }}
               />
             </div>
           </div>

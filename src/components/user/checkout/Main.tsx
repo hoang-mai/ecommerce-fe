@@ -19,7 +19,6 @@ import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import Button from "@/libs/Button";
 import {ColorButton} from "@/types/enum";
-import {useRouter} from "next/navigation";
 import useSWRMutation from "swr/mutation";
 import Divide from "@/libs/Divide";
 import {CartViewDTO, ProductView} from "@/types/interface";
@@ -67,7 +66,6 @@ export default function Main() {
   const [currentTime] = useState(() => Date.now());
   const {getFullAddress} = useAddressMapping();
   const {trigger} = useSWRMutation(ORDER,fetcherCreateOrder);
-  const router = useRouter();
   useEffect(() => {
     if (error) {
       const alert: AlertState = {

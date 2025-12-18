@@ -5,11 +5,11 @@ import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import React, {useEffect, useRef, useState} from "react";
 import {ChatDTO, MessageDTO, UserCache} from "@/types/interface";
-import {AlertType, MessageType} from "@/types/enum";
+import {AlertType, MessageType, ShopStatus, AccountStatus} from "@/types/enum";
 import {getTimeAgo} from "@/util/FnCommon";
 import TextField from "@/libs/TextField";
 
-import WebSocketService from "@/services/webSocket";
+import webSocketService from "@/services/webSocket";
 import useSWR from "swr";
 import {CHAT, MESSAGE} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
@@ -69,6 +69,10 @@ export default function Chat({
   const {trigger: triggerUploadImage} = useSWRMutation(CHAT, fetcherUploadImage);
 
   const customer = selectedChat.userCacheList.find(user => user.userId !== currentUserId);
+  const shopStatus = selectedChat.shopCache.shopStatus;
+  const customerStatus = customer?.accountStatus;
+  const canChat = shopStatus === ShopStatus.ACTIVE && customerStatus === AccountStatus.ACTIVE;
+
   const messagesFetcher = (url: string) =>
     get<BaseResponse<PageResponse<MessageDTO>>>(url).then((res) => res.data);
 
@@ -238,7 +242,7 @@ export default function Chat({
   };
 
   const handleSendImage = async () => {
-    if (!selectedImage || isSending) return;
+    if (!selectedImage || isSending || !canChat) return;
 
     const customer = selectedChat.userCacheList.find(user => user.userId !== currentUserId);
     if (!customer?.userId) return;
@@ -275,14 +279,14 @@ export default function Chat({
   };
 
   const handleSendMessage = () => {
-    if (!customer?.userId || !message.trim()) return;
+    if (!customer?.userId || !message.trim() || !canChat) return;
 
     setIsSending(true);
     const messageContent = message.trim();
     setMessage('');
 
     try {
-      WebSocketService.send('/app/private', {
+      webSocketService.send('/app/private', {
         shopId: "",
         chatId: selectedChat?.chatId,
         messageType: MessageType.TEXT,
@@ -354,12 +358,7 @@ export default function Chat({
       ref={messagesContainerRef}
       className="flex-1 overflow-y-auto p-6 bg-grey-c50 space-y-4 min-h-0"
     >
-      {isLoadingMore && (
-        <div className="flex justify-center py-2">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-c700"></div>
-        </div>
-      )}
-      {messages.length === 0 ? (
+      {!canChat ? (
         <div className="flex flex-col items-center justify-center h-full">
           <div className="text-grey-c400 mb-2">
             <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -367,90 +366,136 @@ export default function Chat({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
               />
             </svg>
           </div>
-          <p className="text-grey-c600 text-sm">Bắt đầu cuộc trò chuyện với {customer?.fullName || 'khách hàng'}</p>
+          <p className="text-grey-c600 text-sm text-center font-semibold">
+            {!shopStatus || shopStatus !== ShopStatus.ACTIVE ? 'Cửa hàng không khả dụng' : 'Khách hàng không khả dụng'}
+          </p>
+          <p className="text-grey-c500 text-xs text-center mt-1">
+            {shopStatus === ShopStatus.INACTIVE
+              ? 'Cửa hàng đang tạm ngưng hoạt động'
+              : shopStatus === ShopStatus.SUSPENDED
+                ? 'Cửa hàng đã bị tạm khóa'
+                : customerStatus === AccountStatus.INACTIVE
+                  ? 'Khách hàng đang tạm ngưng hoạt động'
+                  : 'Khách hàng đã bị khóa'}
+          </p>
         </div>
       ) : (
         <>
-          {messages.map((msg) => (
-            <MessageBubble
-              key={msg.messageId}
-              message={msg}
-              isOwner={msg.senderId === currentUserId}
-              customer={customer}
-            />
-          ))}
-          <div ref={messagesEndRef}/>
+          {isLoadingMore && (
+            <div className="flex justify-center py-2">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-c700"></div>
+            </div>
+          )}
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="text-grey-c400 mb-2">
+                <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+              </div>
+              <p className="text-grey-c600 text-sm">Bắt đầu cuộc trò chuyện với {customer?.fullName || 'khách hàng'}</p>
+            </div>
+          ) : (
+            <>
+              {messages.map((msg) => (
+                <MessageBubble
+                  key={msg.messageId}
+                  message={msg}
+                  isOwner={msg.senderId === currentUserId}
+                  customer={customer}
+                />
+              ))}
+              <div ref={messagesEndRef}/>
+            </>
+          )}
         </>
       )}
     </div>
 
     {/* Input Area */}
     <div className="border-t border-grey-c200 p-4 bg-white flex-shrink-0">
-      {/* Image Preview */}
-      {imagePreview && (
-        <div className="mb-3 relative inline-block">
-          <div className="relative rounded-lg overflow-hidden border-2 border-primary-c700">
-            <Image
-              src={imagePreview}
-              alt="Preview"
-              width={200}
-              height={200}
-              className="object-cover"
+      {!canChat ? (
+        <div className="text-center py-2">
+          <p className="text-grey-c500 text-sm">
+            {!shopStatus || shopStatus !== ShopStatus.ACTIVE
+              ? 'Không thể gửi tin nhắn khi cửa hàng không khả dụng'
+              : 'Không thể gửi tin nhắn cho khách hàng này'}
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Image Preview */}
+          {imagePreview && (
+            <div className="mb-3 relative inline-block">
+              <div className="relative rounded-lg overflow-hidden border-2 border-primary-c700">
+                <Image
+                  src={imagePreview}
+                  alt="Preview"
+                  width={200}
+                  height={200}
+                  className="object-cover"
+                />
+                <button
+                  onClick={handleRemoveImage}
+                  className="absolute top-2 right-2 p-1 bg-support-c500 text-white rounded-full hover:bg-support-c700 transition-colors"
+                  title="Xóa ảnh"
+                >
+                  <CloseRoundedIcon fontSize="small"/>
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            {/* Hidden File Input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              className="hidden"
             />
+
             <button
-              onClick={handleRemoveImage}
-              className="absolute top-2 right-2 p-1 bg-support-c500 text-white rounded-full hover:bg-support-c700 transition-colors"
-              title="Xóa ảnh"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isSending}
+              className="p-2 text-grey-c600 hover:text-primary-c700 hover:bg-primary-c50 rounded-full transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Gửi hình ảnh"
             >
-              <CloseRoundedIcon fontSize="small"/>
+              <ImageRoundedIcon className="!text-xl"/>
+            </button>
+
+            <div className="flex-1 relative">
+              <TextField
+                value={message}
+                onChange={(e) => setMessage(e)}
+                onKeyDown={handleKeyPress}
+                placeholder="Nhập tin nhắn..."
+                className="pr-10"
+                disabled={!!selectedImage}
+              />
+            </div>
+
+            <button
+              onClick={selectedImage ? handleSendImage : handleSendMessage}
+              disabled={(selectedImage ? false : !message.trim()) || isSending}
+              className="p-2 bg-primary-c700 text-white rounded-full hover:bg-primary-c800 disabled:bg-grey-c300 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+              title={selectedImage ? "Gửi ảnh" : "Gửi tin nhắn"}
+            >
+              <SendRoundedIcon className="!text-xl"/>
             </button>
           </div>
-        </div>
+        </>
       )}
-
-      <div className="flex items-center gap-2">
-        {/* Hidden File Input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageSelect}
-          className="hidden"
-        />
-
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isSending}
-          className="p-2 text-grey-c600 hover:text-primary-c700 hover:bg-primary-c50 rounded-full transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Gửi hình ảnh"
-        >
-          <ImageRoundedIcon className="!text-xl"/>
-        </button>
-
-        <div className="flex-1 relative">
-          <TextField
-            value={message}
-            onChange={(e) => setMessage(e)}
-            onKeyDown={handleKeyPress}
-            placeholder="Nhập tin nhắn..."
-            className="pr-10"
-            disabled={!!selectedImage}
-          />
-        </div>
-
-        <button
-          onClick={selectedImage ? handleSendImage : handleSendMessage}
-          disabled={(selectedImage ? false : !message.trim()) || isSending}
-          className="p-2 bg-primary-c700 text-white rounded-full hover:bg-primary-c800 disabled:bg-grey-c300 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-          title={selectedImage ? "Gửi ảnh" : "Gửi tin nhắn"}
-        >
-          <SendRoundedIcon className="!text-xl"/>
-        </button>
-      </div>
     </div>
   </div>
 }

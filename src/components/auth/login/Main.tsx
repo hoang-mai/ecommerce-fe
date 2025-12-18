@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import Link from 'next/link';
 import {Controller, useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
@@ -20,6 +20,7 @@ import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType, Role} from "@/types/enum";
 import {ColorButton} from "@/types/enum";
 import {getRoleFromJwtToken} from "@/util/FnCommon";
+import {usePushNotification} from "@/hooks/usePushNotification";
 
 const loginSchema = z.object({
   username: z.string()
@@ -64,6 +65,11 @@ export function Main() {
       remember: false,
     },
   });
+  const {
+    isSubscribed,
+    subscribe,
+    unsubscribe
+  } = usePushNotification();
   const onSubmit = (data: LoginFormData) => {
     trigger({username: data.username, password: data.password}).then(res => {
       if(res.data) {
@@ -91,6 +97,9 @@ export function Main() {
           default:
             router.replace('/');
         }
+        if (!isSubscribed) {
+          subscribe();
+        }
       }
     }).catch((err: ErrorResponse) => {
       const alertState: AlertState = {
@@ -102,6 +111,12 @@ export function Main() {
       dispatch(openAlert(alertState));
     })
   };
+
+  useEffect(() => {
+    if(isSubscribed){
+      unsubscribe();
+    }
+  }, [isSubscribed, unsubscribe]);
 
   return (
     <div

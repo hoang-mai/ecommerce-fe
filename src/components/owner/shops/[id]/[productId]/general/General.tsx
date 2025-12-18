@@ -1,8 +1,7 @@
-"use client";
+
 import React from "react";
 import {ProductView, ProductVariant} from "@/types/interface";
 import {formatPrice, formatDateTime} from "@/util/FnCommon";
-import Card from "@/libs/Card";
 import InfoRow from "@/libs/InfoRow";
 import Image from "next/image";
 import LabelRoundedIcon from '@mui/icons-material/LabelRounded';

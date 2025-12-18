@@ -1,4 +1,4 @@
-import {AlertType} from "@/types/enum";
+import {AlertType, NotificationType, ShopStatus} from "@/types/enum";
 import {MessageDTO} from "@/types/interface";
 
 declare global {
@@ -37,13 +37,13 @@ declare global {
   }
 
   type NotificationState = {
-    notificationId :string;
-    userId :number;
+    notificationId: string;
+    userId: number;
     title: string;
     message: string;
-    notificationType :AlertType
-    isRead :boolean;
-    sentRealtime :boolean;
+    notificationType: NotificationType;
+    isRead: boolean;
+    sentRealtime: boolean;
     createdAt: string;
     updatedAt: string;
   }
@@ -54,6 +54,7 @@ declare global {
     shopId?: string | null;
     shopName?: string | null;
     logoUrl?: string | null;
+    shopStatus?: ShopStatus | null;
     ownerId?: string | null;
     newMessage?: MessageDTO | null;
   }

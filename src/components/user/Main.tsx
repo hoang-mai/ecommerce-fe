@@ -21,6 +21,7 @@ export default function Main() {
     queryParams: {
       pageNo,
       pageSize: 25,
+      sortBy: "totalSold",
     }
   });
 
@@ -56,7 +57,6 @@ export default function Main() {
         ))}
       </div>
       <Pagination  totalPages={totalPages} currentPage={pageNo} onPageChange={setPageNo}/>
-
     </div>
   );
 }

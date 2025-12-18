@@ -18,6 +18,14 @@ export enum AlertType {
   WARNING = 'WARNING',
 }
 
+export enum NotificationType{
+  ERROR = 'ERROR',
+  SUCCESS = 'SUCCESS',
+  INFO = 'INFO',
+  WARNING = 'WARNING',
+  PAYMENT = 'PAYMENT',
+}
+
 export enum Gender {
   MALE = 'MALE',
   FEMALE = 'FEMALE',

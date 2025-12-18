@@ -6,7 +6,6 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType} from "@/types/enum";
 import Loading from "@/components/modals/Loading";
-import {useAddressMapping} from "@/hooks/useAddressMapping";
 
 interface AddressData {
   addressId: number;
@@ -33,7 +32,6 @@ export default function DeleteAddressModal({isOpen, setIsOpen, mutate, addressDa
   const {trigger, isMutating} = useSWRMutation(`${ADDRESS}/${addressData.addressId}`, fetcher, {
     revalidate: false,
   });
-  const {getProvinceName, getWardName} = useAddressMapping();
 
   const handleDelete = () => {
     trigger().then(res => {

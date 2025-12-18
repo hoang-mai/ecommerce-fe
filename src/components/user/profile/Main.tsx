@@ -28,6 +28,10 @@ import UpdateAvatarModal from "@/components/user/profile/UpdateAvatarModal";
 import RegisterOwnerModal from "@/components/user/profile/RegisterOwnerModal";
 import HistoryRegisterOwnerModal from "@/components/user/profile/HistoryRegisterOwnerModal";
 import InfoRow from "@/libs/InfoRow";
+import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
+import NotificationsOffRoundedIcon from '@mui/icons-material/NotificationsOffRounded';
+import Switch from "@/libs/Switch";
+import {usePushNotification} from "@/hooks/usePushNotification";
 
 export interface ProfileData {
   userId: number;
@@ -54,6 +58,15 @@ export default function Main() {
     revalidateOnFocus: false,
   })
   const dispatch = useDispatch();
+
+  const {
+    isSupported,
+    isSubscribed,
+    isLoading: notificationLoading,
+    permission,
+    subscribe,
+    unsubscribe,
+  } = usePushNotification();
   useEffect(() => {
     if(error){
       const alert : AlertState = {
@@ -72,6 +85,45 @@ export default function Main() {
       newState[3] = true;
       return newState;
     });
+  };
+
+  const handleNotificationToggle =() => {
+
+      if (isSubscribed) {
+        unsubscribe().then(() => {
+          dispatch(openAlert({
+            isOpen: true,
+            message: "Đã tắt thông báo thành công",
+            type: AlertType.SUCCESS,
+            title: "Thành công"
+          }));
+        }).catch(() => {
+          dispatch(openAlert({
+            isOpen: true,
+            message: "Không thể tắt thông báo",
+            type: AlertType.ERROR,
+            title: "Lỗi"
+          }));
+        });
+      } else {
+        subscribe().then(() => {
+          dispatch(openAlert({
+            isOpen: true,
+            message: "Đã bật thông báo thành công",
+            type: AlertType.SUCCESS,
+            title: "Thành công"
+          }));
+        }).catch(() => {
+          dispatch(openAlert({
+            isOpen: true,
+            message: permission === 'denied'
+              ? "Bạn đã từ chối quyền thông báo. Vui lòng bật lại trong cài đặt trình duyệt."
+              : "Không thể bật thông báo",
+            type: AlertType.ERROR,
+            title: "Lỗi"
+          }));
+        });
+      }
   };
 
   return (
@@ -246,6 +298,45 @@ export default function Main() {
                     icon={<CalendarTodayRoundedIcon/>}
                     label={"Cập nhật lần cuối"}
                     value={data?.updatedAt ? formatDateTime(data.updatedAt) : null}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Cài đặt thông báo */}
+            <div className="mt-6">
+              <h3 className="text-lg font-bold text-grey-c800 mb-4 flex items-center gap-2">
+                <div className="w-1 h-6 bg-primary-c700 rounded"></div>
+                Cài đặt thông báo
+              </h3>
+              <div className="bg-grey-c50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {isSubscribed ? (
+                      <NotificationsRoundedIcon className="text-primary-c700" style={{fontSize: 24}}/>
+                    ) : (
+                      <NotificationsOffRoundedIcon className="text-grey-c400" style={{fontSize: 24}}/>
+                    )}
+                    <div>
+                      <div className="font-semibold text-grey-c800">
+                        Nhận thông báo đẩy
+                      </div>
+                      <div className="text-sm text-grey-c600">
+                        {!isSupported
+                          ? "Trình duyệt không hỗ trợ thông báo đẩy"
+                          : permission === 'denied'
+                          ? "Bạn đã từ chối quyền thông báo. Vui lòng bật lại trong cài đặt trình duyệt."
+                          : isSubscribed
+                          ? "Bạn đang nhận thông báo về đơn hàng, khuyến mãi và tin tức mới"
+                          : "Bật để nhận thông báo về đơn hàng, khuyến mãi và tin tức mới"
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={isSubscribed}
+                    onChange={handleNotificationToggle}
+                    disabled={!isSupported || notificationLoading || permission === 'denied'}
                   />
                 </div>
               </div>

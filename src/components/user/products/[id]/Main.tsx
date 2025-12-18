@@ -9,7 +9,7 @@ import useSWRMutation from "swr/mutation";
 import {useCartData} from "@/components/provider/CartProvider";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
-import {AlertType, ColorButton, ProductStatus, ProductVariantStatus, ShopStatus} from "@/types/enum";
+import {AlertType, ColorButton, ProductStatus, ShopStatus} from "@/types/enum";
 import Button from "@/libs/Button";
 import {ProductVariant, ProductView,} from "@/types/interface";
 import ImagePreview from "@/libs/ImagePreview";
@@ -24,109 +24,33 @@ import Shop from "@/components/user/products/[id]/Shop";
 import Star from "@/libs/Star";
 
 const productDefault: ProductView = {
-  productId: "prod_002",
+  productId: "",
   shopId: "",
-  rating: 500,
-  numberOfRatings: 200,
-  numberOfReviews: 300,
+  rating: 0,
+  numberOfRatings: 0,
+  numberOfReviews: 0,
   ratingStatistics: {
-    "FIVE": 150,
-    "FOUR": 30,
-    "THREE": 10,
-    "TWO": 5,
-    "ONE": 5
+    "FIVE": 0,
+    "FOUR": 0,
+    "THREE": 0,
+    "TWO": 0,
+    "ONE": 0
   },
-  name: "Samsung Galaxy S24 Ultra",
-  description: "Galaxy S24 Ultra với bút S Pen tích hợp, camera 200MP, chip Snapdragon 8 Gen 3 for Galaxy, màn hình Dynamic AMOLED 2X 6.8 inch. Hỗ trợ Galaxy AI thông minh.",
+  name: "",
+  description: "",
   productStatus: ProductStatus.ACTIVE,
-  totalSold: 980,
-  discount: 10,
-  discountStartDate: "2024-12-01T00:00:00Z",
-  discountEndDate: "2025-12-31T23:59:59Z",
-  categoryId: "cat_001",
-  categoryName: "Điện thoại",
+  totalSold: 0,
+  discount: 0,
+  discountStartDate: null,
+  discountEndDate: null,
+  categoryId: "",
+  categoryName: "",
   shopStatus: ShopStatus.ACTIVE,
-  productImages: [
-    {
-      productImageId: "img_002_1",
-      imageUrl: "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-ltxipthba13z82@resize_w82_nl"
-    },
-    {
-      productImageId: "img_002_2",
-      imageUrl: "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-ltxipthba13z82@resize_w164_nl"
-    },
-    {
-      productImageId: "img_002_3",
-      imageUrl: "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-ltxipthba13z82@resize_w164_nl"
-    }
-  ],
-  productAttributes: [
-    {
-      productAttributeId: "attr_color_s24",
-      productAttributeName: "Màu sắc",
-      productAttributeValues: [
-        {productAttributeValueId: "val_color_s24_1", productAttributeValue: "Titan Xám"},
-        {productAttributeValueId: "val_color_s24_2", productAttributeValue: "Titan Đen"},
-        {productAttributeValueId: "val_color_s24_3", productAttributeValue: "Titan Tím"},
-        {productAttributeValueId: "val_color_s24_4", productAttributeValue: "Titan Vàng"},
-        {productAttributeValueId: "val_color_s24_5", productAttributeValue: "Titan Hồng"},
-        {productAttributeValueId: "val_color_s24_6", productAttributeValue: "Titan Xanh"},
-      ]
-    },
-    {
-      productAttributeId: "attr_storage_s24",
-      productAttributeName: "Dung lượng",
-      productAttributeValues: [
-        {productAttributeValueId: "val_storage_s24_1", productAttributeValue: "256GB"},
-        {productAttributeValueId: "val_storage_s24_2", productAttributeValue: "512GB"},
-        {productAttributeValueId: "val_storage_s24_3", productAttributeValue: "1TB"}
-      ]
-    }
-  ],
-  productVariants: [
-    {
-      productVariantId: "var_002_1",
-      productVariantStatus: ProductVariantStatus.ACTIVE,
-      price: 26990000,
-      stockQuantity: 60,
-      sold: 1900,
-      isDefault: true,
-      productVariantAttributeValues: [
-        {
-          productVariantAttributeValueId: "vav_002_1",
-          productAttributeId: "attr_color_s24",
-          productAttributeValueId: "val_color_s24_1"
-        },
-        {
-          productVariantAttributeValueId: "vav_002_2",
-          productAttributeId: "attr_storage_s24",
-          productAttributeValueId: "val_storage_s24_1"
-        }
-      ]
-    },
-    {
-      productVariantId: "var_002_2",
-      productVariantStatus: ProductVariantStatus.ACTIVE,
-      price: 29990000,
-      stockQuantity: 40,
-      sold: 120,
-      isDefault: false,
-      productVariantAttributeValues: [
-        {
-          productVariantAttributeValueId: "vav_002_3",
-          productAttributeId: "attr_color_s24",
-          productAttributeValueId: "val_color_s24_2"
-        },
-        {
-          productVariantAttributeValueId: "vav_002_4",
-          productAttributeId: "attr_storage_s24",
-          productAttributeValueId: "val_storage_s24_2"
-        }
-      ]
-    }
-  ],
-  createdAt: "2024-01-20T10:00:00Z",
-  updatedAt: "2024-11-15T14:20:00Z"
+  productImages: [],
+  productAttributes: [],
+  productVariants: [],
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString()
 };
 
 type Props = {

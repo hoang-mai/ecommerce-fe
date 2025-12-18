@@ -4,7 +4,7 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {z} from "zod";
 import TextField from "@/libs/TextField";
 import DropdownSelect from "@/libs/DropdownSelect";
-import {useEffect, useState} from "react";
+import { useState} from "react";
 import useSWRMutation from "swr/mutation";
 import {ADDRESS} from "@/services/api";
 import { useAxiosContext } from '@/components/provider/AxiosProvider';
@@ -12,7 +12,6 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType} from "@/types/enum";
 import Loading from "@/components/modals/Loading";
-import Switch from "@/libs/Switch";
 import {phoneRegex} from "@/util/regex";
 import {useAddressMapping} from "@/hooks/useAddressMapping";
 

@@ -1,6 +1,5 @@
 "use client";
 import React, {useEffect, useState} from "react";
-import Image from "next/image";
 import useSWR from "swr";
 import Button from "@/libs/Button";
 import {AlertType, ColorButton, ProductStatus} from "@/types/enum";
@@ -12,7 +11,6 @@ import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {PRODUCT_VIEW} from "@/services/api";
 import Loading from "@/components/modals/Loading";
 import {openAlert} from "@/redux/slice/alertSlice";
-import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
 import {useDispatch} from "react-redux";
 import ChangeCircleRoundedIcon from "@mui/icons-material/ChangeCircleRounded";
 import {ProductView} from "@/types/interface";

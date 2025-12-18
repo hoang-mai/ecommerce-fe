@@ -1,14 +1,14 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 'use client';
-import React, {useState, useEffect, useRef, useCallback} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ChatDTO} from '@/types/interface';
-import {MessageType, AlertType} from '@/types/enum';
+import {AccountStatus, AlertType, MessageType, ShopStatus} from '@/types/enum';
 import Image from 'next/image';
 import useSWR, {mutate} from 'swr';
 import {CHAT, MESSAGE} from '@/services/api';
 import TextField from "@/libs/TextField";
 import {useAxiosContext} from '@/components/provider/AxiosProvider';
-import {getTimeAgo, getCurrentUserId} from '@/util/FnCommon';
+import {getCurrentUserId, getTimeAgo} from '@/util/FnCommon';
 import Empty from '@/libs/Empty';
 import SubdirectoryArrowRightRoundedIcon from '@mui/icons-material/SubdirectoryArrowRightRounded';
 import Chat from "./Chat";
@@ -62,6 +62,12 @@ export default function Main() {
   });
   const pageData = data?.data;
 
+  useEffect(() => {
+    setCurrentPage(0);
+    setAllChats([]);
+    setHasMore(true);
+  }, [debounce]);
+  
   // Update allChats when new data arrives
   useEffect(() => {
     if (pageData?.data) {
@@ -85,11 +91,6 @@ export default function Main() {
   }, [pageData, currentPage]);
 
 
-  useEffect(() => {
-    setCurrentPage(0);
-    setAllChats([]);
-    setHasMore(true);
-  }, [debounce]);
 
   useEffect(() => {
     if (error) {
@@ -142,11 +143,10 @@ export default function Main() {
 
       existingChat.lastMessage = newMessage;
       if(selectedChatId === newMessage.chatId) {
-        const updatedMessage = {
+        existingChat.lastMessage= {
           ...newMessage,
           readBy: [...(newMessage.readBy || []), currentUserId],
         };
-        existingChat.lastMessage= updatedMessage;
       }
 
       setAllChats(prev => {
@@ -159,12 +159,17 @@ export default function Main() {
         .then(res => {
           const newChat = res.data.data;
           if (newChat) {
-            setAllChats(prev => [newChat, ...prev]);
+            setAllChats(prev => {
+              if (prev.some(chat => chat.chatId === newChat.chatId)) {
+                return prev;
+              }
+              return [newChat, ...prev];
+            });
           }
         });
     }
     dispatch(clearNewMessage());
-  }, [chatState.newMessage, get,selectedChatId,currentUserId, dispatch]);
+  }, [chatState.newMessage, get, selectedChatId, currentUserId, dispatch, allChats]);
 
   return (
     <div className="h-full flex flex-col min-h-0">
@@ -285,6 +290,11 @@ function ChatListItem({chat, isSelected, onClick, currentUserId}: ChatListItemPr
       setIsUnread(!chat.lastMessage.readBy.includes(currentUserId));
     })
   }, [chat.lastMessage.readBy, currentUserId]);
+
+  const isShopActive = chat.shopCache.shopStatus === ShopStatus.ACTIVE;
+  const isCustomerActive = customer?.accountStatus === AccountStatus.ACTIVE;
+  const canChat = isShopActive && isCustomerActive;
+
   return (
     <div
       onClick={() => {
@@ -297,10 +307,12 @@ function ChatListItem({chat, isSelected, onClick, currentUserId}: ChatListItemPr
         }
       }
       }
-      className={`flex items-start gap-3 px-4 py-4 cursor-pointer transition-all border-b border-grey-c100 ${
-        isSelected
-          ? 'bg-primary-c50 border-l-4 border-l-primary-c700'
-          : 'hover:bg-grey-c50 border-l-4 border-l-transparent'
+      className={`flex items-start gap-3 px-4 py-4 transition-all border-b border-grey-c100 ${
+        canChat 
+          ? isSelected
+            ? 'bg-primary-c50 border-l-4 border-l-primary-c700 cursor-pointer'
+            : 'hover:bg-grey-c50 border-l-4 border-l-transparent cursor-pointer'
+          : 'bg-grey-c25 border-l-4 border-l-transparent cursor-not-allowed opacity-60'
       }`}
     >
       {/* Avatar */}
@@ -311,16 +323,20 @@ function ChatListItem({chat, isSelected, onClick, currentUserId}: ChatListItemPr
             alt={customer.fullName}
             width={56}
             height={56}
-            className="w-14 h-14 rounded-full object-cover"
+            className={`w-14 h-14 rounded-full object-cover ${!canChat ? 'grayscale' : ''}`}
           />
         ) : (
-          <div className="w-14 h-14 rounded-full bg-primary-c100 flex items-center justify-center">
-            <span className="text-primary-c700 font-semibold text-xl">
+          <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
+            canChat ? 'bg-primary-c100' : 'bg-grey-c200'
+          }`}>
+            <span className={`font-semibold text-xl ${
+              canChat ? 'text-primary-c700' : 'text-grey-c500'
+            }`}>
               {customer?.fullName.charAt(0).toUpperCase() || '?'}
             </span>
           </div>
         )}
-        {isUnread && (
+        {isUnread && canChat && (
           <div className="absolute -top-1 -right-1 w-4 h-4 bg-support-c900 rounded-full border-2 border-white"/>
         )}
       </div>
@@ -362,9 +378,21 @@ function ChatListItem({chat, isSelected, onClick, currentUserId}: ChatListItemPr
             </span>
           )}
         </div>
-        <p className={`text-sm truncate ${isUnread ? 'font-medium text-grey-c800' : 'text-grey-c600'}`}>
-          {getMessagePreview()}
-        </p>
+        {!canChat ? (
+          <p className="text-xs text-support-c900 font-medium">
+            {!isShopActive
+              ? chat.shopCache.shopStatus === ShopStatus.INACTIVE
+                ? 'Cửa hàng tạm ngưng hoạt động'
+                : 'Cửa hàng đã bị khóa'
+              : customer?.accountStatus === AccountStatus.INACTIVE
+                ? 'Khách hàng tạm ngưng hoạt động'
+                : 'Khách hàng đã bị khóa'}
+          </p>
+        ) : (
+          <p className={`text-sm truncate ${isUnread ? 'font-medium text-grey-c800' : 'text-grey-c600'}`}>
+            {getMessagePreview()}
+          </p>
+        )}
       </div>
     </div>
   );

@@ -21,3 +21,7 @@ export const REVIEW_VIEW = "/api/v1/review-view";
 export const REVIEW_REPLY= "/api/v1/review-reply";
 export const CHAT = "/api/v1/chat";
 export const MESSAGE = "/api/v1/message";
+export const INTERACTION= "/api/v1/interaction";
+export const PUSH_SUBSCRIPTION= "/api/v1/push-subscription";
+export const NOTIFICATION= "/api/v1/notification";
+export const PAYMENT= "/api/v1/payment";

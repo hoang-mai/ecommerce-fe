@@ -46,6 +46,7 @@ const shopDefault: ShopView = {
   numberOfReviews: 0,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
+  totalOrder: 0,
 };
 
 export default function Shop({id}: Props) {
@@ -102,6 +103,7 @@ export default function Shop({id}: Props) {
                   shopName: shopData.shopName,
                   logoUrl: shopData.logoUrl,
                   ownerId: shopData.ownerId,
+                  shopStatus: shopData.shopStatus,
                 }
                 dispatch(openChat(chatState));
               }}

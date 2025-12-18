@@ -7,6 +7,7 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useRouter} from "next/navigation";
 import {clearAllLocalStorage} from "@/services/localStorage";
+import {clearAllCookie} from "@/services/cookie";
 
 type Props = {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export default function DisableAccount({isOpen, setIsOpen}: Props) {
       }
       dispatch(openAlert(alert));
       triggerLogout().finally(() => {
+        clearAllCookie();
         clearAllLocalStorage();
         router.replace('/login');
       });

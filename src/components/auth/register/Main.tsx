@@ -1,6 +1,6 @@
 'use client';
 
-import {useMemo, useState} from 'react';
+import { useState} from 'react';
 import Link from 'next/link';
 import {Controller, useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
@@ -10,7 +10,7 @@ import Button from "@/libs/Button";
 import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
-import {REGISTER} from "@/services/api";
+import {REGISTER, USER_VIEW} from "@/services/api";
 import useSWRMutation from "swr/mutation";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useRouter} from "next/navigation";
@@ -18,10 +18,11 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType, ColorButton, Gender, GenderLabel} from "@/types/enum";
 import DropdownSelect from "@/libs/DropdownSelect";
-import provinceData from "@/util/province.json";
-import wardData from "@/util/ward.json";
 import {phoneRegex} from "@/util/regex";
 import {useAddressMapping} from "@/hooks/useAddressMapping";
+import TextSearch from "@/libs/TextSearch";
+import {useBuildUrl} from "@/hooks/useBuildUrl";
+import useSWR from "swr";
 
 
 const registerSchema = z.object({
@@ -60,8 +61,22 @@ export default function Main() {
   const router = useRouter();
   const dispatch = useDispatch();
   const {provinceOptions, wardOptions} = useAddressMapping(selectedProvince);
-  const { post } = useAxiosContext();
-  const fetcher = (url: string, {arg}: { arg: RegisterFormData }) => post<BaseResponse<undefined>>(url, arg).then(res => res.data);
+  const {get, post} = useAxiosContext();
+  const [keyword, setKeyword] = useState('');
+  const url = useBuildUrl({
+    baseUrl: `${USER_VIEW}/search-address`,
+    queryParams: {
+      keyword: keyword
+    },
+  })
+  const fetcherAddressDetail = (url: string) => get<BaseResponse<string[]>>(url).then(res => res.data.data);
+  const {data: addressDetails, isLoading} = useSWR(keyword ? url : null, fetcherAddressDetail, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  });
+  const fetcher = (url: string, {arg}: {
+    arg: RegisterFormData
+  }) => post<BaseResponse<undefined>>(url, arg).then(res => res.data);
   const {trigger, isMutating} = useSWRMutation(REGISTER, fetcher);
   const {
     control,
@@ -278,17 +293,28 @@ export default function Main() {
               </div>
 
               {/* Detail Address */}
-              <Controller control={control} name={"detail"} render={({field}) =>
-                <TextField htmlFor={"detail"}
-                           id={"detail"}
-                           label={"Địa chỉ chi tiết"}
-                           placeholder={"Nhập địa chỉ chi tiết"}
-                           disabled={isMutating}
-                           error={errors.detail?.message}
-                           required={true}
-                           value={field.value}
-                           onChange={field.onChange}
+              <Controller control={control} name={"detail"} render={({field}) => {
+                const options: Option[] = addressDetails
+                  ? addressDetails.map(address => ({
+                    id: address,
+                    label: address,
+                  }))
+                  : [];
+
+                return <TextSearch id={"detail"}
+                                   label={"Địa chỉ chi tiết"}
+                                   placeholder={"Nhập địa chỉ chi tiết"}
+                                   disabled={isMutating}
+                                   isLoading={isLoading}
+                                   error={errors.detail?.message}
+                                   required={true}
+                                   value={field.value}
+                                   onSelect={field.onChange}
+                                   options={options}
+                                   onSearch={(value) => setKeyword(value)}
+                                   debounceTime={1000}
                 />
+              }
               }
               />
 

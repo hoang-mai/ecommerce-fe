@@ -2,9 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
-import GroupIcon from '@mui/icons-material/Group';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Button from "@/libs/Button";
 import {AlertType, ColorButton} from "@/types/enum";
@@ -15,7 +13,7 @@ import RateReviewIcon from "@mui/icons-material/RateReview";
 import useSWRMutation from "swr/mutation";
 import {useDispatch, useSelector} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
-import {LOGOUT, MESSAGE, USER} from "@/services/api";
+import {LOGOUT, MESSAGE, NOTIFICATION, USER} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import useSWR from "swr";
 import {ProfileData} from "@/components/user/profile/Main";
@@ -24,6 +22,10 @@ import ChatRoundedIcon from '@mui/icons-material/ChatRounded';
 import {useEffect} from "react";
 import {RootState} from "@/redux/store";
 import {getCurrentUserId} from "@/util/FnCommon";
+import {usePushNotification} from "@/hooks/usePushNotification";
+import {clearAllLocalStorage} from "@/services/localStorage";
+import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
+import {clearAllCookie} from "@/services/cookie";
 interface MenuItem {
   name: string;
   link: string;
@@ -45,6 +47,12 @@ export default function Sidebar() {
     refreshInterval: 0,
     revalidateOnFocus: false,
   })
+
+  const fetcherCountNotification = (url: string) => get<BaseResponse<number>>(url).then(res => res.data.data);
+  const {data: countNotification} = useSWR(`${NOTIFICATION}/unread-count`, fetcherCountNotification, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
   const pathname = usePathname();
   const menuItems: MenuItem[] = [
     {name: "Tổng quan", link: "/owner/dashboard", icon: DashboardIcon},
@@ -52,12 +60,17 @@ export default function Sidebar() {
     {name: "Quản lý đơn hàng", link: "/owner/orders", icon: ShoppingCartCheckoutIcon},
     {name: "Quản lý đánh giá", link: "/owner/reviews", icon: RateReviewIcon},
     {name: "Tin nhắn", link: "/owner/chats", icon: ChatRoundedIcon},
+    {name: "Thông báo", link: "/owner/notifications", icon: NotificationsRoundedIcon},
   ];
-
+  const {
+    isSubscribed,
+    unsubscribe
+  } = usePushNotification();
   const router = useRouter();
   const {trigger} = useSWRMutation(LOGOUT, fetcher);
   const dispatch = useDispatch();
   const handleLogout = () => {
+
     trigger().then(res => {
       const alert: AlertState = {
         isOpen: true,
@@ -67,13 +80,12 @@ export default function Sidebar() {
       }
       dispatch(openAlert(alert))
     }).finally(() => {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('expiresIn');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('refreshExpiresIn');
-      localStorage.removeItem('tokenType');
-      localStorage.removeItem('sessionState');
-      localStorage.removeItem('scope');
+      if(isSubscribed){
+        unsubscribe();
+      }
+      clearAllLocalStorage();
+      clearAllCookie();
+      window.dispatchEvent(new Event('authChanged'));
       router.push('/login');
     });
   }
@@ -102,7 +114,7 @@ export default function Sidebar() {
         const isActive = pathname.includes(item.link);
         const IconComponent = item.icon;
         const isMessageTab = item.link === "/owner/chats";
-
+        const isNotificationTab = item.link === "/owner/notifications";
         return (
           <Link
             key={item.link}
@@ -120,6 +132,11 @@ export default function Sidebar() {
                 {Number(countChat) > 99 ? '99+' : countChat}
               </span>
             )}
+            {isNotificationTab && Number(countNotification)>0  && (
+              <span className="ml-auto bg-support-c900 text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">
+                {Number(countNotification) > 99 ? '99+' : countNotification}
+              </span>
+            )}
           </Link>
         );
       })}
@@ -129,27 +146,30 @@ export default function Sidebar() {
     <div className={"border border-grey-c200 w-full"}></div>
 
     {/* Avatar */}
+    <Link href={"/owner/profile"}>
     <div className="flex items-center gap-3 px-4 py-3 bg-grey-c100 rounded-lg mt-2 cursor-pointer">
-      <div
-        className="w-[40px] h-[40px] rounded-full overflow-hidden border-2 border-primary-c200">
-        {dataUser?.avatarUrl
-          ? <Image
-            width={32}
-            height={32}
-            src={dataUser?.avatarUrl}
-            alt="User Avatar"
-            className="w-full h-full rounded-full object-cover"
-          />
-          : <AccountCircleRoundedIcon className="text-primary-c700 !text-4xl"/>
-        }
-      </div>
+
+        <div
+          className="w-[40px] h-[40px] rounded-full overflow-hidden border-2 border-primary-c200">
+          {dataUser?.avatarUrl
+            ? <Image
+              width={32}
+              height={32}
+              src={dataUser?.avatarUrl}
+              alt="User Avatar"
+              className="w-full h-full rounded-full object-cover"
+            />
+            : <AccountCircleRoundedIcon className="text-primary-c700 !text-4xl"/>
+          }
+        </div>
+
       <div className="flex-1 overflow-hidden">
         <p
           className="text-sm font-semibold text-grey-c800 truncate"> {dataUser?.fullName || 'Người dùng'}</p>
         <p className="text-xs text-grey-c500 truncate">{dataUser?.email}</p>
       </div>
     </div>
-
+    </Link>
     {/* Logout Button */}
     <Button
       onClick={handleLogout}

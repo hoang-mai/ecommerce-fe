@@ -5,7 +5,8 @@ import {
   ShopStatus,
   ChatType,
   MessageType,
-  AccountStatus
+  AccountStatus,
+  NotificationType
 } from "@/types/enum";
 export interface DateRange {
   start: Date | null;
@@ -17,9 +18,23 @@ export interface OrderViewStatisticDTO {
   [key: string]: string | number;
 }
 
+export interface OrderViewStatisticRevenueDTO{
+  localDate: string;
+  totalRevenue: number;
+  [key: string]: string | number;
+}
+
 export interface ProductViewStatisticDTO{
   productId: number;
   productName: string;
+  totalSold: number;
+  totalRevenue: number;
+  [key: string]: string | number;
+}
+
+export interface ShopViewStatisticDTO{
+  shopId: number;
+  shopName: string;
   totalSold: number;
   totalRevenue: number;
   [key: string]: string | number;
@@ -201,4 +216,31 @@ export interface ReqPrivateMessageDTO{
   messageContent : string;
   messageType : MessageType;
   shopId: string;
+}
+
+export interface NotificationView {
+  notificationId: string;
+  userId: number;
+  title: string;
+  message: string;
+  data: Record<string, unknown>;
+  notificationType: NotificationType;
+  isRead: boolean;
+  sentRealtime: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface VNPayParams {
+  vnp_TmnCode?: string;          // Mã website merchant
+  vnp_Amount?: string;            // Số tiền thanh toán (đã nhân 100)
+  vnp_BankCode?: string;          // Mã ngân hàng
+  vnp_BankTranNo?: string;       // Mã giao dịch tại ngân hàng
+  vnp_CardType?: string;         // Loại thẻ (ATM, QRCODE)
+  vnp_PayDate?: string;          // Thời gian thanh toán (yyyyMMddHHmmss)
+  vnp_OrderInfo?: string;         // Thông tin mô tả nội dung thanh toán
+  vnp_TransactionNo?: string;     // Mã giao dịch tại VNPAY
+  vnp_ResponseCode?: string;      // Mã phản hồi kết quả (00 = thành công)
+  vnp_TransactionStatus?: string; // Trạng thái giao dịch (00 = thành công)
+  vnp_TxnRef?: string;           // Mã tham chiếu giao dịch
+  vnp_SecureHash?: string;        // Mã kiểm tra checksum
 }

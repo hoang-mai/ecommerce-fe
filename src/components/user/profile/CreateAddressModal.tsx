@@ -6,7 +6,7 @@ import TextField from "@/libs/TextField";
 import DropdownSelect from "@/libs/DropdownSelect";
 import {useState} from "react";
 import useSWRMutation from "swr/mutation";
-import {ADDRESS} from "@/services/api";
+import {ADDRESS, USER_VIEW} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -15,6 +15,9 @@ import Loading from "@/components/modals/Loading";
 import Switch from "@/libs/Switch";
 import {phoneRegex} from "@/util/regex";
 import {useAddressMapping} from "@/hooks/useAddressMapping";
+import TextSearch from "@/libs/TextSearch";
+import {useBuildUrl} from "@/hooks/useBuildUrl";
+import useSWR from "swr";
 
 type Props = {
   isOpen: boolean;
@@ -43,7 +46,7 @@ type AddressFormData = z.infer<typeof addressSchema>;
 export default function CreateAddressModal({isOpen, setIsOpen, mutate, mutateParent}: Props) {
   const [selectedProvince, setSelectedProvince] = useState<string>('');
   const dispatch = useDispatch();
-  const { post } = useAxiosContext();
+  const { post, get } = useAxiosContext();
   const fetcher = (url: string, {arg}: { arg: AddressFormData }) =>
     post<BaseResponse<undefined>>(url, arg).then(res => res.data);
   const {trigger, isMutating} = useSWRMutation(ADDRESS, fetcher,{
@@ -51,6 +54,19 @@ export default function CreateAddressModal({isOpen, setIsOpen, mutate, mutatePar
   });
 
   const {provinceOptions, wardOptions} = useAddressMapping(selectedProvince);
+
+  const [keyword, setKeyword] = useState('');
+  const url = useBuildUrl({
+    baseUrl: `${USER_VIEW}/search-address`,
+    queryParams: {
+      keyword: keyword
+    },
+  })
+  const fetcherAddressDetail = (url: string) => get<BaseResponse<string[]>>(url).then(res => res.data.data);
+  const {data: addressDetails, isLoading} = useSWR(keyword ? url : null, fetcherAddressDetail, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  });
 
   const {
     control,
@@ -198,19 +214,29 @@ export default function CreateAddressModal({isOpen, setIsOpen, mutate, mutatePar
         <Controller
           control={control}
           name="detail"
-          render={({field}) => (
-            <TextField
-              htmlFor="detail"
-              id="detail"
-              label="Địa chỉ chi tiết"
-              placeholder="Nhập địa chỉ chi tiết (Số nhà, tên đường...)"
+          render={({field}) => {
+            const options: Option[] = addressDetails
+              ? addressDetails.map(address => ({
+                id: address,
+                label: address,
+              }))
+              : [];
+
+            return <TextSearch
+              id={"detail"}
+              label={"Địa chỉ chi tiết"}
+              placeholder={"Nhập địa chỉ chi tiết"}
               disabled={isMutating}
+              isLoading={isLoading}
               error={errors.detail?.message}
               required={true}
               value={field.value}
-              onChange={field.onChange}
+              onSelect={field.onChange}
+              options={options}
+              onSearch={(value) => setKeyword(value)}
+              debounceTime={1000}
             />
-          )}
+          }}
         />
 
         {/* Is Default Checkbox */}

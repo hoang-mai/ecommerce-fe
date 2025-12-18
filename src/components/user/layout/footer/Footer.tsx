@@ -69,7 +69,7 @@ export default function Footer() {
                 </div>
                 <div className="flex items-center gap-2">
                   <LocalPhoneRoundedIcon/>
-                  <span>1900-xxxx (8:00 - 21:00)</span>
+                  <span>0867254603 (8:00 - 21:00)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <EmailRoundedIcon/>

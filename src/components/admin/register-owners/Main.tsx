@@ -66,7 +66,7 @@ export default function Main() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const url = useBuildUrl({
-    baseUrl: USER_VERIFICATION,
+    baseUrl: `${USER_VERIFICATION}/search`,
     queryParams: {
       pageNo,
       pageSize,

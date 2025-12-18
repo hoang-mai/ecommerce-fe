@@ -1,11 +1,8 @@
 'use client';
 
 import Modal from "@/libs/Modal";
-import {useState} from "react";
 import InputImage from "@/libs/InputImage";
-import Button from "@/libs/Button";
-import {AlertType, ColorButton} from "@/types/enum";
-import Image from "next/image";
+import {AlertType} from "@/types/enum";
 import {USER} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import useSWRMutation from "swr/mutation";

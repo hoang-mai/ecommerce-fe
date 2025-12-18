@@ -282,7 +282,7 @@ export default function Main() {
       label: "Hành động",
       className: "text-center",
       render: (row) => (
-        <div className="flex gap-2 justify-center">
+        <div className="flex gap-2 justify-start">
           <button
             onClick={() => handleViewShop(Number(row.shopId))}
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
@@ -290,20 +290,25 @@ export default function Main() {
           >
             <VisibilityRoundedIcon/>
           </button>
-          <button
-            onClick={() => handleEditShop(row)}
-            className="cursor-pointer p-2 text-yellow-c800 hover:bg-yellow-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-            title="Chỉnh sửa"
-          >
-            <EditRoundedIcon/>
-          </button>
-          <button
-            onClick={() => handleUpdateStatus(row)}
-            className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-            title="Đổi trạng thái"
-          >
-            <ChangeCircleRoundedIcon/>
-          </button>
+          {row.shopStatus !== ShopStatus.SUSPENDED && (
+            <>
+              <button
+                onClick={() => handleEditShop(row)}
+                className="cursor-pointer p-2 text-yellow-c800 hover:bg-yellow-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                title="Chỉnh sửa"
+              >
+                <EditRoundedIcon/>
+              </button>
+              <button
+                onClick={() => handleUpdateStatus(row)}
+                className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                title="Đổi trạng thái"
+              >
+                <ChangeCircleRoundedIcon/>
+              </button>
+            </>
+          )}
+          
         </div>
       ),
     },

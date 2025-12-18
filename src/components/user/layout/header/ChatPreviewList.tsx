@@ -1,7 +1,7 @@
 'use client';
 import React, {useEffect, useState} from 'react';
 import {ChatDTO} from '@/types/interface';
-import {MessageType} from '@/types/enum';
+import {MessageType, ShopStatus} from '@/types/enum';
 import Image from 'next/image';
 import ImageRoundedIcon from '@mui/icons-material/ImageRounded';
 import ShoppingBagRoundedIcon from '@mui/icons-material/ShoppingBagRounded';
@@ -44,11 +44,15 @@ export default function ChatPreviewList() {
   });
 
   const pageData = dataChats?.data;
-  const chats = pageData?.data || [];
+  
   const totalPages = pageData?.totalPages || 0;
 
-  // Update allChats when new data arrives
   useEffect(() => {
+      setCurrentPage(0);
+      setAllChats([]);
+  }, [debounce]);
+  useEffect(() => {
+    const chats = pageData?.data || [];
     if (chats.length > 0) {
       if (currentPage === 0) {
         setAllChats(chats);
@@ -57,22 +61,16 @@ export default function ChatPreviewList() {
       }
       setIsLoading(false);
     }
-  }, [chats, currentPage]);
+  }, [currentPage, pageData?.data]);
+  
 
-  // Reset when keyword changes
-  useEffect(() => {
-    setCurrentPage(0);
-    setAllChats([]);
-  }, [debounce]);
 
-  // Handle scroll event
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     const scrollTop = target.scrollTop;
     const scrollHeight = target.scrollHeight;
     const clientHeight = target.clientHeight;
-
-    // Check if scrolled to bottom (with 10px threshold)
+    
     if (scrollHeight - scrollTop <= clientHeight + 10) {
       if (!isLoading && currentPage < totalPages - 1) {
         setIsLoading(true);
@@ -149,7 +147,10 @@ function ChatPreviewItem({chat}: ChatPreviewItemProps) {
   }, []);
 
   const isUnread = !chat.lastMessage.readBy.includes(currentUserId);
+  const isShopActive = chat.shopCache.shopStatus === ShopStatus.ACTIVE;
+
   const handleChatClick = () => {
+
     if(isUnread) {
       trigger(chat.chatId).then(() => {
         mutate(`${MESSAGE}/count-unread`);
@@ -202,7 +203,11 @@ function ChatPreviewItem({chat}: ChatPreviewItemProps) {
   return (
     <div
       onClick={handleChatClick}
-      className="flex items-center gap-3 px-4 py-3 hover:bg-grey-c50 cursor-pointer transition-colors border-b border-grey-c100 last:border-b-0"
+      className={`flex items-center gap-3 px-4 py-3 transition-colors border-b border-grey-c100 last:border-b-0 ${
+        isShopActive 
+          ? 'hover:bg-grey-c50 cursor-pointer' 
+          : 'bg-grey-c25 opacity-60'
+      }`}
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0 border border-grey-c200 rounded-full">
@@ -212,16 +217,20 @@ function ChatPreviewItem({chat}: ChatPreviewItemProps) {
             alt={chat?.shopCache.shopName}
             width={48}
             height={48}
-            className="w-12 h-12 rounded-full object-cover"
+            className={`w-12 h-12 rounded-full object-cover ${!isShopActive ? 'grayscale' : ''}`}
           />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-primary-c100 flex items-center justify-center">
-            <span className="text-primary-c700 font-semibold text-lg">
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+            isShopActive ? 'bg-primary-c100' : 'bg-grey-c200'
+          }`}>
+            <span className={`font-semibold text-lg ${
+              isShopActive ? 'text-primary-c700' : 'text-grey-c500'
+            }`}>
               {chat?.shopCache.shopName.charAt(0).toUpperCase()}
             </span>
           </div>
         )}
-        {isUnread && (
+        {isUnread && isShopActive && (
           <div className="absolute -top-1 -right-1 w-3 h-3 bg-support-c900 rounded-full border-2 border-white"/>
         )}
       </div>
@@ -230,7 +239,7 @@ function ChatPreviewItem({chat}: ChatPreviewItemProps) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
           <h4
-            className={`text-sm truncate ${isUnread ? 'font-semibold text-grey-c900' : 'font-medium text-grey-c800'}`}>
+            className={`text-sm truncate ${isUnread && isShopActive ? 'font-semibold text-grey-c900' : 'font-medium text-grey-c800'}`}>
             {chat?.shopCache.shopName}
           </h4>
           {chat.lastMessage?.createdAt && (
@@ -239,9 +248,17 @@ function ChatPreviewItem({chat}: ChatPreviewItemProps) {
             </span>
           )}
         </div>
-        <p className={`text-sm truncate ${isUnread ? 'font-medium text-grey-c800' : 'text-grey-c600'}`}>
-          {getMessagePreview()}
-        </p>
+        {!isShopActive ? (
+          <p className="text-xs text-support-c900 font-medium">
+            {chat.shopCache.shopStatus === ShopStatus.INACTIVE
+              ? 'Cửa hàng tạm ngưng hoạt động'
+              : 'Cửa hàng đã bị khóa'}
+          </p>
+        ) : (
+          <p className={`text-sm truncate ${isUnread ? 'font-medium text-grey-c800' : 'text-grey-c600'}`}>
+            {getMessagePreview()}
+          </p>
+        )}
       </div>
     </div>
   );

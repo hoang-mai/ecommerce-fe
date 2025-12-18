@@ -50,7 +50,7 @@ interface ResCategoryDetailDTO {
 }
 
 export default function UpdateCategoryModal({isOpen, setIsOpen, reload, categoryId}: Props) {
-  const { patch, get } = useAxiosContext();
+  const {patch, get} = useAxiosContext();
   const fetcher = (url: string, {arg}: {
     arg: UpdateCategoryFormData
   }) => patch<BaseResponse<never>>(url, arg).then(res => res.data);
@@ -60,11 +60,12 @@ export default function UpdateCategoryModal({isOpen, setIsOpen, reload, category
   const categoryDetailFetcher = (url: string) => get<BaseResponse<ResCategoryDetailDTO>>(url).then(res => res.data.data);
 
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [prevSearchKeyword, setPrevSearchKeyword] = useState("");
   const [pageNo, setPageNo] = useState(0);
   const [allCategories, setAllCategories] = useState<ResCategorySearchDTO[]>([]);
   const [hasMore, setHasMore] = useState(false);
 
-  const {data: categoryDetail, isLoading: isLoadingDetail,error: errorDetail} = useSWR(
+  const {data: categoryDetail, isLoading: isLoadingDetail, error: errorDetail} = useSWR(
     isOpen && categoryId ? `${CATEGORY}/${categoryId}` : null,
     categoryDetailFetcher,
     {
@@ -73,7 +74,7 @@ export default function UpdateCategoryModal({isOpen, setIsOpen, reload, category
     }
   );
 
-  const {data: categoriesResponse, isLoading: isLoadingCategories,error: errorCategories} = useSWR(
+  const {data: categoriesResponse, isLoading: isLoadingCategories, error: errorCategories} = useSWR(
     isOpen ? `${CATEGORY}/search?keyword=${encodeURIComponent(searchKeyword.trim())}&pageNo=${pageNo}&pageSize=10` : null,
     categoriesFetcher,
     {
@@ -106,9 +107,9 @@ export default function UpdateCategoryModal({isOpen, setIsOpen, reload, category
     }
   );
   useEffect(() => {
-    if(errorDetail || errorCategories){
+    if (errorDetail || errorCategories) {
       const error = errorDetail || errorCategories;
-      const alert : AlertState = {
+      const alert: AlertState = {
         isOpen: true,
         message: error.message || "Đã có lỗi xảy ra",
         type: AlertType.ERROR,
@@ -116,26 +117,25 @@ export default function UpdateCategoryModal({isOpen, setIsOpen, reload, category
       }
       dispatch(openAlert(alert));
     }
-  },[dispatch, errorDetail, errorCategories]);
+  }, [dispatch, errorDetail, errorCategories]);
 
-  useEffect(() => {
+  if (prevSearchKeyword !== searchKeyword) {
+    setPrevSearchKeyword(searchKeyword);
     setPageNo(0);
     setAllCategories([]);
     setHasMore(false);
-  }, [searchKeyword]);
+  }
 
 
   useEffect(() => {
-    if (categoriesResponse) {
-      if (pageNo === 0) {
-        const filtered = categoriesResponse.data.filter(cat => cat.categoryId !== categoryId);
-        setAllCategories(filtered);
-      } else {
-        const filtered = categoriesResponse.data.filter(cat => cat.categoryId !== categoryId);
-        setAllCategories(prev => [...prev, ...filtered]);
-      }
-      setHasMore(categoriesResponse.hasNextPage);
-    }
+    if (!categoriesResponse) return;
+    const filtered = categoriesResponse.data.filter(
+      cat => cat.categoryId !== categoryId
+    );
+    setAllCategories(prev =>
+      pageNo === 0 ? filtered : [...prev, ...filtered]
+    );
+    setHasMore(categoriesResponse.hasNextPage);
   }, [categoriesResponse, pageNo, categoryId]);
 
   useEffect(() => {
@@ -162,7 +162,7 @@ export default function UpdateCategoryModal({isOpen, setIsOpen, reload, category
   ];
 
   const handleFormSubmit = (data: UpdateCategoryFormData) => {
-    if(searchKeyword.trim() === ""){
+    if (searchKeyword.trim() === "") {
       data.parentCategoryId = undefined;
     }
     trigger(data).then(() => {

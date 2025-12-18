@@ -8,7 +8,7 @@ import Chip, {ChipSize, ChipVariant} from '@/libs/Chip';
 import Empty from '@/libs/Empty';
 import ImagePreview from '@/libs/ImagePreview';
 import DropdownSelect from '@/libs/DropdownSelect';
-import {AlertType, ColorButton, RatingNumber} from '@/types/enum';
+import {AlertType, RatingNumber} from '@/types/enum';
 import {formatDateTime} from "@/util/FnCommon";
 import {ProductView, ReviewView} from "@/types/interface";
 import Star from "@/libs/Star";

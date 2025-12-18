@@ -5,27 +5,22 @@ import useSWR from "swr";
 import DropdownSelect from "@/libs/DropdownSelect";
 import TextField from "@/libs/TextField";
 import Table, {Column} from "@/libs/Table";
-import Button from "@/libs/Button";
 import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
-import {AlertType, ColorButton, ShopStatus, SortDir} from "@/types/enum";
-import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import {AlertType, ShopStatus, SortDir} from "@/types/enum";
 import ChangeCircleRoundedIcon from '@mui/icons-material/ChangeCircleRounded';
-import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import Title from "@/libs/Title";
 import {formatDateTime} from "@/util/FnCommon";
 import UpdateStatusShopModal from "./UpdateStatusShopModal";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {SHOP} from "@/services/api";
+import { SHOP_VIEW} from "@/services/api";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useDebounce} from "@/hooks/useDebounce";
 import Loading from "@/components/modals/Loading";
 import {useAddressMapping} from "@/hooks/useAddressMapping";
 import StorefrontIcon from "@mui/icons-material/Storefront";
-import {useRouter} from "next/navigation";
 import { useBuildUrl } from "@/hooks/useBuildUrl";
 
 interface Shop {
@@ -48,7 +43,7 @@ interface Shop {
 export default function Main() {
   const { get } = useAxiosContext();
   const fetcher = (url: string) =>
-    get<BaseResponse<PageResponse<Shop>>>(url).then(res => res.data);
+    get<BaseResponse<PageResponse<Shop>>>(url,{isToken: true}).then(res => res.data);
 
   const [status, setStatus] = useState<string>("");
   const [keyword, setKeyword] = useState("");
@@ -58,14 +53,13 @@ export default function Main() {
   const [sortDir, setSortDir] = useState<SortDir>(SortDir.DESC);
   const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
-  const router = useRouter();
   const debouncedKeyword = useDebounce(keyword, 500);
   const dispatch = useDispatch();
   const {getProvinceName, getWardName} = useAddressMapping();
 
   // Build URL với query params
   const url = useBuildUrl({
-    baseUrl: `${SHOP}/search`,
+    baseUrl: `${SHOP_VIEW}/search`,
     queryParams: {
       status: status || undefined,
       keyword: debouncedKeyword || undefined,
@@ -120,7 +114,7 @@ export default function Main() {
       case ShopStatus.INACTIVE:
         return "Ngừng hoạt động";
       case ShopStatus.SUSPENDED:
-        return "Tạm ngưng";
+        return "Đình chỉ";
       default:
         return status;
     }
@@ -166,11 +160,6 @@ export default function Main() {
   const handlePageSizeChange = (size: string) => {
     setPageSize(size);
     setCurrentPage(0);
-  };
-
-
-  const handleViewShop = (id: number) => {
-    router.push(`/owner/shops/${id}`);
   };
 
 
@@ -289,13 +278,6 @@ export default function Main() {
       className: "text-center",
       render: (row) => (
         <div className="flex gap-2 justify-center">
-          <button
-            onClick={() => handleViewShop(row.shopId)}
-            className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-            title="Xem chi tiết"
-          >
-            <VisibilityRoundedIcon/>
-          </button>
 
           <button
             onClick={() => handleUpdateStatus(row)}

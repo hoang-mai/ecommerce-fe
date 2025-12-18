@@ -6,7 +6,6 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType} from "@/types/enum";
 import Loading from "@/components/modals/Loading";
-import {useAddressMapping} from "@/hooks/useAddressMapping";
 
 interface AddressData {
   addressId: number;

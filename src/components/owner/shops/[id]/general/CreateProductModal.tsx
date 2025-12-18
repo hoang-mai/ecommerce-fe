@@ -122,7 +122,6 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
   const {
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: {errors},
   } = useForm<CreateProductFormData>({
@@ -163,13 +162,13 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
     const currentValue = tempAttributeValue[attrIndex];
     if (!currentValue?.trim()) return;
 
-    const currentValues = watch(`productAttributes.${attrIndex}.attributeValues`) || [];
+    const currentValues = attributes?.[attrIndex]?.attributeValues || [];
     setValue(`productAttributes.${attrIndex}.attributeValues`, [...currentValues, currentValue.trim()]);
     setTempAttributeValue(prev => ({...prev, [attrIndex]: ""}));
   };
 
   const handleRemoveAttributeValue = (attrIndex: number, valueIndex: number) => {
-    const currentValues = watch(`productAttributes.${attrIndex}.attributeValues`) || [];
+    const currentValues = attributes?.[attrIndex]?.attributeValues || [];
     setValue(`productAttributes.${attrIndex}.attributeValues`, currentValues.filter((_, i) => i !== valueIndex));
   };
 
@@ -412,7 +411,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
 
                     {/* Display added values */}
                     <div className="flex flex-wrap gap-2">
-                      {watch(`productAttributes.${index}.attributeValues`)?.map((value, valueIndex) => (
+                      {attributes?.[index]?.attributeValues?.map((value, valueIndex) => (
                         <div
                           key={valueIndex}
                           className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-c100 text-primary-c800 rounded-lg text-sm font-medium"

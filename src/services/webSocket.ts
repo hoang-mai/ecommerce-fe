@@ -27,10 +27,6 @@ class WebSocketService {
       brokerURL: url,
       connectHeaders: config.headers || {},
 
-      debug: (str: string) => {
-        if (config.debug) console.log('STOMP:', str);
-      },
-
       reconnectDelay: config.reconnectDelay || 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
@@ -86,7 +82,7 @@ class WebSocketService {
           try {
             const body = JSON.parse(message.body);
             callback(body);
-          } catch (e) {
+          } catch {
             callback(message.body);
           }
         });
@@ -115,6 +111,15 @@ class WebSocketService {
       console.warn('WebSocket chưa kết nối, không thể gửi message');
     }
   }
+  sendHeartbeat(): void {
+    if (this.client && this.connected) {
+      this.client.publish({
+        destination: '/app/heartbeat',
+      });
+    } else {
+      console.warn('WebSocket chưa kết nối, không thể gửi heartbeat');
+    }
+  }
 
   disconnect(): void {
     if (this.client) {
@@ -122,6 +127,7 @@ class WebSocketService {
       this.activeSubscriptions.clear();
       this.subscriptions.clear();
       this.client.deactivate();
+      this.connected = false;
     }
   }
 
@@ -129,5 +135,5 @@ class WebSocketService {
     return this.connected;
   }
 }
-
-export default new WebSocketService();
+const webSocketService = new WebSocketService();
+export default webSocketService;

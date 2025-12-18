@@ -1,9 +1,5 @@
 import React from "react";
 import DropdownSelect from "@/libs/DropdownSelect";
-import KeyboardDoubleArrowRightRoundedIcon from '@mui/icons-material/KeyboardDoubleArrowRightRounded';
-import KeyboardDoubleArrowLeftRoundedIcon from '@mui/icons-material/KeyboardDoubleArrowLeftRounded';
-import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftRounded';
-import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import Empty from "@/libs/Empty";
 import Pagination from "@/libs/Pagination";
 export interface Column<T> {
@@ -60,7 +56,6 @@ export default function Table<T>({
   emptyMessage = "Không có dữ liệu",
 }: TableProps<T>) {
   const renderSortIcon = (column: string) => {
-    console.log("Rendering sort icon for column:", column, "with sortBy:", sortBy, "and sortDir:", sortDir);
     if (sortBy !== column) {
       return <span className="w-4 h-4 inline-block ml-1"></span>;
     }

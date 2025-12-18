@@ -7,7 +7,7 @@ import {useCartData, useCartRef} from "@/components/provider/CartProvider";
 import Image from "next/image";
 import SelectProductVariantModal from "@/components/user/SelectProductVariantModal";
 import useSWRMutation from "swr/mutation";
-import {CART} from "@/services/api";
+import {CART, INTERACTION} from "@/services/api";
 import {useAxiosContext} from '@/components/provider/AxiosProvider';
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useDispatch} from "react-redux";
@@ -27,6 +27,10 @@ export interface ReqAddToCartDTO {
   productVariantId: string;
   quantity: number;
 }
+interface CreateInteractionRequest{
+  productId: string;
+  interactionType: string;
+}
 
 export default function ProductCard({product}: ProductCardProps) {
   const [isOpenProductSelectVariant, setOpenProductSelectVariant] = useState(false);
@@ -42,6 +46,9 @@ export default function ProductCard({product}: ProductCardProps) {
     post<BaseResponse<never>>(url, arg, {}).then(res => res.data);
   const {trigger, isMutating} = useSWRMutation(`${CART}`, fetcher);
 
+  const fetcherClick = (url: string, {arg}: { arg: CreateInteractionRequest }) =>
+    post<BaseResponse<never>>(url, arg, {}).then(res => res.data);
+  const {trigger: triggerClick} = useSWRMutation(INTERACTION, fetcherClick);
   const isDiscountActive = useMemo(() => {
     if (Number(product.discount) <= 0) return false;
     if (!product.discountStartDate || !product.discountEndDate) return false;
@@ -139,7 +146,13 @@ export default function ProductCard({product}: ProductCardProps) {
       <div
         key={product.productId}
         className="bg-white rounded-lg shadow hover:shadow-xl transition group overflow-hidden"
-        onClick={() => router.push(`/products/${product.productId}`)}
+        onClick={() => {
+          triggerClick({
+            productId: product.productId,
+            interactionType: "CLICK"
+          })
+          router.push(`/products/${product.productId}`)
+        }}
       >
         <div className="relative overflow-hidden">
           <Image

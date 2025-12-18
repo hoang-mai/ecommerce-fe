@@ -11,7 +11,7 @@ import {ReactNode, useEffect, useState} from "react";
 import DropdownMenu from "@/libs/DropdownMenu";
 import {useRouter} from "next/navigation";
 import ChangePassword from "@/components/user/layout/header/ChangePassword";
-import {LOGOUT, MESSAGE, USER} from "@/services/api";
+import {LOGOUT, MESSAGE, NOTIFICATION, USER} from "@/services/api";
 import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import useSWRMutation from "swr/mutation";
 import {AlertType} from "@/types/enum";
@@ -25,7 +25,11 @@ import useSWR from "swr";
 import {ProfileData} from "@/components/user/profile/Main";
 import Image from "next/image";
 import ChatPreviewList from "@/components/user/layout/header/ChatPreviewList";
+import NotificationPreviewList from "@/components/user/layout/header/NotificationPreviewList";
 import {RootState} from "@/redux/store";
+import {usePushNotification} from "@/hooks/usePushNotification";
+import {NotificationView} from "@/types/interface";
+import NotificationDetailModal from "@/components/owner/notifications/NotificationDetailModal";
 export default function Information() {
   const chatState = useSelector((state: RootState) => state.chat);
   const { get, post } = useAxiosContext();
@@ -43,9 +47,21 @@ export default function Information() {
     revalidateOnFocus: false,
   })
 
+
+  const fetcherCountNotification = (url: string) => get<BaseResponse<number>>(url).then(res => res.data.data);
+  const {data: countNotification} = useSWR(`${NOTIFICATION}/unread-count`, fetcherCountNotification, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
+  const {
+    isSubscribed,
+    unsubscribe
+  } = usePushNotification();
   const {data} = useCartData();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isOpenDisableAccount, setIsOpenDisableAccount] = useState<boolean>(false);
+  const [isOpenNotification, setIsOpenNotification] = useState<boolean>(false);
+  const [notificationSelected, setNotificationSelected] = useState<NotificationView | null>(null);
   const router = useRouter();
   const {trigger} = useSWRMutation(LOGOUT, fetcher);
   const [isOpenCart, setIsOpenCart] = useState<boolean>(false);
@@ -53,6 +69,7 @@ export default function Information() {
 
 
   const handleLogout = () => {
+
     trigger().then(res => {
       const alert: AlertState = {
         isOpen: true,
@@ -62,6 +79,9 @@ export default function Information() {
       }
       dispatch(openAlert(alert))
     }).finally(() => {
+      if (isSubscribed) {
+        unsubscribe();
+      }
       clearAllLocalStorage();
       window.dispatchEvent(new Event('authChanged'));
       router.replace('/login');
@@ -94,22 +114,20 @@ export default function Information() {
 
       {/* Thông báo */}
       <DropdownMenu
-        label="Thông báo"
         trigger={
           <IconButton
             icon={<NotificationsRoundedIcon/>}
-            badge={2}
+            badge={countNotification}
             label="Thông báo"
           />
         }
         align="right"
-        items={[
-          {
-            id: 1, label: 'Không có thông báo mới', onClick: () => {
-            }
-          },
-        ]}
-      />
+      >
+        <NotificationPreviewList
+          setIsOpenNotification={setIsOpenNotification}
+          setNotificationSelected={setNotificationSelected}
+        />
+      </DropdownMenu>
 
       {/* Giỏ hàng */}
       <div
@@ -209,6 +227,7 @@ export default function Information() {
       {isOpen && <ChangePassword isOpen={isOpen} setIsOpen={setIsOpen}/>}
       {isOpenDisableAccount && <DisableAccount isOpen={isOpenDisableAccount} setIsOpen={setIsOpenDisableAccount}/>}
       {isOpenCart && <Cart isOpen={isOpenCart} setIsOpen={setIsOpenCart}/>}
+      {isOpenNotification && notificationSelected && <NotificationDetailModal isOpen={isOpenNotification} onClose={()=>setIsOpenNotification(false)} notification={notificationSelected}/>}
     </div>
   );
 }
