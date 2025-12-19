@@ -1,7 +1,7 @@
 import React from "react";
 import Modal from "@/libs/Modal";
 import TextField from "@/libs/TextField";
-import {AlertType, OrderStatus} from "@/types/enum";
+import {AlertType} from "@/types/enum";
 import {z} from "zod";
 import {useForm, Controller} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
