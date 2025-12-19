@@ -15,7 +15,7 @@ import OrderItemDetailModal from "@/components/user/orders/OrderItemDetailModal"
 import Chip, {ChipColor} from "@/libs/Chip";
 import {useDebounce} from "@/hooks/useDebounce";
 import {useBuildUrl} from "@/hooks/useBuildUrl";
-import {ORDER_VIEW} from "@/services/api";
+import {ORDER, ORDER_VIEW} from "@/services/api";
 import useSWR from "swr";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -27,6 +27,8 @@ import Pagination from "@/libs/Pagination";
 import Button from "@/libs/Button";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import {useRouter} from "next/navigation";
+import CancelOrderModal from "@/components/user/orders/CancelOrderModal";
+import CancelIcon from "@mui/icons-material/Cancel";
 
 interface ProductAttribute {
   attributeName: string;
@@ -64,128 +66,6 @@ export interface OrderView {
   createdAt: string;
   orderItems: OrderItem[];
 }
-
-// Mock data for testing
-const mockOrders: OrderView[] = [
-  {
-    orderId: "ORDER-001",
-    userId: "USER-001",
-    shopId: "SHOP-001",
-    shopName: "Shop Thời Trang ABC",
-    shopLogoUrl: "/logo.svg",
-    orderStatus: OrderStatus.PENDING,
-    reason: "",
-    totalPrice: 1500000,
-    paymentId: "PAY-001",
-    receiverName: "Nguyễn Văn A",
-    address: "123 Đường ABC, Phường XYZ, Quận 1, TP.HCM",
-    phoneNumber: "0123456789",
-    createdAt: "2024-11-30T10:30:00Z",
-    orderItems: [
-      {
-        orderItemId: "ITEM-001",
-        productId: "PROD-001",
-        productName: "Áo thun nam basic",
-        productImageUrl: "/imageBanner.jpg",
-        productVariantId: "VAR-001",
-        price: 500000,
-        quantity: 2,
-        totalPrice: 1000000,
-        totalDiscount: 0,
-        totalFinalPrice: 1000000,
-        productAttributes: [
-          {attributeName: "Màu sắc", attributeValue: "Đen"},
-          {attributeName: "Kích thước", attributeValue: "L"}
-        ]
-      },
-      {
-        orderItemId: "ITEM-002",
-        productId: "PROD-002",
-        productName: "Quần jean nam",
-        productImageUrl: "/imageBanner.jpg",
-        productVariantId: "VAR-002",
-        price: 500000,
-        quantity: 1,
-        totalPrice: 500000,
-        totalDiscount: 0,
-        totalFinalPrice: 500000,
-        productAttributes: [
-          {attributeName: "Màu sắc", attributeValue: "Xanh đậm"},
-          {attributeName: "Kích thước", attributeValue: "32"}
-        ]
-      }
-    ],
-    ownerId: ""
-  },
-  {
-    orderId: "ORDER-002",
-    userId: "USER-001",
-    shopId: "SHOP-002",
-    shopName: "Shop Điện Tử XYZ",
-    shopLogoUrl: "/logo.svg",
-    orderStatus: OrderStatus.DELIVERED,
-    reason: "",
-    totalPrice: 15000000,
-    paymentId: "PAY-002",
-    receiverName: "Trần Thị B",
-    address: "456 Đường DEF, Phường UVW, Quận 2, TP.HCM",
-    phoneNumber: "0987654321",
-    createdAt: "2024-11-28T14:20:00Z",
-    orderItems: [
-      {
-        orderItemId: "ITEM-003",
-        productId: "PROD-003",
-        productName: "Laptop Dell Inspiron 15",
-        productImageUrl: "/imageBanner.jpg",
-        productVariantId: "VAR-003",
-        price: 15000000,
-        quantity: 1,
-        totalPrice: 15000000,
-        totalDiscount: 0,
-        totalFinalPrice: 15000000,
-        productAttributes: [
-          {attributeName: "RAM", attributeValue: "16GB"},
-          {attributeName: "SSD", attributeValue: "512GB"}
-        ]
-      }
-    ],
-    ownerId: ""
-  },
-  {
-    orderId: "ORDER-003",
-    userId: "USER-001",
-    shopId: "SHOP-001",
-    shopName: "Shop Thời Trang ABC",
-    shopLogoUrl: "/logo.svg",
-    orderStatus: OrderStatus.COMPLETED,
-    reason: "",
-    totalPrice: 750000,
-    paymentId: "PAY-003",
-    receiverName: "Lê Văn C",
-    address: "789 Đường GHI, Phường RST, Quận 3, TP.HCM",
-    phoneNumber: "0369852147",
-    createdAt: "2024-11-25T09:15:00Z",
-    orderItems: [
-      {
-        orderItemId: "ITEM-004",
-        productId: "PROD-004",
-        productName: "Giày thể thao Nike",
-        productImageUrl: "/imageBanner.jpg",
-        productVariantId: "VAR-004",
-        price: 750000,
-        quantity: 1,
-        totalPrice: 750000,
-        totalDiscount: 0,
-        totalFinalPrice: 750000,
-        productAttributes: [
-          {attributeName: "Màu sắc", attributeValue: "Trắng"},
-          {attributeName: "Size", attributeValue: "42"}
-        ]
-      }
-    ],
-    ownerId: ""
-  }
-];
 
 export const getLabelStatusColor = (status: OrderStatus) => {
   switch (status) {
@@ -246,6 +126,8 @@ export const statusOptions: Option[] = [
 export default function Main() {
   const {get} = useAxiosContext();
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
+  const [selectedOrderIdToCancel, setSelectedOrderIdToCancel] = useState<string>("");
   const [pageNo, setPageNo] = useState<number>(0);
   const [status, setStatus] = useState<string>("");
   const [keyword, setKeyword] = useState<string>('');
@@ -265,12 +147,12 @@ export default function Main() {
     }
   })
   const fetcher = (url: string) => get<BaseResponse<PageResponse<OrderView>>>(url).then(res => res.data);
-  const {data, isLoading, error} = useSWR(url, fetcher, {
+  const {data, isLoading, error, mutate} = useSWR(url, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   })
   const pageData = data?.data;
-  const orders = pageData?.data || mockOrders;
+  const orders = pageData?.data || [];
   const totalPages = pageData?.totalPages || 0;
   useEffect(() => {
     if (error) {
@@ -288,6 +170,11 @@ export default function Main() {
     setKeyword("");
     setStatus("");
     setPageNo(0);
+  };
+
+  const handleOpenCancelModal = (orderId: string) => {
+    setSelectedOrderIdToCancel(orderId);
+    setIsCancelModalOpen(true);
   };
 
   return (
@@ -362,6 +249,14 @@ export default function Main() {
                         label={getLabelStatusColor(order.orderStatus)}
                         color={getStatusColor(order.orderStatus)}
                       />
+                      {order.orderStatus === OrderStatus.PAID && (
+                        <Chip
+                          label="Hủy đơn hàng"
+                          onClick={() => handleOpenCancelModal(order.orderId)}
+                          color={ChipColor.CANCELLED}
+                          icon={<CancelIcon/>}
+                        />
+                      )}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-grey-c600">
                       <div className="flex items-center gap-1">
@@ -433,7 +328,7 @@ export default function Main() {
 
                 {/* Order Footer */}
                 <Divide/>
-                <div className=" flex items-center justify-between">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-6 text-sm text-grey-c600">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4"/>
@@ -466,6 +361,14 @@ export default function Main() {
           orderStatus={selectedOrderStatus}
         />
       )}
+      {/* Cancel Order Modal */}
+      {selectedOrderIdToCancel && isCancelModalOpen && (
+      <CancelOrderModal
+        isOpen={isCancelModalOpen}
+        setIsOpen={setIsCancelModalOpen}
+        orderId={selectedOrderIdToCancel}
+        mutate={mutate}
+      /> )}
     </div>
   )
     ;

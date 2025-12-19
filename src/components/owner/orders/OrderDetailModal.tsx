@@ -3,9 +3,10 @@
 import React from 'react';
 import Modal from '@/libs/Modal';
 import Chip from '@/libs/Chip';
-import { formatDateTime, formatPrice } from '@/util/FnCommon';
-import { getLabelStatusColor, getStatusColor, OrderView } from '@/components/user/orders/Main';
+import {formatDateTime, formatPrice} from '@/util/FnCommon';
+import {getLabelStatusColor, getStatusColor, OrderView} from '@/components/user/orders/Main';
 import InfoRow from "@/libs/InfoRow";
+import {OrderStatus} from "@/types/enum";
 
 interface Props {
   isOpen: boolean;
@@ -45,6 +46,8 @@ export default function OrderDetailModal({ isOpen, setIsOpen, order }: Props) {
           <div>
             <InfoRow label={"Ngày tạo"} value={formatDateTime(order.createdAt)} />
           </div>
+          {order.orderStatus ===OrderStatus.CANCELLED &&
+          <InfoRow label={"Lý do hủy"} value={order.reason}/>}
         </div>
         <h3 className="text-lg font-bold text-grey-c800 mb-4 flex items-center gap-2">
           <div className="w-1 h-6 bg-primary-c700 rounded"></div>
