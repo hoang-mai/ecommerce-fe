@@ -12,7 +12,7 @@ import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
 import {formatDateTime} from "@/util/FnCommon";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
 import Image from "next/image";
-import {USER_VERIFICATION} from "@/services/api";
+import {USER_VERIFICATION_APPROVE} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import useSWRMutation from "swr/mutation";
 import {useDispatch} from "react-redux";
@@ -58,7 +58,7 @@ export default function DetailRegisterOwnerModal({
   const approveFetcher = (url: string) => patch<BaseResponse<void>>(url).then(res => res.data);
 
   const {trigger: approveRequest, isMutating: isApproving} = useSWRMutation(
-    `${USER_VERIFICATION}/${data.userVerificationId}/approve`,
+    `${USER_VERIFICATION_APPROVE}/${data.userVerificationId}/approve`,
     approveFetcher
   );
 

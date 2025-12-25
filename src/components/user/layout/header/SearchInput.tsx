@@ -1,6 +1,7 @@
 'use client';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import {useState, MouseEvent, useEffect} from "react";
+import CameraAltRoundedIcon from '@mui/icons-material/CameraAltRounded';
+import {useState, MouseEvent, useEffect, useRef, ChangeEvent} from "react";
 import {useDebounce} from "@/hooks/useDebounce";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import useSWR from "swr";
@@ -12,14 +13,25 @@ import {useDispatch} from "react-redux";
 import {AlertType} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Empty from "@/libs/Empty";
+import useSWRMutation from "swr/mutation";
 
 export default function SearchInput() {
-  const {get} = useAxiosContext();
+  const {get, post} = useAxiosContext();
   const router = useRouter();
   const fetcher = (url: string) => get<BaseResponse<PageResponse<ProductView>>>(url).then(res => res.data);
   const [searchValue, setSearchValue] = useState("");
   const debounce = useDebounce(searchValue);
   const [isFocused, setIsFocused] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fetcherImageSearch = (url: string, {arg}: {arg: FormData}) =>
+    post<BaseResponse<string>>(url, arg, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
+
+  const {trigger, isMutating} = useSWRMutation(`${PRODUCT_VIEW}/search-images`, fetcherImageSearch);
 
   const url = useBuildUrl({
     baseUrl: PRODUCT_VIEW,
@@ -57,6 +69,45 @@ export default function SearchInput() {
     }
   };
 
+  const handleCameraClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      const alert: AlertState = {
+        isOpen: true,
+        message: "Kích thước ảnh không được vượt quá 5MB",
+        type: AlertType.ERROR,
+        title: "Lỗi kích thước file",
+      };
+      dispatch(openAlert(alert));
+      return;
+    }
+
+    setIsFocused(false);
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      trigger(formData).then(response => {
+        if(response.data) router.push(`/search?searchId=${encodeURIComponent(response.data)}`);
+        else router.push(`/search`);
+      }).catch((error: ErrorResponse) => {
+        const alert: AlertState = {
+          isOpen: true,
+          message: error.message || "Tìm kiếm bằng hình ảnh thất bại",
+          type: AlertType.ERROR,
+          title: "Lỗi tìm kiếm",
+        };
+        dispatch(openAlert(alert));
+      });
+
+  };
+
   const shouldShowDropdown = isFocused && debounce.trim() && (
     (data && data.data && data.data.data.length > 0) ||
     (data && data.data && data.data.data.length === 0 && !isLoading) ||
@@ -81,7 +132,7 @@ export default function SearchInput() {
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder="Tìm kiếm sản phẩm, danh mục hay thương hiệu..."
-          className={`relative w-full h-12 pl-6 pr-14 text-base bg-white rounded-full 
+          className={`relative w-full h-12 pl-6 pr-24 text-base bg-white rounded-full 
                    outline-none transition-all duration-200
                    placeholder:text-grey-c400 font-normal
                    ${isFocused
@@ -89,6 +140,35 @@ export default function SearchInput() {
             : 'border-2 border-grey-c200 hover:border-primary-c400'
           }`}
         />
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+        />
+
+        {/* Camera Icon Button */}
+        <button
+          type="button"
+          onClick={handleCameraClick}
+          disabled={isMutating}
+          className={`absolute right-12 w-10 h-10 flex items-center justify-center
+                   rounded-full transition-all duration-200
+                   ${isMutating
+            ? 'bg-grey-c300 cursor-not-allowed'
+            : 'bg-grey-c100 hover:bg-grey-c200 active:scale-90'
+          }
+                   shadow-sm hover:shadow-md`}
+          title="Tìm kiếm bằng hình ảnh"
+        >
+          {isMutating ? (
+            <div className="w-5 h-5 border-2 border-grey-c400 border-t-grey-c700 rounded-full animate-spin"></div>
+          ) : (
+            <CameraAltRoundedIcon className="text-grey-c700 !text-[22px]"/>
+          )}
+        </button>
 
         <button
           type="button"

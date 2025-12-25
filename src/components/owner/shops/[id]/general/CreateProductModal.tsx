@@ -373,7 +373,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
                         value={field.value}
                         onChange={field.onChange}
                         label="Tên thuộc tính"
-                        placeholder="VD: Màu sắc, Kích thước"
+                        placeholder=""
                         error={errors.productAttributes?.[index]?.attributeName?.message}
                         required
                       />
@@ -392,7 +392,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
                           ...prev,
                           [index]: value || ""
                         }))}
-                        placeholder="VD: Đỏ, Xanh, Vàng"
+                        placeholder=""
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();

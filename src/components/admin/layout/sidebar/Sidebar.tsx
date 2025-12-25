@@ -15,6 +15,8 @@ import {LOGOUT} from "@/services/api";
 import {useDispatch} from "react-redux";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {openAlert} from "@/redux/slice/alertSlice";
+import {clearAllCookie} from "@/services/cookie";
+import {clearAllLocalStorage} from "@/services/localStorage";
 
 interface MenuItem {
   name: string;
@@ -45,13 +47,8 @@ export default function Sidebar() {
       }
       dispatch(openAlert(alert))
     }).finally(() => {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('expiresIn');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('refreshExpiresIn');
-      localStorage.removeItem('tokenType');
-      localStorage.removeItem('sessionState');
-      localStorage.removeItem('scope');
+      clearAllCookie();
+      clearAllLocalStorage();
       router.push('/login');
     });
 

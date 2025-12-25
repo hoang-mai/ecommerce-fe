@@ -5,7 +5,8 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ZoomInRoundedIcon from '@mui/icons-material/ZoomInRounded';
 import ZoomOutRoundedIcon from '@mui/icons-material/ZoomOutRounded';
 import RestartAltRoundedIcon from '@mui/icons-material/RestartAltRounded';
-import {useState} from "react";
+import {useState, useEffect, useLayoutEffect} from "react";
+import {createPortal} from "react-dom";
 
 interface ImagePreviewProps {
   imageUrl: string | null;
@@ -15,8 +16,33 @@ interface ImagePreviewProps {
 
 export default function ImagePreview({imageUrl, onClose, alt = "Preview"}: ImagePreviewProps) {
   const [scale, setScale] = useState(1);
+  const [portalElement, setPortalElement] = useState<HTMLElement | null>(null);
 
-  if (!imageUrl) return null;
+  useLayoutEffect(() => {
+    queueMicrotask(() => {
+      setPortalElement(document.body);
+    });
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (imageUrl) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [imageUrl, onClose]);
+
+  if (!imageUrl || !portalElement) return null;
 
   const handleZoomIn = () => {
     setScale(prev => Math.min(prev + 0.25, 3));
@@ -36,7 +62,7 @@ export default function ImagePreview({imageUrl, onClose, alt = "Preview"}: Image
     }
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 bg-black/60 z-image flex items-center justify-center p-4"
       onClick={handleBackdropClick}
@@ -79,23 +105,31 @@ export default function ImagePreview({imageUrl, onClose, alt = "Preview"}: Image
       </div>
 
       {/* Image Container */}
-      <div className="relative max-w-[90vw] max-h-[90vh] overflow-auto">
+      <div
+        className="relative rounded-lg flex items-center justify-center"
+        style={{
+          maxWidth: '90vw',
+          maxHeight: '85vh',
+        }}
+      >
         <div
           style={{
             transform: `scale(${scale})`,
-            transition: 'transform 0.2s ease-out',
+            transformOrigin: 'center center',
+            transition: 'transform 0.3s ease-out',
           }}
-          className="origin-center"
         >
           <Image
             src={imageUrl}
             alt={alt}
             width={1200}
             height={800}
-            className="max-w-full h-auto rounded-lg shadow-2xl"
+            className="rounded-lg shadow-2xl"
             style={{
+              maxWidth: '90vw',
               maxHeight: '85vh',
               width: 'auto',
+              height: 'auto',
               objectFit: 'contain',
             }}
           />
@@ -106,6 +140,7 @@ export default function ImagePreview({imageUrl, onClose, alt = "Preview"}: Image
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-grey-c800 text-white rounded-lg shadow-lg text-sm">
         Click bên ngoài hoặc nhấn ESC để đóng
       </div>
-    </div>
+    </div>,
+    portalElement
   );
 }

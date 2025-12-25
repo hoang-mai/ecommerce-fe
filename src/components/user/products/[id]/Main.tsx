@@ -184,7 +184,7 @@ export default function Main({id}: Props) {
     <div className="max-w-5xl mx-auto p-6">
       {isLoading && <Loading/>}
       <div className="flex flex-col gap-10">
-        <div className={"flex flex-row gap-10 flex-wrap"}>
+        <div className={"flex flex-row gap-10 flex-nowrap"}>
           <div className={"flex-1"}>
             <div className={"aspect-square rounded-lg overflow-hidden mb-3"}>
               {product.productImages.length > 0 ? (

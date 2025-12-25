@@ -49,70 +49,7 @@ const statusOptions: Option[] = [
   {id: 'with_reply', label: 'Đã phản hồi'},
   {id: 'without_reply', label: 'Chưa phản hồi'},
 ]
-const mockReviews: ReviewView[] = [
-  {
-    reviewId: '1',
-    orderItemId: 'ORD-001',
-    productId: 'PROD-001',
-    productName: 'iPhone 15 Pro Max',
-    productVariantId: 'VAR-001',
-    userId: 'USER-001',
-    ownerId: 'OWNER-001',
-    shopId: 'SHOP-001',
-    rating: 5,
-    comment: 'Sản phẩm rất tốt, giao hàng nhanh. Shop phục vụ nhiệt tình!',
-    imageUrls: ['https://picsum.photos/300/300?random=1', 'https://picsum.photos/300/300?random=2'],
-    attributes: {Color: 'Natural Titanium', Storage: '256GB'},
-    createdAt: '2024-12-01T10:30:00Z',
-    updatedAt: '2024-12-01T10:30:00Z',
-    fullName: "Mai Anh Hoàng",
-    isUpdated: true
-  },
-  {
-    reviewId: '2',
-    orderItemId: 'ORD-002',
-    productId: 'PROD-002',
-    productName: 'MacBook Pro M3',
-    productVariantId: 'VAR-002',
-    userId: 'USER-002',
-    ownerId: 'OWNER-001',
-    shopId: 'SHOP-001',
-    rating: 4,
-    comment: 'Máy chạy mượt, thiết kế đẹp. Tuy nhiên giá hơi cao.',
-    imageUrls: ['https://picsum.photos/300/300?random=3'],
-    attributes: {Chip: 'M3 Pro', RAM: '18GB'},
-    reviewReplyView: {
-      replyId: 'REP-001',
-      replierId: 'OWNER-001',
-      content: 'Cảm ơn bạn đã tin tưởng shop. Chúng tôi luôn cố gắng mang đến giá tốt nhất!',
-      createdAt: '2024-12-01T15:00:00Z',
-      updatedAt: '2024-12-01T15:00:00Z',
-    },
-    createdAt: '2024-12-01T14:20:00Z',
-    updatedAt: '2024-12-01T14:20:00Z',
-    fullName: "",
-    isUpdated: false
-  },
-  {
-    reviewId: '3',
-    orderItemId: 'ORD-003',
-    productId: 'PROD-003',
-    productName: 'AirPods Pro 2',
-    productVariantId: 'VAR-003',
-    userId: 'USER-003',
-    ownerId: 'OWNER-001',
-    shopId: 'SHOP-001',
-    rating: 3,
-    comment: 'Chất lượng âm thanh ok nhưng pin không được lâu như mô tả.',
-    attributes: {Type: 'USB-C'},
-    createdAt: '2024-11-30T09:15:00Z',
-    updatedAt: '2024-11-30T09:15:00Z',
-    fullName: "",
-    isUpdated: false
-  },
-];
 
-// New: memoized ReviewCard placed outside Main to avoid remounts when Main state changes
 type ReviewCardProps = {
   review: ReviewView;
   isReplying: boolean;
@@ -314,7 +251,7 @@ export default function Reviews({id}: Props) {
     revalidate: false
   });
   const pageData = data?.data;
-  const reviews = pageData?.data || mockReviews;
+  const reviews = pageData?.data || [];
   const totalPages = pageData?.totalPages || 0;
   useEffect(() => {
     if (error) {

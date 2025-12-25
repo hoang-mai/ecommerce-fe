@@ -89,37 +89,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Navigation Bar */}
-      <div className="border-t border-grey-c200 bg-grey-c50">
-        <div className="container mx-auto px-4">
-          <nav className="flex items-center gap-8 h-12 overflow-x-auto scrollbar-hide">
-            <Link href="/categories/electronics"
-                  className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
-              Điện tử
-            </Link>
-            <Link href="/categories/fashion"
-                  className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
-              Thời trang
-            </Link>
-            <Link href="/categories/beauty"
-                  className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
-              Làm đẹp
-            </Link>
-            <Link href="/categories/home"
-                  className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
-              Nhà cửa
-            </Link>
-            <Link href="/categories/sports"
-                  className="text-grey-c700 hover:text-primary-c700 whitespace-nowrap font-medium transition-colors">
-              Thể thao
-            </Link>
-            <Link href="/deals"
-                  className="text-support-c900 hover:text-support-c800 whitespace-nowrap font-semibold transition-colors">
-              🔥 Khuyến mãi hot
-            </Link>
-          </nav>
-        </div>
-      </div>
     </header>
   );
 }

@@ -59,7 +59,7 @@ export default function Carousel(
           <div key={image.imageId} className="relative w-full h-full flex-shrink-0"
                onClick={() => setSelectedImage(image.imageUrl)}
           >
-            <Image src={image.imageUrl} alt={title} fill className="object-cover" priority={index === 0} />
+            <Image src={image.imageUrl} alt={title} fill className="object-contain" priority={index === 0} />
 
           </div>
         ))}
@@ -106,12 +106,18 @@ export default function Carousel(
           {images.map((image, index) => (
             <div
               key={image.imageId}
-              className={`w-16 h-16 rounded-lg border-2 cursor-pointer flex-shrink-0 overflow-hidden transition-all duration-200 ${
+              className={`w-16 h-16 rounded-lg border-2 cursor-pointer flex-shrink-0 overflow-hidden transition-all duration-200 flex items-center justify-center ${
                 index === currentIndex ? "border-primary-c700" : "border-transparent hover:border-primary-c300"
               }`}
               onClick={() => goToSlide(index)}
             >
-              <Image src={image.imageUrl} alt={`${title} thumbnail ${index + 1}`} width={64} height={64} className="object-cover w-full h-full"/>
+              <Image
+                src={image.imageUrl}
+                alt={`${title} thumbnail ${index + 1}`}
+                width={64}
+                height={64}
+                className="object-contain w-full h-full"
+              />
             </div>
           ))}
         </div>

@@ -1,6 +1,8 @@
 import Modal from "@/libs/Modal";
 import InputImage from "@/libs/InputImage";
 import TextField from "@/libs/TextField";
+import DropdownSelect from "@/libs/DropdownSelect";
+import banks from "@/util/bank.json";
 import {z} from "zod";
 import {Controller, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
@@ -11,6 +13,21 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType} from "@/types/enum";
 import Loading from "@/components/modals/Loading";
+
+interface Bank {
+  id: number;
+  name: string;
+  code: string;
+  bin: string;
+  shortName: string;
+  logo: string;
+  transferSupported: number;
+  lookupSupported: number;
+  short_name: string;
+  support: number;
+  isTransfer: number;
+  swift_code: string;
+}
 
 const registerOwnerSchema = z.object({
   verificationCode: z.string().min(1, "Số căn cước công dân là bắt buộc"),
@@ -114,7 +131,7 @@ export default function RegisterOwnerModal({isOpen, setIsOpen,reload}: Props) {
       title={"Đăng ký làm người bán"}
       showSaveButton={true}
       onSave={handleSubmit(onSubmit)}
-      maxWidth="3xl"
+      maxWidth="4xl"
       isLoading={isMutating}
     >
       {isMutating && <Loading/>}
@@ -155,16 +172,26 @@ export default function RegisterOwnerModal({isOpen, setIsOpen,reload}: Props) {
           <Controller
             control={control}
             name="bankName"
-            render={({field}) => (
-              <TextField
-                label="Tên ngân hàng"
-                placeholder="Nhập tên ngân hàng"
-                value={field.value}
-                onChange={field.onChange}
-                required
-                error={errors.bankName?.message}
-              />
-            )}
+            render={({field}) => {
+              const options: Option[] = (banks as Bank[]).map((b) => ({
+                id: String(b.name),
+                label: `${b.shortName} - ${b.name}`,
+              }));
+
+              return (
+                <DropdownSelect
+                  label="Tên ngân hàng"
+                  placeholder="Chọn ngân hàng"
+                  options={options}
+                  enableSearch
+                  searchPlaceholder="Tìm ngân hàng..."
+                  value={field.value}
+                  onChange={field.onChange}
+                  required
+                  error={errors.bankName?.message}
+                />
+              );
+            }}
           />
         </div>
         {/* Ảnh đại diện */}

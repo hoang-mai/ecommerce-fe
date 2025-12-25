@@ -582,7 +582,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                           value={field.value}
                           onChange={field.onChange}
                           label="Tên thuộc tính"
-                          placeholder="VD: Màu sắc, Kích thước"
+                          placeholder=""
                           error={errors.productAttributes?.[index]?.productAttributeName?.message}
                           disabled={isExistingAttribute}
                           required
@@ -601,7 +601,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                             ...prev,
                             [index]: value || ""
                           }))}
-                          placeholder="VD: Đỏ, Xanh, Vàng"
+                          placeholder=""
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();

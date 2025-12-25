@@ -11,7 +11,7 @@ import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
 import Title from "@/libs/Title";
 import {formatDateTime} from "@/util/FnCommon";
 import useSWR from "swr";
-import {USER_VERIFICATION} from "@/services/api";
+import {USER_VERIFICATION,USER_VERIFICATION_APPROVE} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
 import {useDebounce} from "@/hooks/useDebounce";
@@ -86,7 +86,7 @@ export default function Main() {
 
 
   const {trigger: approveRequest, isMutating: isApproving} = useSWRMutation(
-    approvingId ? `${USER_VERIFICATION}/${approvingId}/approve` : null,
+    approvingId ? `${USER_VERIFICATION_APPROVE}/${approvingId}/approve` : null,
     approveFetcher
   );
 

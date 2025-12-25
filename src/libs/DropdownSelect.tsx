@@ -173,7 +173,7 @@ export default function DropdownSelect(
       {typeof window !== 'undefined' && isOpen && isPositioned && !disabled && createPortal(
         <div
           ref={menuRef}
-          className={`fixed bg-white border-2 border-primary-c500 rounded-2xl shadow-lg z-dropdown w-fit ${
+          className={`fixed bg-white border-2 border-primary-c500 rounded-2xl shadow-lg z-dropdown w-fit max-w-xs ${
             align === "top" ? "origin-bottom" : "origin-top"
           }`}
           style={{

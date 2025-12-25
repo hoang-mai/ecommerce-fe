@@ -21,6 +21,7 @@ import {AlertType, Role} from "@/types/enum";
 import {ColorButton} from "@/types/enum";
 import {getRoleFromJwtToken} from "@/util/FnCommon";
 import {usePushNotification} from "@/hooks/usePushNotification";
+import Loading from "@/components/modals/Loading";
 
 const loginSchema = z.object({
   username: z.string()
@@ -121,6 +122,7 @@ export function Main() {
   return (
     <div
       className="min-h-screen flex items-center justify-center bg-[url('/imageBanner.jpg')] bg-no-repeat bg-cover">
+      {isMutating && <Loading/>}
       <div className="w-full max-w-lg">
         {/* Card Container */}
         <div className="bg-white rounded-xl shadow-xl p-8">

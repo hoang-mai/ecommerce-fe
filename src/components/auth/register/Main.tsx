@@ -23,6 +23,7 @@ import {useAddressMapping} from "@/hooks/useAddressMapping";
 import TextSearch from "@/libs/TextSearch";
 import {useBuildUrl} from "@/hooks/useBuildUrl";
 import useSWR from "swr";
+import Loading from "@/components/modals/Loading";
 
 
 const registerSchema = z.object({
@@ -123,6 +124,7 @@ export default function Main() {
   return (
     <div
       className="min-h-screen flex items-center justify-center bg-[url('/imageBanner.jpg')] bg-no-repeat bg-cover py-8">
+      {isMutating && <Loading/>}
       <div className="w-full max-w-4xl">
         {/* Card Container */}
         <div className="bg-white rounded-xl shadow-xl p-8">

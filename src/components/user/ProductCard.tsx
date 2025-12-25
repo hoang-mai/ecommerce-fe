@@ -7,7 +7,7 @@ import {useCartData, useCartRef} from "@/components/provider/CartProvider";
 import Image from "next/image";
 import SelectProductVariantModal from "@/components/user/SelectProductVariantModal";
 import useSWRMutation from "swr/mutation";
-import {CART, INTERACTION} from "@/services/api";
+import {CART, USER_CATEGORY} from "@/services/api";
 import {useAxiosContext} from '@/components/provider/AxiosProvider';
 import {openAlert} from "@/redux/slice/alertSlice";
 import {useDispatch} from "react-redux";
@@ -27,9 +27,10 @@ export interface ReqAddToCartDTO {
   productVariantId: string;
   quantity: number;
 }
-interface CreateInteractionRequest{
-  productId: string;
-  interactionType: string;
+
+interface UserCategoryDTO {
+  categoryId: string;
+  userCategoryType: string;
 }
 
 export default function ProductCard({product}: ProductCardProps) {
@@ -46,9 +47,9 @@ export default function ProductCard({product}: ProductCardProps) {
     post<BaseResponse<never>>(url, arg, {}).then(res => res.data);
   const {trigger, isMutating} = useSWRMutation(`${CART}`, fetcher);
 
-  const fetcherClick = (url: string, {arg}: { arg: CreateInteractionRequest }) =>
+  const fetcherClick = (url: string, {arg}: { arg: UserCategoryDTO }) =>
     post<BaseResponse<never>>(url, arg, {}).then(res => res.data);
-  const {trigger: triggerClick} = useSWRMutation(INTERACTION, fetcherClick);
+  const {trigger: triggerClick} = useSWRMutation(USER_CATEGORY, fetcherClick);
   const isDiscountActive = useMemo(() => {
     if (Number(product.discount) <= 0) return false;
     if (!product.discountStartDate || !product.discountEndDate) return false;
@@ -148,22 +149,20 @@ export default function ProductCard({product}: ProductCardProps) {
         className="bg-white rounded-lg shadow hover:shadow-xl transition group overflow-hidden"
         onClick={() => {
           triggerClick({
-            productId: product.productId,
-            interactionType: "CLICK"
+            categoryId: product.categoryId,
+            userCategoryType: "CLICK"
           })
           router.push(`/products/${product.productId}`)
         }}
       >
-        <div className="relative overflow-hidden">
-          <Image
-            ref={imageRef}
-            src={product.productImages[0]?.imageUrl || "/placeholder.png"}
-            alt={product.name}
-            width={400}
-            height={400}
-            loading="eager"
-            className="w-full h-48 object-cover group-hover:scale-110 transition duration-300"
-          />
+        <div className="relative h-64">
+            <Image
+              ref={imageRef}
+              src={product.productImages[0]?.imageUrl || "/placeholder.png"}
+              alt={product.name}
+              fill
+              className="object-contain group-hover:scale-110 transition duration-300"
+            />
           {isDiscountActive && (
             <div
               className="absolute top-3 left-3 bg-gradient-to-r from-support-c900 to-support-c800 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
