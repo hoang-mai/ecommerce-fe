@@ -107,10 +107,6 @@ export default function ImagePreview({imageUrl, onClose, alt = "Preview"}: Image
       {/* Image Container */}
       <div
         className="relative rounded-lg flex items-center justify-center"
-        style={{
-          maxWidth: '90vw',
-          maxHeight: '85vh',
-        }}
       >
         <div
           style={{

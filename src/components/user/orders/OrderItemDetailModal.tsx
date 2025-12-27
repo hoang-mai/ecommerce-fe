@@ -99,7 +99,7 @@ export default function OrderItemDetailModal({
     handleSubmit,
     formState: {errors, isDirty},
     reset,
-    setValue
+    setValue,
   } = useForm<ReviewForm>({
     resolver: zodResolver(ReviewSchema),
     defaultValues: {
@@ -193,7 +193,9 @@ const handleOnRemove= (indexOrId: number | string)=>{
   };
 
 
-  return <Modal
+  return <>
+    {isCreating || isUpdating && <Loading/>}
+    <Modal
     isOpen={isOpen}
     onClose={() => {
       setIsOpen(false);
@@ -462,4 +464,5 @@ const handleOnRemove= (indexOrId: number | string)=>{
       )}
     </div>
   </Modal>
+    </>;
 }

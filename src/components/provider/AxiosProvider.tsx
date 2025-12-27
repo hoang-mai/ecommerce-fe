@@ -64,6 +64,10 @@ export const AxiosProvider: FC<{ children: ReactNode }> = ({children}) => {
       }
 
       const token = localStorage.getItem('accessToken');
+
+      if(isRouterNotAuth && config.isToken && !token){
+        return config;
+      }
       if (token && !isTokenExpired(token)) {
         config.headers.Authorization = `Bearer ${token}`;
       } else {

@@ -208,7 +208,8 @@ export default function SearchInput() {
                     >
                       <button
                         type="button"
-                        onClick={() => {
+                        onMouseDown={(e: MouseEvent<HTMLButtonElement>) => {
+                          e.preventDefault();
                           router.push(`/products/${product.productId}`);
                           setIsFocused(false);
                           setSearchValue("");
@@ -216,8 +217,6 @@ export default function SearchInput() {
                         className="w-full px-5 py-3.5 flex items-start gap-3 text-left cursor-pointer"
                       >
                         {product.name}
-
-
                       </button>
                     </li>
                   ))}
