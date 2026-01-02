@@ -11,7 +11,7 @@ import DropdownSelect from '@/libs/DropdownSelect';
 import TextField from '@/libs/TextField';
 import Table, {Column} from '@/libs/Table';
 import Title from '@/libs/Title';
-import {formatDateTime, formatPrice} from '@/util/FnCommon';
+import {formatDateTime, formatPrice} from '@/util/fnCommon';
 import {AlertType, OrderStatus} from '@/types/enum';
 import {getLabelStatusColor, getStatusColor, OrderView, statusOptions} from "@/components/user/orders/Main";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -218,7 +218,7 @@ export default function Orders({id}: Props) {
 
   return (
     <div>
-      {isLoading && isMutating && <Loading/>}
+      {(isLoading && isMutating )&& <Loading/>}
       <Title title="Quản lý đơn hàng" isDivide/>
 
       {/* Filters */}

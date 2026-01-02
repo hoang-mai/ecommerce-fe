@@ -1,6 +1,6 @@
 import type {NextRequest} from 'next/server'
 import {NextResponse} from 'next/server'
-import {getRoleFromJwtToken} from "@/util/FnCommon";
+import {getRoleFromJwtToken} from "@/util/fnCommon";
 import {Role} from "@/types/enum";
 
 export function proxy(request: NextRequest) {

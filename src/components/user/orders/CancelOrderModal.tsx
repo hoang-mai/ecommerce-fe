@@ -10,31 +10,39 @@ import {PAYMENT} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
+import Loading from "@/components/modals/Loading";
+
+type ActionType = "CANCELLED" | "RETURNED";
 
 interface CancelOrderModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   orderId: string;
   mutate: () => void;
+  actionType?: ActionType;
 }
 
-const CancelOrderSchema = z.object({
-  reason: z.string().min(10, "Lý do hủy phải có ít nhất 10 ký tự").max(500, "Lý do hủy tối đa 500 ký tự"),
+const createSchema = (actionType: ActionType) => z.object({
+  reason: z.string()
+    .min(10, actionType === "CANCELLED" ? "Lý do hủy phải có ít nhất 10 ký tự" : "Lý do trả hàng phải có ít nhất 10 ký tự")
+    .max(500, actionType === "CANCELLED" ? "Lý do hủy tối đa 500 ký tự" : "Lý do trả hàng tối đa 500 ký tự"),
 });
 
-type CancelOrderFormData = z.infer<typeof CancelOrderSchema>;
+type CancelOrderFormData = z.infer<ReturnType<typeof createSchema>>;
 
 const CancelOrderModal: React.FC<CancelOrderModalProps> = ({
   isOpen,
   setIsOpen,
   orderId,
-  mutate
+  mutate,
+  actionType = "CANCELLED"
 }) => {
+  const isReturn = actionType === "RETURNED";
   const {patch} = useAxiosContext();
-  const fetcherCancelOrder = (url: string, {arg}: { arg: { orderId: string, reason: string } }) =>
-    patch<BaseResponse<unknown>>(`${url}/${arg.orderId}`, arg.reason).then(res => res.data);
+  const fetcherCancelOrder = (url: string, {arg}: { arg: { orderId: string, reason: string, paymentStatus: string } }) =>
+    patch<BaseResponse<unknown>>(`${url}/${arg.orderId}`, {reason :arg.reason,paymentStatus: arg.paymentStatus}).then(res => res.data);
 
-  const {trigger: triggerCancelOrder, isMutating} = useSWRMutation(`${PAYMENT}/refund`, fetcherCancelOrder, {
+  const {trigger: triggerCancelOrder, isMutating} = useSWRMutation(PAYMENT, fetcherCancelOrder, {
     revalidate: false
   });
   const dispatch = useDispatch();
@@ -43,7 +51,7 @@ const CancelOrderModal: React.FC<CancelOrderModalProps> = ({
     handleSubmit,
     formState: {errors,isDirty},
   } = useForm<CancelOrderFormData>({
-    resolver: zodResolver(CancelOrderSchema),
+    resolver: zodResolver(createSchema(actionType)),
     defaultValues: {
       reason: "",
     },
@@ -52,11 +60,10 @@ const CancelOrderModal: React.FC<CancelOrderModalProps> = ({
 
   const onSubmit = (data: CancelOrderFormData) => {
 
-    triggerCancelOrder({orderId, reason: data.reason}).then(() => {
-
+    triggerCancelOrder({orderId, reason: data.reason, paymentStatus:"CANCELLED"=== actionType ? "CANCELLED" : "REFUNDED"}).then(() => {
       const alert: AlertState = {
         isOpen: true,
-        message: "Hủy đơn hàng thành công",
+        message: isReturn ? "Yêu cầu trả hàng đã được gửi" : "Hủy đơn hàng thành công",
         type: AlertType.SUCCESS,
         title: "Thành công",
       };
@@ -68,7 +75,7 @@ const CancelOrderModal: React.FC<CancelOrderModalProps> = ({
         isOpen: true,
         message: error.message || "Đã có lỗi xảy ra, vui lòng thử lại sau",
         type: AlertType.ERROR,
-        title: "Hủy đơn hàng thất bại",
+        title: isReturn ? "Yêu cầu trả hàng thất bại" : "Hủy đơn hàng thất bại",
       };
       dispatch(openAlert(alert));
     });
@@ -78,12 +85,13 @@ const CancelOrderModal: React.FC<CancelOrderModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={() => setIsOpen(false)}
-      title="Bạn có chắc chắn muốn hủy đơn hàng này?"
+      title={isReturn ? "Bạn có chắc chắn muốn trả hàng đơn này?" : "Bạn có chắc chắn muốn hủy đơn hàng này?"}
       onSave={handleSubmit(onSubmit)}
       isLoading={isMutating}
-      saveButtonText="Xác nhận hủy"
+      saveButtonText={isReturn ? "Xác nhận trả hàng" : "Xác nhận hủy"}
       disableSave={!isDirty}
     >
+      {isMutating && <Loading/>}
           <div className="mb-2">
             <Controller
               name="reason"
@@ -91,9 +99,9 @@ const CancelOrderModal: React.FC<CancelOrderModalProps> = ({
               render={({field}) => (
                 <TextField
                   {...field}
-                  label="Lý do hủy đơn hàng"
+                  label={isReturn ? "Lý do trả hàng" : "Lý do hủy đơn hàng"}
                   required={true}
-                  placeholder="Vui lòng nhập lý do hủy đơn hàng (ít nhất 10 ký tự)..."
+                  placeholder={isReturn ? "Vui lòng nhập lý do trả hàng (ít nhất 10 ký tự)..." : "Vui lòng nhập lý do hủy đơn hàng (ít nhất 10 ký tự)..."}
                   typeTextField="textarea"
                   rows={4}
                   error={errors.reason?.message}
@@ -105,7 +113,10 @@ const CancelOrderModal: React.FC<CancelOrderModalProps> = ({
           </div>
       <div className="">
         <p className="text-sm text-support-c900 bg-support-c200 p-3 rounded-lg border border-support-c300">
-          Lưu ý: Sau khi hủy đơn hàng, bạn sẽ không thể khôi phục lại.
+          {isReturn
+            ? "Lưu ý: Sau khi gửi yêu cầu trả hàng, shop sẽ xem xét và phản hồi trong thời gian sớm nhất."
+            : "Lưu ý: Sau khi hủy đơn hàng, bạn sẽ không thể khôi phục lại."
+          }
         </p>
       </div>
     </Modal>

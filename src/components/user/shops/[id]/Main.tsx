@@ -9,7 +9,7 @@ import {ProductView, ShopView} from "@/types/interface";
 import {AlertType, ColorButton, ShopStatus} from "@/types/enum";
 import ProductCard from "@/components/user/ProductCard";
 import Title from "@/libs/Title"
-import {formatDate, formatNumber} from "@/util/FnCommon";
+import {formatDate, formatNumber} from "@/util/fnCommon";
 import Image from "next/image";
 import Button from "@/libs/Button";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
@@ -125,7 +125,7 @@ export default function Main({id}: Props) {
   };
   return (
     <div className="">
-      {isLoading && isLoadingShop && <Loading/>}
+      {(isLoading || isLoadingShop) && <Loading/>}
       {/* Shop Info Card */}
       <div className="bg-white shadow-sm">
         {/* Banner */}

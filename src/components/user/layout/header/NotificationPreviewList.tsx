@@ -7,7 +7,7 @@ import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
 import PaymentRoundedIcon from '@mui/icons-material/PaymentRounded';
-import {getTimeAgo} from "@/util/FnCommon";
+import {getTimeAgo} from "@/util/fnCommon";
 import TextField from "@/libs/TextField";
 import useSWR, {mutate} from "swr";
 import {NOTIFICATION} from "@/services/api";

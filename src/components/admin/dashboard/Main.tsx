@@ -1,397 +1,428 @@
-"use client";
-import React, {useEffect, useState, useCallback} from "react";
-import DropdownSelect from "@/libs/DropdownSelect";
-import TextField from "@/libs/TextField";
-import Table, {Column} from "@/libs/Table";
-import {AccountStatus, AlertType, Role} from "@/types/enum";
-import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
-import Title from "@/libs/Title";
-import {formatDateTime} from "@/util/FnCommon";
-import useSWR from "swr";
-import {USER_VIEW} from "@/services/api";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
-import {useDebounce} from "@/hooks/useDebounce";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
-import Loading from "@/components/modals/Loading";
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
-import ChangeCircleRoundedIcon from "@mui/icons-material/ChangeCircleRounded";
-import Image from "next/image";
-import ChangeAccountStatusModal from "@/components/admin/users/ChangeAccountStatusModal";
-import DetailUserModal from "@/components/admin/users/DetailUserModal";
-import { useBuildUrl } from "@/hooks/useBuildUrl";
+'use client';
 
-interface UserViewDto {
-  userId: number;
-  username: string;
-  email: string | null;
-  accountStatus: AccountStatus;
-  fullName: string;
-  phoneNumber: string | null;
-  role: Role;
-  avatarUrl: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import {useState} from 'react';
+import {ResponsiveLine} from '@nivo/line';
+import {ResponsiveBar} from '@nivo/bar';
+import useSWR from 'swr';
+import {useAxiosContext} from '@/components/provider/AxiosProvider';
+import {ORDER_VIEW, PRODUCT_VIEW, SHOP_VIEW, USER_VIEW} from '@/services/api';
+import Loading from '@/components/modals/Loading';
+import {subMonths} from 'date-fns';
+import Title from '@/libs/Title';
+import {formatNumber, formatPrice} from "@/util/fnCommon";
+import MonthRangePicker from "@/libs/MonthRangePicker";
+import {
+  DateRange,
+  OrderViewStatisticRevenueDTO,
+  ProductViewStatisticDTO,
+  ShopViewStatisticDTO,
+  NewShopViewStatisticDTO,
+  NewUserViewStatisticDTO
+} from "@/types/interface";
+import {useBuildUrl} from "@/hooks/useBuildUrl";
+import Empty from "@/libs/Empty";
 
 export default function Main() {
-  const { get } = useAxiosContext();
-  const fetcher = (url: string) => get<BaseResponse<PageResponse<UserViewDto>>>(url).then(res => res.data);
-  const [status, setStatus] = useState<string>("");
-  const [keyword, setKeyword] = useState("");
-  const [pageNo, setPageNo] = useState(0);
-  const [pageSize, setPageSize] = useState("10");
-  const [sortBy, setSortBy] = useState("createdAt");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isChangeStatusModalOpen, setIsChangeStatusModalOpen] = useState(false);
-  const [selectedData, setSelectedData] = useState<UserViewDto | null>(null);
-  const debouncedKeyword = useDebounce(keyword, 500);
-  const url = useBuildUrl({
-    baseUrl: USER_VIEW,
-    queryParams: {
-      pageNo,
-      pageSize,
-      sortBy: sortBy || undefined,
-      sortDir: sortDir || undefined,
-      keyword: debouncedKeyword || undefined,
-      accountStatus: status || undefined,
-    }
+  const {get} = useAxiosContext();
+
+  const [selectRangeDate, setSelectRangeDate] = useState<DateRange | null>({
+    start: subMonths(new Date(), 12),
+    end: new Date(),
   });
 
-  const {data, error, isLoading, mutate} = useSWR(url, fetcher, {
+
+  const [selectUserViewDate, setSelectUserViewDate] = useState<DateRange | null>({
+    start: subMonths(new Date(), 12),
+    end: new Date(),
+  });
+
+  const urlUserView = useBuildUrl({
+    baseUrl: `${USER_VIEW}/statistic/date-range`,
+    queryParams: {
+      fromDate: selectUserViewDate ? selectUserViewDate.start?.toISOString() : undefined,
+      toDate: selectUserViewDate ? selectUserViewDate.end?.toISOString() : undefined,
+    }
+  })
+  const fetcherUserView = (url: string) => get<BaseResponse<NewUserViewStatisticDTO[]>>(url).then((res) => res.data);
+  const {data: userViews, isLoading: isLoadingUserView} = useSWR(urlUserView, fetcherUserView, {
     refreshInterval: 0,
     revalidateOnFocus: false,
-  });
+  })
 
-  const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (error) {
-      const alert: AlertState = {
-        isOpen: true,
-        message: error.message || "Đã có lỗi xảy ra",
-        type: AlertType.ERROR,
-        title: "Lỗi tải dữ liệu",
-      }
-      dispatch(openAlert(alert));
+  const urlNewShop = useBuildUrl({
+    baseUrl: `${SHOP_VIEW}/statistic/date-range`,
+    queryParams: {
+      fromDate: selectRangeDate ? selectRangeDate.start?.toISOString() : undefined,
+      toDate: selectRangeDate ? selectRangeDate.end?.toISOString() : undefined,
     }
-  }, [dispatch, error]);
+  })
+  const fetcherNewShop = (url: string) => get<BaseResponse<NewShopViewStatisticDTO[]>>(url).then((res) => res.data);
+  const {data: newShopData, isLoading: isLoadingNewShop} = useSWR(urlNewShop, fetcherNewShop, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
 
-
-  const getStatusColor = (status: AccountStatus) => {
-    switch (status) {
-      case AccountStatus.INACTIVE:
-        return ChipColor.WARNING;
-      case AccountStatus.ACTIVE:
-        return ChipColor.SUCCESS;
-      case AccountStatus.SUSPENDED:
-        return ChipColor.ERROR;
-      default:
-        return ChipColor.INFO;
+  const urlTopRevenueShop = useBuildUrl({
+    baseUrl: `${SHOP_VIEW}/statistic/top-revenue`,
+    queryParams: {
+      type: "revenue"
     }
-  };
+  })
+  const fetcherTopRevenueShop = (url: string) => get<BaseResponse<ShopViewStatisticDTO[]>>(url, {isToken: true}).then((res) => res.data);
+  const {
+    data: topRevenueShops,
+    isLoading: isLoadingTopRevenueShops
+  } = useSWR(urlTopRevenueShop, fetcherTopRevenueShop, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
 
-  const getLabelStatusColor = (status: AccountStatus) => {
-    switch (status) {
-      case AccountStatus.INACTIVE:
-        return "Vô hiệu hóa";
-      case AccountStatus.ACTIVE:
-        return "Hoạt động";
-      case AccountStatus.SUSPENDED:
-        return "Đình chỉ";
-      default:
-        return "Chưa xác định";
+  const urlTopSellingShop = useBuildUrl({
+    baseUrl: `${SHOP_VIEW}/statistic/top-revenue`,
+    queryParams: {
+      type: "sold"
     }
-  }
+  })
+  const fetcherTopSellingShop = (url: string) => get<BaseResponse<ShopViewStatisticDTO[]>>(url, {isToken: true}).then((res) => res.data);
+  const {
+    data: topSellingShops,
+    isLoading: isLoadingTopSellingShops
+  } = useSWR(urlTopSellingShop, fetcherTopSellingShop, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
 
-  const statusOptions = [
-    {id: AccountStatus.ACTIVE, label: "Hoạt động"},
-    {id: AccountStatus.INACTIVE, label: "Vô hiệu hóa"},
-    {id: AccountStatus.SUSPENDED, label: "Đình chỉ"},
-  ];
-
-  const getLabelRole = (role: Role) => {
-    switch (role) {
-      case Role.ADMIN:
-        return "Quản trị viên";
-      case Role.OWNER:
-        return "Chủ cửa hàng";
-      case Role.USER:
-        return "Người dùng";
-      case Role.EMPLOYEE:
-        return "Nhân viên";
-      default:
-        return "Chưa xác định";
+  const urlTopRevenueProduct = useBuildUrl({
+    baseUrl: `${PRODUCT_VIEW}/statistic`,
+    queryParams: {
+      type: "revenue"
     }
-  }
+  })
+  const fetcherTopRevenueProduct = (url: string) => get<BaseResponse<ProductViewStatisticDTO[]>>(url, {isToken: true}).then((res) => res.data);
+  const {
+    data: topRevenueProducts,
+    isLoading: isLoadingTopRevenueProducts
+  } = useSWR(urlTopRevenueProduct, fetcherTopRevenueProduct, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
 
-  const highlightText = useCallback((text: string, keyword: string) => {
-    if (!keyword || !text) return text;
-
-    const parts = text.split(new RegExp(`(${keyword})`, 'gi'));
-    return (
-      <span>
-        {parts.map((part, i) =>
-          part.toLowerCase() === keyword.toLowerCase() ? (
-            <mark key={`highlight-${i}`} className="bg-yellow-c200 text-grey-c900 rounded px-1">{part}</mark>
-          ) : (
-            <span key={`text-${i}`}>{part}</span>
-          )
-        )}
-      </span>
-    );
-  }, []);
-
-  const handleClearSearch = () => {
-    setKeyword("");
-    setStatus("");
-    setPageNo(0);
-  };
-
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setSortDir(sortDir === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(column);
-      setSortDir("desc");
+  const urlTopProductSold = useBuildUrl({
+    baseUrl: `${PRODUCT_VIEW}/statistic`,
+    queryParams: {
+      type: "sold"
     }
-    setPageNo(0);
-  };
+  })
+  const fetcherTopProduct = (url: string) => get<BaseResponse<ProductViewStatisticDTO[]>>(url, {isToken: true}).then((res) => res.data);
+  const {
+    data: topSellingProducts,
+    isLoading: isLoadingTopSellingProducts
+  } = useSWR(urlTopProductSold, fetcherTopProduct, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
 
-  const handlePageChange = (page: number) => {
-    setPageNo(page);
-  };
 
-  const handlePageSizeChange = (size: string) => {
-    setPageSize(size);
-    setPageNo(0);
-  };
-
-  const columns: Column<UserViewDto>[] = [
-    {
-      key: "userId",
-      label: "ID",
-      sortable: true,
-      render: (row) => (
-        <span className="text-sm text-grey-c700 font-semibold">
-          {row.userId}
-        </span>
-      ),
-    },
-    {
-      key: "username",
-      label: "Người dùng",
-      sortable: true,
-      render: (row) => (
-        <div className="flex items-center gap-3">
-          <div>
-            <div className="text-sm font-semibold text-grey-c900">
-              {highlightText(row.username, keyword)}
-            </div>
-            <div className="text-xs text-grey-c600">
-              {row.email && highlightText(row.email, keyword)}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "fullName",
-      label: "Họ và tên",
-      sortable: true,
-      render: (row) => (
-        <div className={"flex items-center flex-row gap-2"}>
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-c200 bg-white flex-shrink-0">
-            <Image
-              src={row.avatarUrl || "/avatar_hoat_hinh_db4e0e9cf4.webp"}
-              alt={"avatar"}
-              width={48}
-              height={48}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="text-sm font-semibold text-grey-c900">
-            {highlightText(row.fullName, keyword)}
-          </div>
-        </div>
-
-      ),
-    },
-    {
-      key: "status",
-      label: "Trạng thái",
-      render: (row) => (
-        <Chip
-          label={getLabelStatusColor(row.accountStatus)}
-          variant={ChipVariant.SOFT}
-          color={getStatusColor(row.accountStatus)}
-        />
-      ),
-    },
-    {
-      key: "phoneNumber",
-      label: "Số điện thoại",
-      render: (row) => (
-        <div className="text-sm text-grey-c700">
-          {row.phoneNumber ? highlightText(row.phoneNumber, keyword) : "-"}
-        </div>
-      ),
-    },
-    {
-      key: "role",
-      label: "Vai trò",
-      render: (row) => (
-        <div className="text-sm text-grey-c700 capitalize">
-          {getLabelRole(row.role)}
-        </div>
-      ),
-    },
-    {
-      key: "createdAt",
-      label: "Ngày tạo",
-      sortable: true,
-      render: (row) => (
-        <div className="text-sm text-grey-c700">
-          {formatDateTime(row.createdAt)}
-        </div>
-      )
-    },
-    {
-      key: "actions",
-      label: "Hành động",
-      className: "text-center",
-      render: (row) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              setSelectedData(row);
-              setIsDetailModalOpen(true);
-            }}
-            className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
-            title="Xem chi tiết"
-          >
-            <VisibilityRoundedIcon/>
-          </button>
-          <button
-            className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-            title="Đổi trang thái"
-            onClick={() => {
-              setSelectedData(row);
-              setIsChangeStatusModalOpen(true);
-            }}
-          >
-            <ChangeCircleRoundedIcon/>
-          </button>
-
-        </div>
-      ),
-    },
-  ];
-
-  const pageData = data?.data;
-  const verifications = pageData?.data || [];
-  const totalPages = pageData?.totalPages || 0;
 
   return (
-    <div>
-      {isLoading && <Loading/>}
-      <Title title={"Tài khoản"} isDivide={true}/>
+    <div className="space-y-6 overflow-y-auto">
+      {/* Header */}
+      {isLoadingNewShop && isLoadingTopSellingProducts && isLoadingUserView && isLoadingTopRevenueProducts && isLoadingTopSellingShops && isLoadingTopRevenueShops &&
+        <Loading/>}
+      <div>
+        <Title title={"Bảng Điều Khiển Admin"} isDivide={true}/>
+      </div>
 
-      {/* Filters */}
-      <div className="flex gap-4 mb-6 flex-wrap items-center">
-        <div className="flex-1 min-w-[300px] relative">
-          <TextField
-            value={keyword}
-            onChange={(e) => setKeyword(e)}
-            placeholder="Tìm kiếm theo tên, email..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                setPageNo(0);
-              }
-            }}
-          />
-          {keyword && (
-            <button
-              onClick={handleClearSearch}
-              className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-grey-c200 rounded-full transition-all"
-              title="Xóa tìm kiếm"
-            >
-              <ClearRoundedIcon className="text-grey-c600 text-xl"/>
-            </button>
+      {/*/!* Stats Cards *!/*/}
+      {/*<div className="grid grid-cols-1 md:grid-cols-2 gap-4">*/}
+      {/*  <Card*/}
+      {/*    isStats*/}
+      {/*    title="Tổng Doanh Thu"*/}
+      {/*    value={formatPrice(ownerStatsData?.data?.totalRevenue || 0)}*/}
+      {/*    icon={<AttachMoneyRoundedIcon className="text-4xl"/>}*/}
+      {/*    iconBg="bg-primary-c200"*/}
+      {/*    iconColor="text-primary-c700"*/}
+      {/*    baseClasses={"bg-gradient-to-br from-primary-c50 to-white rounded-2xl shadow-sm border border-primary-c100"}*/}
+      {/*  />*/}
+      {/*  <Card*/}
+      {/*    isStats*/}
+      {/*    title="Tổng Đơn Hàng"*/}
+      {/*    value={formatNumber(ownerStatsData?.data?.totalOrders || 0)}*/}
+      {/*    icon={<ShoppingCartRoundedIcon className="text-4xl"/>}*/}
+      {/*    iconBg="bg-success-c100"*/}
+      {/*    iconColor="text-success-c600"*/}
+      {/*    baseClasses={"bg-gradient-to-br from-success-c50 to-white rounded-2xl shadow-sm border border-success-c100"}*/}
+      {/*  />*/}
+      {/*  <Card*/}
+      {/*    isStats*/}
+      {/*    title="Tổng Sản Phẩm"*/}
+      {/*    value={formatNumber(ownerStatsData?.data?.totalProducts || 0)}*/}
+      {/*    icon={<TrendingUpRoundedIcon className="text-4xl"/>}*/}
+      {/*    iconBg="bg-purple-100"*/}
+      {/*    iconColor="text-purple-600"*/}
+      {/*    baseClasses={"bg-gradient-to-br from-purple-50 to-white rounded-2xl shadow-sm border border-purple-100"}*/}
+      {/*  />*/}
+      {/*  <Card*/}
+      {/*    isStats*/}
+      {/*    title="Tổng Sản Phẩm Đã Bán"*/}
+      {/*    value={formatNumber(ownerStatsData?.data?.totalSold || 0)}*/}
+      {/*    icon={<StorefrontRoundedIcon className="text-4xl"/>}*/}
+      {/*    iconBg="bg-orange-100"*/}
+      {/*    iconColor="text-orange-600"*/}
+      {/*    baseClasses={"bg-gradient-to-br from-orange-50 to-white rounded-2xl shadow-sm border border-orange-100"}*/}
+      {/*  />*/}
+      {/*</div>*/}
+
+      {/* Revenue Chart */}
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className={"flex items-center justify-between mb-4"}>
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Người dùng mới Theo Tháng</h2>
+          <MonthRangePicker
+            value={selectUserViewDate}
+            onChange={setSelectUserViewDate}
+            maxRange={12}/>
+        </div>
+        {userViews && userViews.data && userViews.data.length > 0 ?
+          <div style={{height: '400px'}}>
+            <ResponsiveBar
+              data={userViews.data}
+              keys={["newUserViews"]}
+              indexBy="localDate"
+              margin={{top: 20, right: 20, bottom: 70, left: 60}}
+              padding={0.5}
+              valueScale={{type: 'linear'}}
+              colors={['#2D7D9F']}
+              axisTop={null}
+              axisRight={null}
+              borderRadius={5}
+              axisLeft={{
+                tickSize: 5,
+                tickPadding: 5,
+                tickRotation: 0,
+                legend: 'Người dùng',
+                legendPosition: 'middle',
+                legendOffset: -50,
+              }}
+              enableLabel={false}
+              tooltip={({indexValue, value}) => (
+                <div className="border border-grey-c200 rounded-xl shadow-lg overflow-hidden">
+                  {/* header */}
+                  <div className="bg-primary-c600 text-white px-4 py-2">
+                    <div className="text-sm font-semibold">{indexValue}</div>
+                  </div>
+
+                  {/* body */}
+                  <div className="bg-white px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-primary-c600"></div>
+                      <div className="text-grey-c800 font-medium whitespace-nowrap">
+                        Người dùng: <span className="text-primary-c700 font-bold">{value}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            />
+          </div>
+          :
+          <div className={"flex items-center justify-center h-100 flex-col"}>
+            <Empty/>
+            <div className={"text-grey-c600"}>Không có dữ liệu người dùng</div>
+          </div>
+        }
+      </div>
+
+      {/* Orders Chart */}
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className={"flex items-center justify-between mb-4"}>
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Cửa hàng mới theo tháng</h2>
+          <MonthRangePicker
+            value={selectRangeDate}
+            onChange={setSelectRangeDate}
+            maxRange={12}/>
+        </div>
+        {newShopData && newShopData.data && newShopData.data.length > 0 ?
+          <div style={{height: '400px'}}>
+            <ResponsiveBar
+              data={newShopData.data}
+              keys={["newShopViews"]}
+              indexBy="localDate"
+              margin={{top: 20, right: 20, bottom: 70, left: 60}}
+              padding={0.5}
+              valueScale={{type: 'linear'}}
+              colors={['#2D7D9F']}
+              axisTop={null}
+              axisRight={null}
+              borderRadius={5}
+              axisLeft={{
+                tickSize: 5,
+                tickPadding: 5,
+                tickRotation: 0,
+                legend: 'Đơn hàng',
+                legendPosition: 'middle',
+                legendOffset: -50,
+              }}
+              enableLabel={false}
+              tooltip={({indexValue, value}) => (
+                <div className="border border-grey-c200 rounded-xl shadow-lg overflow-hidden">
+                  {/* header */}
+                  <div className="bg-primary-c600 text-white px-4 py-2">
+                    <div className="text-sm font-semibold">{indexValue}</div>
+                  </div>
+
+                  {/* body */}
+                  <div className="bg-white px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-primary-c600"></div>
+                      <div className="text-grey-c800 font-medium whitespace-nowrap">
+                        Cửa hàng: <span className="text-primary-c700 font-bold">{value}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            />
+          </div>
+          :
+          <div className={"flex items-center justify-center h-100 flex-col"}>
+            <Empty/>
+            <div className={"text-grey-c600"}>Không có dữ liệu cửa hàng</div>
+          </div>
+        }
+      </div>
+
+      {/* Top Shop */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-120">
+        {/* Revenue */}
+        <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col">
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Top 5 Cửa Hàng Doanh Thu</h2>
+          <div className="space-y-3">
+            {topRevenueShops && topRevenueShops.data && topRevenueShops.data.map((shop, index) => (
+              <div
+                key={shop.shopId}
+                className="flex items-center gap-4 p-4 bg-grey-c50 rounded-lg hover:bg-grey-c100 transition-colors"
+              >
+                <div
+                  className="flex-shrink-0 w-10 h-10 bg-primary-c600 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  {index + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-grey-c900 truncate">{shop.shopName}</h3>
+                  <p className="text-sm text-grey-c600">Đã bán: {formatNumber(shop.totalSold)} sản phẩm</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-bold text-grey-c900">{formatPrice(shop.totalRevenue)}</p>
+                </div>
+              </div>
+            ))}
+
+          </div>
+          {topRevenueShops && topRevenueShops.data && topRevenueShops.data.length === 0 && (
+            <div className={"flex flex-col items-center justify-center flex-1"}>
+              <Empty/>
+              <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
+            </div>
           )}
         </div>
 
-        <div className="min-w-[200px]">
-          <DropdownSelect
-            value={status}
-            onChange={(value) => {
-              setStatus(value);
-              setPageNo(0);
-            }}
-            options={statusOptions}
-            placeholder="Chọn trạng thái"
-          />
+        {/* Top Products Sold */}
+        <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col">
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Top 5 Cửa Hàng Bán Chạy</h2>
+          <div className="space-y-3">
+            {topSellingShops && topSellingShops.data && topSellingShops.data.map((shop, index) => (
+              <div
+                key={shop.shopId}
+                className="flex items-center gap-4 p-4 bg-grey-c50 rounded-lg hover:bg-grey-c100 transition-colors"
+              >
+                <div
+                  className="flex-shrink-0 w-10 h-10 bg-primary-c600 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  {index + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-grey-c900 truncate">{shop.shopName}</h3>
+                  <p className="text-sm text-grey-c600">Đã bán: {formatNumber(shop.totalSold)} sản phẩm</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-bold text-grey-c900">{formatPrice(shop.totalRevenue)}</p>
+                </div>
+              </div>
+            ))}
+            {topSellingShops && topSellingShops.data && topSellingShops.data.length === 0 && (
+              <div className={"flex flex-col items-center justify-center flex-1"}>
+                <Empty/>
+                <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Search Summary */}
-      {(keyword || status) && (
-        <div
-          className="mb-4 flex items-center gap-2 text-sm text-grey-c700 bg-primary-c50 px-4 py-3 rounded-lg border border-primary-c200">
-          <SearchRoundedIcon className="text-primary-c700"/>
-          <span>
-            Tìm thấy <strong className="text-primary-c800">{pageData?.totalElements || 0}</strong> yêu cầu
-            {keyword && <> với từ khóa &ldquo;<strong className="text-primary-c800">{keyword}</strong>&rdquo;</>}
-            {status && <> - Trạng thái: <strong
-                className="text-primary-c800">{statusOptions.find(o => o.id === status)?.label}</strong></>}
-          </span>
-          <button
-            onClick={handleClearSearch}
-            className="ml-auto text-primary-c700 hover:text-primary-c900 underline cursor-pointer"
-          >
-            Xóa bộ lọc
-          </button>
+      {/* Top Products */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-120">
+        {/* Revenue */}
+        <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col">
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Top 5 Sản Phẩm Doanh Thu</h2>
+          <div className="space-y-3">
+            {topRevenueProducts && topRevenueProducts.data && topRevenueProducts.data.map((product, index) => (
+              <div
+                key={product.productId}
+                className="flex items-center gap-4 p-4 bg-grey-c50 rounded-lg hover:bg-grey-c100 transition-colors"
+              >
+                <div
+                  className="flex-shrink-0 w-10 h-10 bg-primary-c600 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  {index + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-grey-c900 truncate">{product.productName}</h3>
+                  <p className="text-sm text-grey-c600">Đã bán: {formatNumber(product.totalSold)} sản phẩm</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-bold text-grey-c900">{formatPrice(product.totalRevenue)}</p>
+                </div>
+              </div>
+            ))}
+
+          </div>
+          {topRevenueProducts && topRevenueProducts.data && topRevenueProducts.data.length === 0 && (
+            <div className={"flex flex-col items-center justify-center flex-1"}>
+              <Empty/>
+              <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Table */}
-      <Table
-        columns={columns}
-        data={verifications}
-        keyExtractor={(row) => row.userId}
-        sortDir={sortDir}
-        sortBy={sortBy}
-        onSort={handleSort}
-        currentPage={pageNo}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-        pageSize={pageSize}
-        setPageSize={handlePageSizeChange}
-        emptyMessage={
-          keyword || status
-            ? "Không tìm thấy dữ liệu phù hợp. Thử thay đổi từ khóa hoặc bộ lọc."
-            : "Không có dữ liệu"
-        }
-      />
-      {isChangeStatusModalOpen && selectedData && (
-        <ChangeAccountStatusModal
-          isOpen={isChangeStatusModalOpen}
-          setIsOpen={setIsChangeStatusModalOpen}
-          reload={mutate}
-          userId={selectedData.userId}
-          currentStatus={selectedData.accountStatus}
-          />
-      )}
-      {isDetailModalOpen && selectedData && (
-        <DetailUserModal
-          isOpen={isDetailModalOpen}
-          setIsOpen={setIsDetailModalOpen}
-          user={selectedData}/>
-      )}
-
+        {/* Top Products Sold */}
+        <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col">
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Top 5 Sản Phẩm Bán Chạy</h2>
+          <div className="space-y-3">
+            {topSellingProducts && topSellingProducts.data && topSellingProducts.data.map((product, index) => (
+              <div
+                key={product.productId}
+                className="flex items-center gap-4 p-4 bg-grey-c50 rounded-lg hover:bg-grey-c100 transition-colors"
+              >
+                <div
+                  className="flex-shrink-0 w-10 h-10 bg-primary-c600 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  {index + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-grey-c900 truncate">{product.productName}</h3>
+                  <p className="text-sm text-grey-c600">Đã bán: {formatNumber(product.totalSold)} sản phẩm</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-bold text-grey-c900">{formatPrice(product.totalRevenue)}</p>
+                </div>
+              </div>
+            ))}
+            {topSellingProducts && topSellingProducts.data && topSellingProducts.data.length === 0 && (
+              <div className={"flex flex-col items-center justify-center flex-1"}>
+                <Empty/>
+                <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

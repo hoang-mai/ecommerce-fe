@@ -19,7 +19,7 @@ import {closeChat, clearNewMessage} from "@/redux/slice/chatSlice";
 import StoreRoundedIcon from "@mui/icons-material/Storefront";
 import TextField from "@/libs/TextField";
 import webSocketService from "@/services/webSocket";
-import {getCurrentUserId} from "@/util/FnCommon";
+import {getCurrentUserId} from "@/util/fnCommon";
 import {openAlert} from "@/redux/slice/alertSlice";
 import useSWRMutation from "swr/mutation";
 

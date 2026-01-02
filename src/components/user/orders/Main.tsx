@@ -8,14 +8,14 @@ import Phone from '@mui/icons-material/Phone';
 import Title from "@/libs/Title";
 import TextField from "@/libs/TextField";
 import DropdownSelect from "@/libs/DropdownSelect";
-import {formatDate, formatPrice} from "@/util/FnCommon";
+import {formatDate, formatPrice} from "@/util/fnCommon";
 import {AlertType, ColorButton, OrderStatus} from "@/types/enum";
 import Divide from "@/libs/Divide";
 import OrderItemDetailModal from "@/components/user/orders/OrderItemDetailModal";
 import Chip, {ChipColor} from "@/libs/Chip";
 import {useDebounce} from "@/hooks/useDebounce";
 import {useBuildUrl} from "@/hooks/useBuildUrl";
-import {ORDER, ORDER_VIEW} from "@/services/api";
+import {ORDER_VIEW} from "@/services/api";
 import useSWR from "swr";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -29,6 +29,7 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import {useRouter} from "next/navigation";
 import CancelOrderModal from "@/components/user/orders/CancelOrderModal";
 import CancelIcon from "@mui/icons-material/Cancel";
+import AssignmentReturnIcon from "@mui/icons-material/AssignmentReturn";
 
 interface ProductAttribute {
   attributeName: string;
@@ -64,6 +65,7 @@ export interface OrderView {
   address: string;
   phoneNumber: string;
   createdAt: string;
+  updatedAt: string;
   orderItems: OrderItem[];
 }
 
@@ -128,6 +130,7 @@ export default function Main() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
   const [selectedOrderIdToCancel, setSelectedOrderIdToCancel] = useState<string>("");
+  const [actionType, setActionType] = useState<"CANCELLED" | "RETURNED">("CANCELLED");
   const [pageNo, setPageNo] = useState<number>(0);
   const [status, setStatus] = useState<string>("");
   const [keyword, setKeyword] = useState<string>('');
@@ -172,8 +175,9 @@ export default function Main() {
     setPageNo(0);
   };
 
-  const handleOpenCancelModal = (orderId: string) => {
+  const handleOpenCancelModal = (orderId: string, type: "CANCELLED" | "RETURNED" = "CANCELLED") => {
     setSelectedOrderIdToCancel(orderId);
+    setActionType(type);
     setIsCancelModalOpen(true);
   };
 
@@ -255,6 +259,15 @@ export default function Main() {
                           onClick={() => handleOpenCancelModal(order.orderId)}
                           color={ChipColor.CANCELLED}
                           icon={<CancelIcon/>}
+                        />
+                      )}
+                      {order.orderStatus === OrderStatus.COMPLETED && order.updatedAt &&
+                        (new Date().getTime() - new Date(order.updatedAt).getTime()) <= 7 * 24 * 60 * 60 * 1000 && (
+                        <Chip
+                          label="Trả hàng"
+                          onClick={() => handleOpenCancelModal(order.orderId, "RETURNED")}
+                          color={ChipColor.RETURNED}
+                          icon={<AssignmentReturnIcon/>}
                         />
                       )}
                     </div>
@@ -368,6 +381,7 @@ export default function Main() {
         setIsOpen={setIsCancelModalOpen}
         orderId={selectedOrderIdToCancel}
         mutate={mutate}
+        actionType={actionType}
       /> )}
     </div>
   )

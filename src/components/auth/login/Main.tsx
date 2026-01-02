@@ -19,7 +19,7 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType, Role} from "@/types/enum";
 import {ColorButton} from "@/types/enum";
-import {getRoleFromJwtToken} from "@/util/FnCommon";
+import {getRoleFromJwtToken} from "@/util/fnCommon";
 import {usePushNotification} from "@/hooks/usePushNotification";
 import Loading from "@/components/modals/Loading";
 

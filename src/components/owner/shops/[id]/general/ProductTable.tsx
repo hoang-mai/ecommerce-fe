@@ -10,7 +10,7 @@ import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import ChangeCircleRoundedIcon from '@mui/icons-material/ChangeCircleRounded';
-import {formatDateTime, formatPrice} from "@/util/FnCommon";
+import {formatDateTime, formatPrice} from "@/util/fnCommon";
 import CreateProductModal from "./CreateProductModal";
 import UpdateProductModal from "./UpdateProductModal";
 import UpdateStatusProductModal from "./UpdateStatusProductModal";
@@ -66,10 +66,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
     }
   });
 
-  const {data, error, isLoading, mutate} = useSWR(url, productFetcher, {
-    refreshInterval: 0,
-    revalidateOnFocus: false,
-  });
+  const {data, error, isLoading, mutate} = useSWR(url, productFetcher);
 
   useEffect(() => {
     if (error) {

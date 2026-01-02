@@ -14,7 +14,7 @@ import InventoryRoundedIcon from '@mui/icons-material/InventoryRounded';
 import { subMonths} from 'date-fns';
 import Card from '@/libs/Card';
 import Title from '@/libs/Title';
-import {formatNumber, formatPrice} from "@/util/FnCommon";
+import {formatNumber, formatPrice} from "@/util/fnCommon";
 import MonthRangePicker from "@/libs/MonthRangePicker";
 import {
   DateRange,
@@ -102,7 +102,7 @@ export default function Statistics({shop, id}: Props) {
   return (
     <div className="space-y-6 py-4">
       {/* Header */}
-      {isLoadingNewOrder && isLoadingTopProducts && isLoadingRevenue && isLoadingTopRevenueProducts && <Loading/>}
+      {(isLoadingNewOrder || isLoadingTopProducts || isLoadingRevenue || isLoadingTopRevenueProducts) && <Loading/>}
       <div>
         <Title title={"Thống Kê Cửa Hàng"} isDivide={true}/>
       </div>

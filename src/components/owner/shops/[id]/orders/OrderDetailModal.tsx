@@ -3,7 +3,7 @@
 import React from 'react';
 import Modal from '@/libs/Modal';
 import Chip from '@/libs/Chip';
-import { formatDateTime, formatPrice } from '@/util/FnCommon';
+import { formatDateTime, formatPrice } from '@/util/fnCommon';
 import { getLabelStatusColor, getStatusColor, OrderView } from '@/components/user/orders/Main';
 import InfoRow from "@/libs/InfoRow";
 

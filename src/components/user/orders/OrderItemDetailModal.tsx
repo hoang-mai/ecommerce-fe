@@ -1,7 +1,7 @@
 import Modal from "@/libs/Modal";
-import {formatDateTime, formatPrice} from "@/util/FnCommon";
+import {formatDateTime, formatPrice} from "@/util/fnCommon";
 import Divide from "@/libs/Divide";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import InfoRow from "@/libs/InfoRow";
 import {OrderItem, OrderView} from "@/components/user/orders/Main";
 import Image from "next/image";
@@ -53,6 +53,12 @@ const ReviewSchema = z.object({
 });
 
 type ReviewForm = z.infer<typeof ReviewSchema>;
+
+const isWithin30Days = (updatedAt: string | undefined): boolean => {
+  if (!updatedAt) return false;
+  const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+  return (new Date().getTime() - new Date(updatedAt).getTime()) <= thirtyDaysInMs;
+};
 
 export default function OrderItemDetailModal({
                                                isOpen,
@@ -123,12 +129,10 @@ const handleOnRemove= (indexOrId: number | string)=>{
 
     setValue('images', currentImages.filter(img => img !== indexOrId), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
   } else {
-    // It's a new File index
     setValue('images', currentImages.filter((_, i) => i !== indexOrId));
   }
 }
-  // Reset form when entering edit mode or when existingReview changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (isEditMode && existingReview) {
       reset({
         rating: Number(RatingNumber[existingReview.rating]),
@@ -194,7 +198,7 @@ const handleOnRemove= (indexOrId: number | string)=>{
 
 
   return <>
-    {isCreating || isUpdating && <Loading/>}
+    {(isCreating || isUpdating) && <Loading/>}
     <Modal
     isOpen={isOpen}
     onClose={() => {
@@ -206,7 +210,7 @@ const handleOnRemove= (indexOrId: number | string)=>{
     isLoading={isCreating || isUpdating}
     disableSave={!isDirty}
     saveButtonText={isEditMode ? "Cập nhật đánh giá" : "Gửi đánh giá"}
-    showSaveButton={orderStatus === OrderStatus.COMPLETED && (!existingReview || isEditMode)}
+    showSaveButton={orderStatus === OrderStatus.COMPLETED && isWithin30Days(selectedOrder.updatedAt) && (!existingReview || isEditMode)}
     childrenFooter={
       <div className="p-4">
         <Divide/>
@@ -295,8 +299,8 @@ const handleOnRemove= (indexOrId: number | string)=>{
         </div>
       )}
 
-      {/* Rating Section: only show when orderStatus is COMPLETED */}
-      {orderStatus === OrderStatus.COMPLETED && (
+      {/* Rating Section: only show when orderStatus is COMPLETED and within 30 days */}
+      {orderStatus === OrderStatus.COMPLETED && isWithin30Days(selectedOrder.updatedAt) && (
         <div className="mb-6">
           <h3 className="text-lg font-bold text-grey-c800 mb-4 flex items-center gap-2">
             <div className="w-1 h-6 bg-primary-c700 rounded"></div>

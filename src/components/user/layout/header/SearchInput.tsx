@@ -5,8 +5,8 @@ import {useState, MouseEvent, useEffect, useRef, ChangeEvent} from "react";
 import {useDebounce} from "@/hooks/useDebounce";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import useSWR from "swr";
-import {PRODUCT_VIEW} from "@/services/api";
-import {ProductView} from "@/types/interface";
+import {PRODUCT_VIEW, SEARCH_KEYWORD} from "@/services/api";
+import {ProductView, SearchKeyword} from "@/types/interface";
 import {useRouter} from "next/navigation";
 import {useBuildUrl} from "@/hooks/useBuildUrl";
 import {useDispatch} from "react-redux";
@@ -18,11 +18,16 @@ import useSWRMutation from "swr/mutation";
 export default function SearchInput() {
   const {get, post} = useAxiosContext();
   const router = useRouter();
-  const fetcher = (url: string) => get<BaseResponse<PageResponse<ProductView>>>(url).then(res => res.data);
+  const fetcher = (url: string) => get<BaseResponse<PageResponse<SearchKeyword>>>(url).then(res => res.data);
   const [searchValue, setSearchValue] = useState("");
   const debounce = useDebounce(searchValue);
   const [isFocused, setIsFocused] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fetcherCreateSearchKeyword = (url: string, { arg }: { arg: string }) =>
+    post<BaseResponse<never>>(url, {keyword: arg}).then(res => res.data);
+
+  const {trigger: triggerCreateSearchKeyword} = useSWRMutation(SEARCH_KEYWORD, fetcherCreateSearchKeyword);
 
   const fetcherImageSearch = (url: string, {arg}: {arg: FormData}) =>
     post<BaseResponse<string>>(url, arg, {
@@ -34,14 +39,14 @@ export default function SearchInput() {
   const {trigger, isMutating} = useSWRMutation(`${PRODUCT_VIEW}/search-images`, fetcherImageSearch);
 
   const url = useBuildUrl({
-    baseUrl: PRODUCT_VIEW,
+    baseUrl: SEARCH_KEYWORD,
     queryParams: {
       pageNo: 0,
       keyword: debounce.trim() || undefined,
       pageSize: 5,
     }
   })
-  const {data, isLoading, error} = useSWR(url, fetcher,{
+  const {data, isLoading, error} = useSWR(debounce.trim() ? url : null, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   })
@@ -64,6 +69,7 @@ export default function SearchInput() {
     e.preventDefault();
     e.stopPropagation();
     if (searchValue.trim()) {
+      triggerCreateSearchKeyword(searchValue.trim());
       router.push(`/search?keyword=${encodeURIComponent(searchValue.trim())}`);
       setIsFocused(false);
     }
@@ -94,6 +100,7 @@ export default function SearchInput() {
       formData.append('file', file);
 
       trigger(formData).then(response => {
+        if(fileInputRef.current) fileInputRef.current.value = "";
         if(response.data) router.push(`/search?searchId=${encodeURIComponent(response.data)}`);
         else router.push(`/search`);
       }).catch((error: ErrorResponse) => {
@@ -155,10 +162,10 @@ export default function SearchInput() {
           onClick={handleCameraClick}
           disabled={isMutating}
           className={`absolute right-12 w-10 h-10 flex items-center justify-center
-                   rounded-full transition-all duration-200
+                   rounded-full transition-all duration-200  
                    ${isMutating
             ? 'bg-grey-c300 cursor-not-allowed'
-            : 'bg-grey-c100 hover:bg-grey-c200 active:scale-90'
+            : 'bg-primary-c100 hover:bg-primary-c200 active:scale-90 cursor-pointer'
           }
                    shadow-sm hover:shadow-md`}
           title="Tìm kiếm bằng hình ảnh"
@@ -166,7 +173,7 @@ export default function SearchInput() {
           {isMutating ? (
             <div className="w-5 h-5 border-2 border-grey-c400 border-t-grey-c700 rounded-full animate-spin"></div>
           ) : (
-            <CameraAltRoundedIcon className="text-grey-c700 !text-[22px]"/>
+            <CameraAltRoundedIcon className="text-primary-c700 !text-[22px]"/>
           )}
         </button>
 
@@ -174,7 +181,7 @@ export default function SearchInput() {
           type="button"
           onClick={handleSearch}
           className={`absolute right-1 w-10 h-10 flex items-center justify-center
-                   rounded-full transition-all duration-200
+                   rounded-full transition-all duration-200 cursor-pointer
                    ${isFocused || searchValue
             ? 'bg-primary-c700 hover:bg-primary-c800 scale-100'
             : 'bg-primary-c600 hover:bg-primary-c700 scale-95'
@@ -201,22 +208,23 @@ export default function SearchInput() {
             {!isLoading && data && data.data && data.data.data.length > 0 && (
               <div className="max-h-[270px] overflow-y-auto">
                 <ul className="py-1">
-                  {data.data.data.map((product) => (
+                  {data.data.data.map((searchKeyword) => (
                     <li
-                      key={product.productId}
+                      key={searchKeyword.id}
                       className={"transition-all duration-150 hover:bg-primary-c50 bg-white cursor-pointer"}
                     >
                       <button
                         type="button"
                         onMouseDown={(e: MouseEvent<HTMLButtonElement>) => {
                           e.preventDefault();
-                          router.push(`/products/${product.productId}`);
+                          router.push(`/search?keyword=${encodeURIComponent(searchKeyword.keyword)}`);
+                          triggerCreateSearchKeyword(searchKeyword.keyword);
                           setIsFocused(false);
                           setSearchValue("");
                         }}
                         className="w-full px-5 py-3.5 flex items-start gap-3 text-left cursor-pointer"
                       >
-                        {product.name}
+                        {searchKeyword.keyword}
                       </button>
                     </li>
                   ))}

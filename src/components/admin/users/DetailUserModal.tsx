@@ -7,9 +7,10 @@ import EmailRoundedIcon from '@mui/icons-material/EmailRounded';
 import Chip, {ChipColor} from "@/libs/Chip";
 import React from "react";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
-import {formatDateTime} from "@/util/FnCommon";
+import {formatDateTime} from "@/util/fnCommon";
 import CalendarTodayRoundedIcon from "@mui/icons-material/CalendarTodayRounded";
 import Image from "next/image";
+import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 interface UserViewDto {
   userId: number;
   username: string;
@@ -93,14 +94,17 @@ export default function DetailUserModal({isOpen, setIsOpen, user}: Props) {
         <div className={"grid grid-cols-2 gap-x-8 gap-y-4 bg-grey-c50 rounded-lg p-4"}>
           <InfoRow icon={<AccountCircleIcon/>} label={"Họ và tên"} value={
             <div className={"flex items-center flex-row gap-2"}>
-              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-c200 bg-white flex-shrink-0">
-                <Image
-                  src={user.avatarUrl || "/avatar_hoat_hinh_db4e0e9cf4.webp"}
-                  alt={"avatar"}
-                  width={48}
-                  height={48}
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-c200 bg-white flex-shrink-0 flex items-center justify-center">
+                {user?.avatarUrl
+                  ? <Image
+                    width={40}
+                    height={40}
+                    src={user?.avatarUrl}
+                    alt="User Avatar"
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                  : <AccountCircleRoundedIcon className="text-primary-c700 !w-[40px] !h-[40px]"/>
+                }
               </div>
               <div >
                 {user.fullName}

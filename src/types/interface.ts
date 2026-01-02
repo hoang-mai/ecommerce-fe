@@ -18,6 +18,18 @@ export interface OrderViewStatisticDTO {
   [key: string]: string | number;
 }
 
+export interface NewShopViewStatisticDTO{
+  localDate: string;
+  newShopViews: number;
+  [key: string]: string | number;
+}
+
+export interface NewUserViewStatisticDTO{
+  localDate: string;
+  newUserViews: number;
+  [key: string]: string | number;
+}
+
 export interface OrderViewStatisticRevenueDTO{
   localDate: string;
   totalRevenue: number;
@@ -80,6 +92,7 @@ export interface ProductView {
   ratingStatistics: Record<string, number>;
   name: string;
   description: string;
+  productDetails: Record<string, string>
   productStatus: ProductStatus;
   totalSold: number;
   discount: number | null
@@ -230,17 +243,10 @@ export interface NotificationView {
   createdAt: string;
   updatedAt: string;
 }
-export interface VNPayParams {
-  vnp_TmnCode?: string;          // Mã website merchant
-  vnp_Amount?: string;            // Số tiền thanh toán (đã nhân 100)
-  vnp_BankCode?: string;          // Mã ngân hàng
-  vnp_BankTranNo?: string;       // Mã giao dịch tại ngân hàng
-  vnp_CardType?: string;         // Loại thẻ (ATM, QRCODE)
-  vnp_PayDate?: string;          // Thời gian thanh toán (yyyyMMddHHmmss)
-  vnp_OrderInfo?: string;         // Thông tin mô tả nội dung thanh toán
-  vnp_TransactionNo?: string;     // Mã giao dịch tại VNPAY
-  vnp_ResponseCode?: string;      // Mã phản hồi kết quả (00 = thành công)
-  vnp_TransactionStatus?: string; // Trạng thái giao dịch (00 = thành công)
-  vnp_TxnRef?: string;           // Mã tham chiếu giao dịch
-  vnp_SecureHash?: string;        // Mã kiểm tra checksum
+
+export interface SearchKeyword {
+  id: string;
+  keyword: string;
+  searchCount: number;
+  lastSearchedAt: string;
 }

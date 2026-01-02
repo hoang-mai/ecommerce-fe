@@ -26,3 +26,4 @@ export const USER_CATEGORY= "/api/v1/user-category";
 export const PUSH_SUBSCRIPTION= "/api/v1/push-subscription";
 export const NOTIFICATION= "/api/v1/notification";
 export const PAYMENT= "/api/v1/payment";
+export const SEARCH_KEYWORD= "/api/v1/search-keyword";

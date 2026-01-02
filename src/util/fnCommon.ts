@@ -1,4 +1,4 @@
-import {format, formatDistanceToNow} from "date-fns";
+import {format, formatDistanceToNow, parseISO } from "date-fns";
 import {jwtDecode, JwtPayload} from "jwt-decode";
 import {Role} from "@/types/enum";
 import {vi} from "date-fns/locale";
@@ -9,11 +9,15 @@ interface JwtDecodedPayload extends JwtPayload {
 }
 
 export function formatDateTime(date: string) {
-  return format(new Date(date), "HH:mm:ss dd/MM/yyyy");
+  const parsed = parseISO(date + "Z");
+  if (isNaN(parsed.getTime())) return "";
+  return format(parsed, "HH:mm:ss dd/MM/yyyy");
 }
 
 export function formatDate(date: string) {
-  return format(new Date(date), "dd/MM/yyyy");
+  const parsed = parseISO(date + "Z");
+  if (isNaN(parsed.getTime())) return "";
+  return format(parsed, "HH:mm:ss dd/MM/yyyy");
 }
 
 export function getRoleFromJwtToken(token: string) {
@@ -42,7 +46,7 @@ export function isTokenExpired(token: string) {
 }
 
 export function formatNumber(number: number) {
-  if(number >= 1000000) {
+  if (number >= 1000000) {
     return (number / 1000000).toFixed(1) + 'M';
   }
   if (number >= 1000) {
@@ -52,16 +56,10 @@ export function formatNumber(number: number) {
 }
 
 export function getTimeAgo(date: string) {
-  return formatDistanceToNow(new Date(date), {
+  const parsed = parseISO(date + "Z");
+  if (isNaN(parsed.getTime())) return "";
+  return formatDistanceToNow(parsed, {
     addSuffix: true,
     locale: vi,
   });
 }
-
-export function toLocalISOString(date: Date | null | undefined): string | null{
-  if (!date) return null;
-
-  const tzOffset = date.getTimezoneOffset() * 60000;
-  const localDate = new Date(date.getTime() - tzOffset);
-  return localDate.toISOString();
-};

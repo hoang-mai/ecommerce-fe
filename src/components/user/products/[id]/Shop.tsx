@@ -5,7 +5,7 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import LocalMallIcon from '@mui/icons-material/LocalMall';
-import {formatNumber} from "@/util/FnCommon";
+import {formatNumber} from "@/util/fnCommon";
 import Image from "next/image";
 import Button from "@/libs/Button";
 import {AlertType, ColorButton, ShopStatus} from "@/types/enum";

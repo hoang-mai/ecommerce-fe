@@ -15,7 +15,7 @@ import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import Title from "@/libs/Title";
-import {formatDateTime} from "@/util/FnCommon";
+import {formatDateTime} from "@/util/fnCommon";
 import CreateShopModal from "./CreateShopModal";
 import UpdateShopModal from "./UpdateShopModal";
 import UpdateStatusShopModal from "./UpdateStatusShopModal";

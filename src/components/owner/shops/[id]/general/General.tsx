@@ -5,7 +5,7 @@ import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import ProductTable from "@/components/owner/shops/[id]/general/ProductTable";
 import CalendarTodayRoundedIcon from "@mui/icons-material/CalendarTodayRounded";
-import {formatDateTime} from "@/util/FnCommon";
+import {formatDateTime} from "@/util/fnCommon";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 

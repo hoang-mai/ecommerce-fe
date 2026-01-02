@@ -1,7 +1,7 @@
 
 import React from "react";
 import {ProductView, ProductVariant} from "@/types/interface";
-import {formatPrice, formatDateTime} from "@/util/FnCommon";
+import {formatPrice, formatDateTime} from "@/util/fnCommon";
 import InfoRow from "@/libs/InfoRow";
 import Image from "next/image";
 import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
@@ -77,7 +77,7 @@ export default function General({product}: Props) {
   return (
     <div className="py-6 space-y-6">
       {/* Thông tin cơ bản */}
-      <div className={"flex flex-row gap-6"}>
+      <div className={"flex flex-row gap-6 flex-wrap"}>
         <div className={"flex-1"}>
           <h3 className="text-lg font-bold text-grey-c800 mb-4 flex items-center gap-2">
             <div className="w-1 h-6 bg-primary-c700 rounded"></div>
@@ -138,6 +138,26 @@ export default function General({product}: Props) {
           </div>
         </div>
       </div>
+      {/* Thông tin chi tiết */}
+      <h3 className="text-lg font-bold text-grey-c800 mb-4 flex items-center gap-2">
+        <div className="w-1 h-6 bg-primary-c700 rounded"></div>
+        Thông tin chi tiết sản phẩm
+      </h3>
+      <div className="bg-grey-c50 rounded-lg p-4">
+        {Object.entries(product.productDetails).length === 0 ? (
+          <div className="text-center py-8 text-grey-c600">Không có thông tin chi tiết</div>
+        ) : (
+          <div className="flex flex-col gap-2 divide-y divide-grey-c200">
+            {Object.entries(product.productDetails).map(([key, value]) => (
+              <div key={key} className="flex flex-row p-2">
+                <span className="font-semibold text-grey-c800 mr-40">{key}:</span>
+                <span className="text-grey-c700">{value}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Hình ảnh */}
       <h3 className="text-lg font-bold text-grey-c800 mb-4 flex items-center gap-2">
         <div className="w-1 h-6 bg-primary-c700 rounded"></div>

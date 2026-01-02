@@ -14,7 +14,7 @@ import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
 import {subMonths} from 'date-fns';
 import Card from '@/libs/Card';
 import Title from '@/libs/Title';
-import {formatNumber, formatPrice} from "@/util/FnCommon";
+import {formatNumber, formatPrice} from "@/util/fnCommon";
 import MonthRangePicker from "@/libs/MonthRangePicker";
 import {
   DateRange,

@@ -9,7 +9,7 @@ import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
 import Title from "@/libs/Title";
-import {formatDateTime} from "@/util/FnCommon";
+import {formatDateTime} from "@/util/fnCommon";
 import useSWR from "swr";
 import {USER_VERIFICATION,USER_VERIFICATION_APPROVE} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
@@ -353,7 +353,7 @@ export default function Main() {
 
   return (
     <div>
-      {isLoading || isApproving && <Loading/>}
+      {(isLoading || isApproving) && <Loading/>}
       <Title title={"Đăng ký người bán"} isDivide={true}/>
 
       {/* Filters */}

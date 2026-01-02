@@ -8,7 +8,7 @@ import useSWR, {mutate} from 'swr';
 import {CHAT, MESSAGE} from '@/services/api';
 import TextField from "@/libs/TextField";
 import {useAxiosContext} from '@/components/provider/AxiosProvider';
-import {getCurrentUserId, getTimeAgo} from '@/util/FnCommon';
+import {getCurrentUserId, getTimeAgo} from '@/util/fnCommon';
 import Empty from '@/libs/Empty';
 import SubdirectoryArrowRightRoundedIcon from '@mui/icons-material/SubdirectoryArrowRightRounded';
 import Chat from "./Chat";

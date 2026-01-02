@@ -11,7 +11,7 @@ import CakeRoundedIcon from '@mui/icons-material/CakeRounded';
 import WcRoundedIcon from '@mui/icons-material/WcRounded';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
 import UpdateProfileModal from "@/components/user/profile/UpdateProfileModal";
-import {formatDate, formatDateTime} from "@/util/FnCommon";
+import {formatDate, formatDateTime} from "@/util/fnCommon";
 import useSWR from "swr";
 import {USER} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
@@ -28,6 +28,7 @@ import {usePushNotification} from "@/hooks/usePushNotification";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
 import Switch from "@/libs/Switch";
+import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 
 export interface ProfileData {
   userId: number;
@@ -131,14 +132,17 @@ export default function Main() {
           </div>
           <div className="relative group">
             <div
-              className="w-[150px] h-[150px] rounded-full overflow-hidden border-4 border-primary-c200 transition-all duration-500 hover:shadow-lg cursor-pointer">
-              <Image
-                src={data?.avatarUrl || '/avatar_hoat_hinh_db4e0e9cf4.webp'}
-                alt="Avatar"
-                width={150}
-                height={150}
-                className="object-cover w-full h-full"
-              />
+              className="w-[150px] h-[150px] rounded-full overflow-hidden border-4 border-primary-c200 transition-all duration-500 hover:shadow-lg cursor-pointer flex items-center justify-center">
+              {data?.avatarUrl
+                ? <Image
+                  width={150}
+                  height={150}
+                  src={data?.avatarUrl}
+                  alt="Avatar"
+                  className="object-cover w-full h-full"
+                />
+                : <AccountCircleRoundedIcon className="text-primary-c700 !w-[160px] !h-[160px]"/>
+              }
             </div>
             {/* Edit Icon Overlay */}
             <button
@@ -154,7 +158,6 @@ export default function Main() {
           <div className={"text-2xl font-semibold text-grey-c800"}>
             {data?.fullName || 'Người dùng'}
           </div>
-          <div className="text-grey-c600">{data?.role}</div>
           <div className="text-grey-c600">{data?.email}</div>
           <div className={"flex flex-row gap-4 whitespace-nowrap"}>
             <Button

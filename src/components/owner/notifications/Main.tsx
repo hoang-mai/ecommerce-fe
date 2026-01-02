@@ -5,7 +5,7 @@ import DropdownSelect from '@/libs/DropdownSelect';
 import TextField from '@/libs/TextField';
 import Table, {Column} from '@/libs/Table';
 import Title from '@/libs/Title';
-import {formatDateTime} from '@/util/FnCommon';
+import {formatDateTime} from '@/util/fnCommon';
 import {AlertType, NotificationType, SortDir} from '@/types/enum';
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {useBuildUrl} from "@/hooks/useBuildUrl";

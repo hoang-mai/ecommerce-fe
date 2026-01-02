@@ -6,7 +6,7 @@ import Image from 'next/image';
 import ImageRoundedIcon from '@mui/icons-material/ImageRounded';
 import ShoppingBagRoundedIcon from '@mui/icons-material/ShoppingBagRounded';
 import InventoryRoundedIcon from '@mui/icons-material/InventoryRounded';
-import {getTimeAgo, getCurrentUserId} from "@/util/FnCommon";
+import {getTimeAgo, getCurrentUserId} from "@/util/fnCommon";
 import TextField from "@/libs/TextField";
 import useSWR, {mutate} from "swr";
 import {CHAT, MESSAGE} from "@/services/api";

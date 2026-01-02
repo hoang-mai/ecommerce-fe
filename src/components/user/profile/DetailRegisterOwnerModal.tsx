@@ -1,6 +1,6 @@
 "use client";
 import Modal from "@/libs/Modal";
-import {AlertType, UserVerificationStatus, UserVerificationStatusLabel , ColorButton} from "@/types/enum";
+import {UserVerificationStatus, UserVerificationStatusLabel , ColorButton} from "@/types/enum";
 import {useState} from "react";
 import ImagePreview from "@/libs/ImagePreview";
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
@@ -12,13 +12,6 @@ import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
 import {formatDateTime} from "@/util/fnCommon";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
 import Image from "next/image";
-import {USER_VERIFICATION_APPROVE} from "@/services/api";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import useSWRMutation from "swr/mutation";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
-import RejectReasonModal from "./RejectReasonModal";
-import Loading from "@/components/modals/Loading";
 import InfoRow from "@/libs/InfoRow";
 
 interface ResUserVerificationDTO {
@@ -42,25 +35,14 @@ interface DetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   data: ResUserVerificationDTO;
-  reload: () => void;
 }
 
 export default function DetailRegisterOwnerModal({
                                                    isOpen,
                                                    onClose,
                                                    data,
-                                                   reload,
                                                  }: DetailModalProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-  const dispatch = useDispatch();
-  const { patch } = useAxiosContext();
-  const approveFetcher = (url: string) => patch<BaseResponse<void>>(url).then(res => res.data);
-
-  const {trigger: approveRequest, isMutating: isApproving} = useSWRMutation(
-    `${USER_VERIFICATION_APPROVE}/${data.userVerificationId}/approve`,
-    approveFetcher
-  );
 
 
 
@@ -78,31 +60,9 @@ export default function DetailRegisterOwnerModal({
     }
   };
 
-  const handleApprove = () => {
-    approveRequest().then(response => {
-      const alert: AlertState = {
-        isOpen: true,
-        title: "Thành công",
-        message: response.message || "Đã duyệt yêu cầu thành công",
-        type: AlertType.SUCCESS,
-      };
-      dispatch(openAlert(alert));
-      reload();
-      onClose();
-    }).catch((error: ErrorResponse) => {
-      const alert: AlertState = {
-        isOpen: true,
-        title: "Lỗi",
-        message: error.message || "Không thể duyệt yêu cầu",
-        type: AlertType.ERROR,
-      };
-      dispatch(openAlert(alert));
-    });
-  };
 
 
 
-  const isPending = data.userVerificationStatus === UserVerificationStatus.PENDING;
 
   return (
     <>
@@ -111,16 +71,10 @@ export default function DetailRegisterOwnerModal({
         onClose={onClose}
         title="Chi tiết đăng ký người bán"
         maxWidth="4xl"
-        showSaveButton={isPending}
-        saveButtonText="Duyệt đơn"
-        cancelButtonText={isPending ? "Từ chối đơn" : "Hủy"}
-        onSave={handleApprove}
-        onCancel={() => setIsRejectModalOpen(true)}
-        showOnCancel={isPending}
-        isLoading={isApproving}
+        showSaveButton={false}
+        cancelButtonText={"Đóng"}
         saveButtonColor= {ColorButton.SUCCESS}
       >
-        {isApproving && <Loading/>}
         <div className="space-y-6">
           {/* Header Info */}
           <div className="flex items-center justify-between bg-primary-c50 p-4 rounded-lg border border-primary-c200">
@@ -292,16 +246,6 @@ export default function DetailRegisterOwnerModal({
         </div>
       </Modal>
 
-      {/* Reject Reason Modal */}
-      <RejectReasonModal
-        isOpen={isRejectModalOpen}
-        onClose={() => setIsRejectModalOpen(false)}
-        userName={data.userName}
-        userVerificationId={data.userVerificationId}
-        reload={reload}
-        onParentClose={onClose}
-
-      />
 
       {/* Image Preview */}
       <ImagePreview

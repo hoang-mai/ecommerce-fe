@@ -43,6 +43,7 @@ export const productDefault: ProductView = {
   categoryId: "",
   categoryName: "",
   shopStatus: ShopStatus.INACTIVE,
+  productDetails: {},
   productImages: [],
   productAttributes: [],
   productVariants: [],

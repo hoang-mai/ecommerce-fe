@@ -11,7 +11,7 @@ export default function InfoRow({icon, label, value}: Props) {
     {icon && <div className="text-primary-c600 mt-0.5">{icon}</div>}
     <div className="flex-1">
       <span className="text-sm font-semibold text-grey-c600 block mb-1">{label}</span>
-      <span className="text-base text-grey-c800">{value || 'Chưa cập nhật'}</span>
+      <span className="text-base text-grey-c800 whitespace-pre-wrap">{value || 'Chưa cập nhật'}</span>
     </div>
   </div>
 }

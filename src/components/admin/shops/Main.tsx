@@ -11,7 +11,7 @@ import ChangeCircleRoundedIcon from '@mui/icons-material/ChangeCircleRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import Title from "@/libs/Title";
-import {formatDateTime} from "@/util/FnCommon";
+import {formatDateTime} from "@/util/fnCommon";
 import UpdateStatusShopModal from "./UpdateStatusShopModal";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import { SHOP_VIEW} from "@/services/api";

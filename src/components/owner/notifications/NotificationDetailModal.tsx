@@ -1,6 +1,6 @@
 import {NotificationView} from "@/types/interface";
 import Modal from "@/libs/Modal";
-import {formatDateTime} from "@/util/FnCommon";
+import {formatDateTime} from "@/util/fnCommon";
 import InfoRow from "@/libs/InfoRow";
 import TitleRoundedIcon from '@mui/icons-material/TitleRounded';
 import MessageRoundedIcon from '@mui/icons-material/MessageRounded';

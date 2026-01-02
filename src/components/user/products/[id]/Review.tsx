@@ -9,7 +9,7 @@ import Empty from '@/libs/Empty';
 import ImagePreview from '@/libs/ImagePreview';
 import DropdownSelect from '@/libs/DropdownSelect';
 import {AlertType, RatingNumber} from '@/types/enum';
-import {formatDateTime} from "@/util/FnCommon";
+import {formatDateTime} from "@/util/fnCommon";
 import {ProductView, ReviewView} from "@/types/interface";
 import Star from "@/libs/Star";
 import {ratingOptions, sortOptions} from "@/components/owner/reviews/Main";
@@ -21,100 +21,13 @@ import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import Pagination from "@/libs/Pagination";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
+import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 
 type Props = {
   id: string,
   product: ProductView;
 };
 
-const mockReviews: ReviewView[] = [
-  {
-    reviewId: '1',
-    userId: 'user1',
-    fullName: 'Nguyễn Văn A',
-    avatarUrl: 'https://i.pravatar.cc/150?img=1',
-    rating: 5,
-    comment: 'Sản phẩm rất tốt, chất lượng vượt mong đợi. Giao hàng nhanh, đóng gói cẩn thận.',
-    imageUrls: ['https://picsum.photos/200/200?random=1', 'https://picsum.photos/200/200?random=2'],
-    attributes: {Mau: 'Đỏ', Size: 'L'},
-    createdAt: '2024-11-20T10:30:00',
-    reviewReplyView: {
-      replyId: 'r1',
-      content: 'Cảm ơn bạn đã tin tưởng sử dụng sản phẩm của shop!',
-      createdAt: '2024-11-21T09:00:00',
-      replierId: "",
-      updatedAt: ""
-    },
-    orderItemId: "",
-    productId: "",
-    productName: "",
-    productVariantId: "",
-    ownerId: "",
-    shopId: "",
-    updatedAt: "",
-    isUpdated: false
-  },
-  {
-    reviewId: '2',
-    userId: 'user2',
-    fullName: 'Trần Thị B',
-    avatarUrl: 'https://i.pravatar.cc/150?img=2',
-    rating: 4,
-    comment: 'Sản phẩm đẹp, đúng mô tả. Tuy nhiên giao hàng hơi lâu.',
-    imageUrls: ['https://picsum.photos/200/200?random=3'],
-    attributes: {Mau: 'Xanh', Size: 'M'},
-    createdAt: '2024-11-19T15:20:00',
-    reviewReplyView: null,
-    orderItemId: "",
-    productId: "",
-    productName: "",
-    productVariantId: "",
-    ownerId: "",
-    shopId: "",
-    updatedAt: "",
-    isUpdated: false
-  },
-  {
-    reviewId: '3',
-    userId: 'user3',
-    fullName: 'Lê Văn C',
-    avatarUrl: 'https://i.pravatar.cc/150?img=3',
-    rating: 5,
-    comment: 'Tuyệt vời, sẽ ủng hộ shop lần sau.',
-    imageUrls: [],
-    attributes: {Mau: 'Đen', Size: 'XL'},
-    createdAt: '2024-11-18T08:45:00',
-    reviewReplyView: null,
-    orderItemId: "",
-    productId: "",
-    productName: "",
-    productVariantId: "",
-    ownerId: "",
-    shopId: "",
-    updatedAt: "",
-    isUpdated: false
-  },
-  {
-    reviewId: '4',
-    userId: 'user4',
-    fullName: 'Phạm Thị D',
-    avatarUrl: 'https://i.pravatar.cc/150?img=4',
-    rating: 3,
-    comment: 'Sản phẩm bình thường, giá hơi cao.',
-    imageUrls: [],
-    attributes: {Mau: 'Trắng', Size: 'S'},
-    createdAt: '2024-11-17T14:30:00',
-    reviewReplyView: null,
-    orderItemId: "",
-    productId: "",
-    productName: "",
-    productVariantId: "",
-    ownerId: "",
-    shopId: "",
-    updatedAt: "",
-    isUpdated: false
-  }
-];
 
 export default function Review({id, product}: Props) {
   const {get} = useAxiosContext();
@@ -142,7 +55,7 @@ export default function Review({id, product}: Props) {
     revalidateOnFocus: false,
   })
   const pageData = data?.data;
-  const reviews = pageData?.data || mockReviews;
+  const reviews = pageData?.data || [];
   const totalPages = pageData?.totalPages || 0;
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -179,14 +92,17 @@ export default function Review({id, product}: Props) {
     return (
       <div className="bg-white rounded-lg p-6 border border-grey-c100 hover:shadow-md transition-shadow">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 relative rounded-full overflow-hidden flex-shrink-0 border-2 border-grey-c100">
-            <Image
-              src={review.avatarUrl ?? '/avatar_hoat_hinh_db4e0e9cf4.webp'}
-              alt={review.fullName}
-              width={48}
-              height={48}
-              className="object-cover"
-            />
+          <div className="w-12 h-12 relative rounded-full overflow-hidden flex-shrink-0 border-2 border-grey-c100 flex items-center justify-center">
+            {review?.avatarUrl
+              ? <Image
+                width={48}
+                height={48}
+                src={review?.avatarUrl}
+                alt="User Avatar"
+                className="w-12 h-12 rounded-full object-cover"
+              />
+              : <AccountCircleRoundedIcon className="text-primary-c700 !w-12 !h-12"/>
+            }
           </div>
 
           <div className="flex-1 min-w-0">

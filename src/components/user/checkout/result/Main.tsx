@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertType } from "@/types/enum";
 import Button from "@/libs/Button";
 import { ColorButton } from "@/types/enum";
-import { formatPrice } from "@/util/FnCommon";
+import { formatPrice } from "@/util/fnCommon";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlineRounded';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineRounded';
 import {useDispatch} from "react-redux";

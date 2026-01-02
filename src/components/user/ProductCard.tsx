@@ -1,6 +1,6 @@
 import React, {useMemo, useRef, useState} from "react";
 import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRounded";
-import {formatNumber, formatPrice} from "@/util/FnCommon";
+import {formatNumber, formatPrice} from "@/util/fnCommon";
 import Button from "@/libs/Button";
 import {AlertType, ColorButton} from "@/types/enum";
 import {useCartData, useCartRef} from "@/components/provider/CartProvider";

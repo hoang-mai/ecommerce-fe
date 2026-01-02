@@ -21,7 +21,7 @@ import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded';
 import {useEffect} from "react";
 import {RootState} from "@/redux/store";
-import {getCurrentUserId} from "@/util/FnCommon";
+import {getCurrentUserId} from "@/util/fnCommon";
 import {usePushNotification} from "@/hooks/usePushNotification";
 import {clearAllLocalStorage} from "@/services/localStorage";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
@@ -102,7 +102,7 @@ export default function Sidebar() {
 
   }, [chatState.newMessage, mutate]);
   return <div
-    className={"hidden md:flex sticky top-0 left-0 z-sidebar h-screen w-60 min-w-60 border-r border-grey-c200 shadow-md flex flex-col px-4 pt-8 pb-4 rounded-r-lg overflow-y-auto"}>
+    className={"hidden md:flex sticky top-0 left-0 z-sidebar h-screen w-60 min-w-60 border-r border-grey-c200 shadow-md flex-col px-4 pt-8 pb-4 rounded-r-lg overflow-y-auto"}>
     {/* Logo */}
     <div className="flex items-center justify-center mb-8">
       <Image src={"/evoway.svg"} alt={"logo"} width={300} height={40} className={"h-full w-30"}/>
@@ -150,16 +150,16 @@ export default function Sidebar() {
     <div className="flex items-center gap-3 px-4 py-3 bg-grey-c100 rounded-lg mt-2 cursor-pointer">
 
         <div
-          className="w-[40px] h-[40px] rounded-full overflow-hidden border-2 border-primary-c200">
+          className="w-[40px] h-[40px] rounded-full overflow-hidden border-2 border-primary-c200 flex items-center justify-center">
           {dataUser?.avatarUrl
             ? <Image
-              width={32}
-              height={32}
+              width={40}
+              height={40}
               src={dataUser?.avatarUrl}
               alt="User Avatar"
               className="w-full h-full rounded-full object-cover"
             />
-            : <AccountCircleRoundedIcon className="text-primary-c700 !text-4xl"/>
+            : <AccountCircleRoundedIcon className="text-primary-c700 !w-[40px] !h-[40px]"/>
           }
         </div>
 

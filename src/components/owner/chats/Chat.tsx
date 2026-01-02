@@ -6,7 +6,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import React, {useEffect, useRef, useState} from "react";
 import {ChatDTO, MessageDTO, UserCache} from "@/types/interface";
 import {AlertType, MessageType, ShopStatus, AccountStatus} from "@/types/enum";
-import {getTimeAgo} from "@/util/FnCommon";
+import {getTimeAgo} from "@/util/fnCommon";
 import TextField from "@/libs/TextField";
 
 import webSocketService from "@/services/webSocket";

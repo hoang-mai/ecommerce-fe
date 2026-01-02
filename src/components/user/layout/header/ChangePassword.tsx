@@ -12,6 +12,11 @@ import {AUTH} from "@/services/api";
 import { AlertType } from "@/types/enum";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
+import {useRouter} from "next/navigation";
+import {clearAllCookie} from "@/services/cookie";
+import {clearAllLocalStorage} from "@/services/localStorage";
+import {usePushNotification} from "@/hooks/usePushNotification";
+import Loading from "@/components/modals/Loading";
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(6, 'Mật khẩu hiện tại phải có ít nhất 6 ký tự').max(20, 'Mật khẩu hiện tại không được quá 20 ký tự'),
@@ -47,11 +52,13 @@ export default function ChangePassword({isOpen, setIsOpen}: Props) {
       confirmPassword: '',
     },
   });
+  const {isSubscribed, unsubscribe} = usePushNotification();
   const {trigger, isMutating} = useSWRMutation(AUTH, fetcher);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const dispatch = useDispatch();
+  const router = useRouter();
   const onSubmit = (data: ChangePasswordFormData) => {
     trigger(data).then((res) => {
       const alert : AlertState = {
@@ -61,7 +68,13 @@ export default function ChangePassword({isOpen, setIsOpen}: Props) {
         title:"Đổi mật khẩu thành công"
       }
       dispatch(openAlert(alert));
-      setIsOpen(false);
+      if(isSubscribed){
+        unsubscribe();
+      }
+      clearAllLocalStorage();
+      clearAllCookie();
+      window.dispatchEvent(new Event('authChanged'));
+      router.push('/login');
     }).catch((error: ErrorResponse) => {
       const alert : AlertState = {
         isOpen: true,
@@ -77,7 +90,7 @@ export default function ChangePassword({isOpen, setIsOpen}: Props) {
                 isLoading={isMutating}
                 onSave={handleSubmit(onSubmit)}
   >
-
+    {isMutating && <Loading/>}
     <div className={"flex flex-col gap-6"}>
       <Controller control={control} name={"currentPassword"} render={({field}) =>
         <div className={"relative"}>

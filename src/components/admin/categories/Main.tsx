@@ -20,7 +20,7 @@ import useSWR from "swr";
 import {CATEGORY} from "@/services/api";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
 import {useDebounce} from "@/hooks/useDebounce";
-import {formatDateTime} from "@/util/FnCommon";
+import {formatDateTime} from "@/util/fnCommon";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";

@@ -37,7 +37,7 @@ export default function TextSearch({
   onLoadMore,
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(value);
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
   const [isPositioned, setIsPositioned] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, debounceTime);
@@ -49,7 +49,6 @@ export default function TextSearch({
   const hasMoreRef = useRef(hasMore);
   const isLoadingRef = useRef(isLoading);
 
-  // Update refs when props change
   useEffect(() => {
     hasMoreRef.current = hasMore;
   }, [hasMore]);
@@ -57,13 +56,6 @@ export default function TextSearch({
   useEffect(() => {
     isLoadingRef.current = isLoading;
   }, [isLoading]);
-
-  useEffect(() => {
-    if (value !== searchTerm) {
-      setSearchTerm(value);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
 
   useEffect(() => {
     if (debouncedSearchTerm !== undefined) {

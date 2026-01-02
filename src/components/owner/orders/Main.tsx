@@ -11,7 +11,7 @@ import DropdownSelect from '@/libs/DropdownSelect';
 import TextField from '@/libs/TextField';
 import Table, {Column} from '@/libs/Table';
 import Title from '@/libs/Title';
-import {formatDateTime, formatPrice} from '@/util/FnCommon';
+import {formatDateTime, formatPrice} from '@/util/fnCommon';
 import {AlertType, OrderStatus, SortDir} from '@/types/enum';
 import {getLabelStatusColor, getStatusColor, OrderView, statusOptions} from "@/components/user/orders/Main";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -52,10 +52,7 @@ export default function Main() {
     }
   })
   const fetcher = (url: string) => get<BaseResponse<PageResponse<OrderView>>>(url).then(res => res.data);
-  const {data, isLoading, error, mutate} = useSWR(url, fetcher, {
-    refreshInterval: 0,
-    revalidateOnFocus: false,
-  })
+  const {data, isLoading, error, mutate} = useSWR(url, fetcher)
 
   const fetcherUpdateOrderStatus = (url: string, {arg}: {
     arg: { orderId: string, orderStatus: OrderStatus, reason: string }
@@ -239,7 +236,7 @@ export default function Main() {
 
   return (
     <div className={"overflow-y-auto min-h-0"}>
-      {isLoading && isMutating && <Loading/>}
+      {(isLoading && isMutating) && <Loading/>}
       <Title title="Quản lý đơn hàng" isDivide/>
 
       {/* Filters */}

@@ -5,7 +5,7 @@ import useSWR from "swr";
 import {USER_VERIFICATION} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {AlertType, UserVerificationStatus, UserVerificationStatusLabel} from "@/types/enum";
-import {formatDateTime} from "@/util/FnCommon";
+import {formatDateTime} from "@/util/fnCommon";
 import DropdownSelect from "@/libs/DropdownSelect";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
 import Image from "next/image";
@@ -18,7 +18,7 @@ import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import {useDebounce} from "@/hooks/useDebounce";
 import ImagePreview from "@/libs/ImagePreview";
-import DetailRegisterOwnerModal from "@/components/admin/register-owners/DetailRegisterOwnerModal";
+import DetailRegisterOwnerModal from "./DetailRegisterOwnerModal";
 import { useBuildUrl } from "@/hooks/useBuildUrl";
 
 interface ResUserVerificationDTO {
@@ -77,7 +77,7 @@ export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
     }
   });
 
-  const {data, error, isLoading, mutate} = useSWR(url, fetcher, {
+  const {data, error, isLoading} = useSWR(url, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   });
@@ -376,7 +376,6 @@ export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
           isOpen={isDetailModalOpen}
           onClose={() => setIsDetailModalOpen(false)}
           data={selectedData}
-          reload={mutate}
         />
       )}
     </>

@@ -11,12 +11,15 @@ import {SvgIconComponent} from '@mui/icons-material';
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import useSWRMutation from "swr/mutation";
-import {LOGOUT} from "@/services/api";
+import {LOGOUT, USER} from "@/services/api";
 import {useDispatch} from "react-redux";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {clearAllCookie} from "@/services/cookie";
 import {clearAllLocalStorage} from "@/services/localStorage";
+import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
+import {ProfileData} from "@/components/user/profile/Main";
+import useSWR from "swr";
 
 interface MenuItem {
   name: string;
@@ -25,7 +28,12 @@ interface MenuItem {
 }
 export default function Sidebar() {
   const pathname = usePathname();
-  const { post } = useAxiosContext();
+  const {get, post } = useAxiosContext();
+  const fetcherUser = (url: string) => get<BaseResponse<ProfileData>>(url).then(res => res.data.data);
+  const {data: dataUser} = useSWR(USER, fetcherUser, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  })
   const fetcher = (url: string) => post<BaseResponse<never>>(url, {}, {withCredentials: true}).then(res => res.data);
   const menuItems: MenuItem[] = [
     {name: "Tổng quan", link: "/admin/dashboard", icon: DashboardIcon},
@@ -55,7 +63,7 @@ export default function Sidebar() {
   };
 
   return <div
-    className={"hidden md:flex sticky top-0 left-0 z-sidebar h-screen w-60 min-w-60 border-r border-grey-c200 shadow-md flex flex-col px-4 pt-8 pb-4 rounded-r-lg overflow-y-auto"}>
+    className={"hidden md:flex sticky top-0 left-0 z-sidebar h-screen w-60 min-w-60 border-r border-grey-c200 shadow-md flex-col px-4 pt-8 pb-4 rounded-r-lg overflow-y-auto"}>
     {/* Logo */}
     <div className="flex items-center justify-center mb-8">
       <Image src={"/evoway.svg"} alt={"logo"} width={300} height={40} className={"h-full w-30"}/>
@@ -88,19 +96,25 @@ export default function Sidebar() {
 
     {/* Avatar */}
     <div className="flex items-center gap-3 px-4 py-3 bg-grey-c100 rounded-lg mt-2 cursor-pointer">
+
       <div
-        className="w-[40px] h-[40px] rounded-full overflow-hidden border-2 border-primary-c200">
-        <Image
-          src={"/avatar_hoat_hinh_db4e0e9cf4.webp"}
-          alt={"avatar"}
-          width={40}
-          height={40}
-          className={"w-full h-full object-cover"}
-        />
+        className="w-[40px] h-[40px] rounded-full overflow-hidden border-2 border-primary-c200 flex items-center justify-center">
+        {dataUser?.avatarUrl
+          ? <Image
+            width={40}
+            height={40}
+            src={dataUser?.avatarUrl}
+            alt="User Avatar"
+            className="w-full h-full rounded-full object-cover"
+          />
+          : <AccountCircleRoundedIcon className="text-primary-c700 !w-[40px] !h-[40px]"/>
+        }
       </div>
+
       <div className="flex-1 overflow-hidden">
-        <p className="text-sm font-semibold text-grey-c800 truncate">Quản trị viên</p>
-        <p className="text-xs text-grey-c500 truncate">admin@evoway.com</p>
+        <p
+          className="text-sm font-semibold text-grey-c800 truncate"> {dataUser?.fullName || 'Người dùng'}</p>
+        <p className="text-xs text-grey-c500 truncate">{dataUser?.email}</p>
       </div>
     </div>
 

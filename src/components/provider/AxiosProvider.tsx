@@ -7,11 +7,11 @@ import {
   PUSH_SUBSCRIPTION,
   REFRESH_TOKEN,
   REGISTER,
-  REVIEW_VIEW,
+  REVIEW_VIEW, SEARCH_KEYWORD,
   SHOP_VIEW,
   USER_VIEW
 } from '@/services/api';
-import {isTokenExpired} from "@/util/FnCommon";
+import {isTokenExpired} from "@/util/fnCommon";
 import {clearAllLocalStorage} from "@/services/localStorage";
 import {clearAllCookie} from "@/services/cookie";
 
@@ -44,6 +44,7 @@ const ROUTER_NOT_AUTHS = [
   REVIEW_VIEW,
   `${USER_VIEW}/search-address`,
   `${PUSH_SUBSCRIPTION}/unsubscribe`,
+  SEARCH_KEYWORD,
 ];
 
 export const AxiosProvider: FC<{ children: ReactNode }> = ({children}) => {

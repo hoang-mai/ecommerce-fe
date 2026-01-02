@@ -1,7 +1,7 @@
 import Modal from "@/libs/Modal";
 import {AlertType, CategoryStatus} from "@/types/enum";
 import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
-import {formatDateTime} from "@/util/FnCommon";
+import {formatDateTime} from "@/util/fnCommon";
 import useSWR from "swr";
 import {CATEGORY} from "@/services/api";
 import {useEffect} from "react";

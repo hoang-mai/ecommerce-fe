@@ -6,7 +6,7 @@ import Table, {Column} from "@/libs/Table";
 import {AccountStatus, AlertType, Role} from "@/types/enum";
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import Title from "@/libs/Title";
-import {formatDateTime} from "@/util/FnCommon";
+import {formatDateTime} from "@/util/fnCommon";
 import useSWR from "swr";
 import {USER_VIEW} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
@@ -22,6 +22,7 @@ import Image from "next/image";
 import ChangeAccountStatusModal from "@/components/admin/users/ChangeAccountStatusModal";
 import DetailUserModal from "@/components/admin/users/DetailUserModal";
 import { useBuildUrl } from "@/hooks/useBuildUrl";
+import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 
 interface UserViewDto {
   userId: number;
@@ -204,14 +205,17 @@ export default function Main() {
       sortable: true,
       render: (row) => (
         <div className={"flex items-center flex-row gap-2"}>
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-c200 bg-white flex-shrink-0">
-            <Image
-              src={row.avatarUrl || "/avatar_hoat_hinh_db4e0e9cf4.webp"}
-              alt={"avatar"}
-              width={48}
-              height={48}
-              className="w-full h-full object-cover"
-            />
+          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-c200 bg-white flex-shrink-0 flex items-center justify-center">
+            {row?.avatarUrl
+              ? <Image
+                width={40}
+                height={40}
+                src={row?.avatarUrl}
+                alt="User Avatar"
+                className="w-full h-full rounded-full object-cover"
+              />
+              : <AccountCircleRoundedIcon className="text-primary-c700 !w-[40px] !h-[40px]"/>
+            }
           </div>
           <div className="text-sm font-semibold text-grey-c900">
             {highlightText(row.fullName, keyword)}

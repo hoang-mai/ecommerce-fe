@@ -2,15 +2,14 @@
 import Title from "@/libs/Title"
 import useSWR from "swr";
 import {ADDRESS, CART_VIEW, ORDER} from "@/services/api";
-import { useAxiosContext } from '@/components/provider/AxiosProvider';
+import {useAxiosContext} from '@/components/provider/AxiosProvider';
 import {useDispatch} from "react-redux";
 import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {AlertType} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
-import Loading from "@/components/modals/Loading";
 import Image from "next/image";
 import Chip, {ChipColor} from "@/libs/Chip";
-import {formatDate, formatPrice} from "@/util/FnCommon";
+import {formatDate, formatPrice} from "@/util/fnCommon";
 import CountdownTimer from "@/libs/CountDownTime";
 import {ResInfoAddressDTO} from "@/components/user/profile/AddressModal";
 import {useAddressMapping} from "@/hooks/useAddressMapping";
@@ -24,6 +23,7 @@ import Divide from "@/libs/Divide";
 import {CartViewDTO, ProductView} from "@/types/interface";
 import Empty from "@/libs/Empty";
 import {useCartData} from "@/components/provider/CartProvider";
+import Loading from "@/components/modals/Loading";
 
 interface ResCreateProductOrderItemDTO {
   productId: number;
@@ -32,19 +32,25 @@ interface ResCreateProductOrderItemDTO {
   quantity: number;
   price: number;
 }
+
 interface ResCreateOrderItemDTO {
   shopId: number;
   productOrderItems: ResCreateProductOrderItemDTO[];
 }
+
 interface ResCreateOrderDTO {
   receiverName: string;
   address: string;
   phoneNumber: string;
   items: ResCreateOrderItemDTO[];
 }
+
+const cartDefault: CartViewDTO = {cartId: "", cartItems: []};
 export default function Main() {
-  const { get, post } = useAxiosContext();
-  const fetcherCreateOrder = (url: string, {arg}:{arg:ResCreateOrderDTO}) => post<BaseResponse<never>>(url,arg).then(res=>res.data);
+  const {get, post} = useAxiosContext();
+  const fetcherCreateOrder = (url: string, {arg}: {
+    arg: ResCreateOrderDTO
+  }) => post<BaseResponse<never>>(url, arg).then(res => res.data);
   const fetcher = (url: string) => get<BaseResponse<CartViewDTO>>(url).then(res => res.data);
   const fetcherAddress = (url: string) => get<BaseResponse<ResInfoAddressDTO>>(url).then(res => res.data);
   const {mutate} = useCartData();
@@ -65,7 +71,8 @@ export default function Main() {
   const [isOpenAddressModal, setIsOpenAddressModal] = useState(false);
   const [currentTime] = useState(() => Date.now());
   const {getFullAddress} = useAddressMapping();
-  const {trigger} = useSWRMutation(ORDER,fetcherCreateOrder);
+  const {trigger} = useSWRMutation(ORDER, fetcherCreateOrder);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   useEffect(() => {
     if (error) {
       const alert: AlertState = {
@@ -111,7 +118,7 @@ export default function Main() {
       dispatch(openAlert(alert));
       return;
     }
-
+    setIsCreatingOrder(true);
     const orderItems: ResCreateOrderItemDTO[] = cartData.cartItems.map(item => {
       const productOrderItems: ResCreateProductOrderItemDTO[] = item.productCartItems
         .map(pci => {
@@ -141,9 +148,9 @@ export default function Main() {
     };
 
     trigger(reqCreateOrder)
-        .then(()=>{
-            mutate();
-        })
+      .then(() => {
+        mutate();
+      })
       .catch((err: ErrorResponse) => {
         const alert: AlertState = {
           isOpen: true,
@@ -155,10 +162,8 @@ export default function Main() {
       });
   }
 
-  const cartData: CartViewDTO = useMemo(
-    () => data?.data ?? {cartId: "", cartItems: []},
-    [data?.data]
-  );
+  const cartData: CartViewDTO = data?.data ?? cartDefault;
+
   const totalQuantity = useMemo(() => cartData.cartItems.reduce(
     (sum, item) => sum + item.productCartItems.reduce((s, pci) => {
       const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
@@ -182,7 +187,7 @@ export default function Main() {
     return sum + itemTotal;
   }, 0), [cartData, isDiscountActive]);
   return <div className="max-w-6xl mx-auto p-4">
-    {isLoading && isLoadingAddress && <Loading/>}
+    {(isLoading || isLoadingAddress || isCreatingOrder) && <Loading/>}
     <Title title={"Thanh toán & Giao hàng"}/>
     <div className="flex flex-col gap-6 mt-4">
       {cartData.cartItems.length > 0 ? cartData.cartItems.map(item => {
@@ -213,7 +218,7 @@ export default function Main() {
                     >
                       <div className="w-24 h-24 flex-shrink-0">
                         <Image
-                          src={productView.productImages[0]?.imageUrl || '/avatar_hoat_hinh_db4e0e9cf4.webp'}
+                          src={productView.productImages[0]?.imageUrl}
                           alt={productView.name}
                           width={100}
                           height={100}

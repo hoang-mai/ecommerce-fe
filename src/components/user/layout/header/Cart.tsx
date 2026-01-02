@@ -1,7 +1,7 @@
 import Modal from "@/libs/Modal";
 import Image from "next/image";
 import React, {useEffect, useMemo, useState} from "react";
-import {formatDate, formatPrice} from "@/util/FnCommon";
+import {formatDate, formatPrice} from "@/util/fnCommon";
 import Button from "@/libs/Button";
 import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
 import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
@@ -262,7 +262,7 @@ export function Cart({isOpen, setIsOpen}: Props) {
                       >
                         <div className="w-24 h-24 flex-shrink-0">
                           <Image
-                            src={productView.productImages[0]?.imageUrl || '/avatar_hoat_hinh_db4e0e9cf4.webp'}
+                            src={productView.productImages[0]?.imageUrl}
                             alt={productView.name}
                             width={100}
                             height={100}

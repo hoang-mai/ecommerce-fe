@@ -1,7 +1,7 @@
 import {ReqAddToCartDTO} from "@/components/user/ProductCard";
 import Modal from "@/libs/Modal";
 import React, {useEffect, useMemo, useState} from "react";
-import {formatPrice} from "@/util/FnCommon";
+import {formatPrice} from "@/util/fnCommon";
 import ImagePreview from "@/libs/ImagePreview";
 import Button from "@/libs/Button";
 import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftRounded';
@@ -248,7 +248,7 @@ export default function SelectProductVariantModal({isOpen, setIsOpen, product}: 
 
         </div>
       </div>
-      <p className="text-gray-600 mt-4">{product.description}</p>
+      <p className="text-gray-600 mt-4 whitespace-pre-wrap">{product.description}</p>
     </Modal>
     {/* Image Preview */}
     <ImagePreview

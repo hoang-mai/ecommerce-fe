@@ -3,7 +3,7 @@ import Image from "next/image";
 import SearchInput from "@/components/user/layout/header/SearchInput";
 import Information from "@/components/user/layout/header/Information";
 import Link from "next/link";
-import {getRoleFromJwtToken} from "@/util/FnCommon";
+import {getRoleFromJwtToken} from "@/util/fnCommon";
 import {Role} from "@/types/enum";
 import {useRouter} from "next/navigation";
 import {useEffect, useState} from "react";

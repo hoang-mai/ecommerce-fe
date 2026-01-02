@@ -22,7 +22,7 @@ import Loading from "@/components/modals/Loading";
 import CheckBox from "@/libs/CheckBox";
 import {ProductView} from "@/types/interface";
 import DateTimePicker from "@/libs/DateTimePicker";
-import {toLocalISOString} from "@/util/FnCommon";
+import {formatDateTime} from "@/util/fnCommon";
 
 const productAttributeSchema = z.object({
   productAttributeId: z.string().optional(),
@@ -48,6 +48,10 @@ const updateProductSchema = z.object({
   discount: z.number().min(0, "Phần trăm giả giá phải lớn hơn 0").max(100, "Phần trăm giảm giá phải nhỏ hơn 100").optional(),
   discountStartDate: z.date().optional(),
   discountEndDate: z.date().optional(),
+  productDetails: z.array(z.object({
+    key: z.string().min(1, "Trường không được để trống"),
+    value: z.string().min(1, "Giá trị không được để trống"),
+  })).optional(),
   imageUrls: z.array(z.union([z.instanceof(File), z.string()]))
     .min(1, "Vui lòng tải lên ít nhất 1 ảnh")
     .refine((files) => files.every(file =>
@@ -90,38 +94,34 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
   const [allCategories, setAllCategories] = useState<{ categoryId: number; categoryName: string }[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
-  // State to manage variant attribute values locally
   const [variantAttributeValues, setVariantAttributeValues] = useState<{
     [variantIndex: number]: { [attrName: string]: string }
   }>({});
 
-  const {data: categoriesData, isLoading: isLoadingCategories} = useSWR(
+  const {isLoading: isLoadingCategories} = useSWR(
     isOpen ? `${CATEGORY}/search?keyword=${searchKeyword}&pageNo=${pageNo}&pageSize=10` : null,
     categoryFetcher,
     {
       refreshInterval: 0,
       revalidateOnFocus: false,
+      onSuccess: (data) => {
+        if(!data) return;
+        if (pageNo === 0) {
+          setAllCategories(data.data);
+        } else {
+          setAllCategories(prev => [...prev, ...data.data]);
+        }
+        setHasMore(data.hasNextPage);
+      },
     }
   );
 
-  // Reset page and categories when search keyword changes
   useEffect(() => {
     setPageNo(0);
     setAllCategories([]);
     setHasMore(false);
   }, [searchKeyword]);
 
-  // Update categories when new data arrives
-  useEffect(() => {
-    if (categoriesData) {
-      if (pageNo === 0) {
-        setAllCategories(categoriesData.data);
-      } else {
-        setAllCategories(prev => [...prev, ...categoriesData.data]);
-      }
-      setHasMore(categoriesData.hasNextPage);
-    }
-  }, [categoriesData, pageNo]);
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isLoadingCategories) {
@@ -148,8 +148,9 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
       description: productData.description,
       categoryId: productData.categoryId.toString(),
       discount: productData.discount || undefined,
-      discountStartDate: productData.discountStartDate ? new Date(productData.discountStartDate) : undefined,
-      discountEndDate: productData.discountEndDate ? new Date(productData.discountEndDate) : undefined,
+      discountStartDate: productData.discountStartDate ? new Date(productData.discountStartDate +'Z') : undefined,
+      discountEndDate: productData.discountEndDate ? new Date(productData.discountEndDate +'Z') : undefined,
+      productDetails: productData.productDetails ? Object.entries(productData.productDetails).map(([k, v]) => ({ key: k, value: v })) : [],
       imageUrls: productData.productImages.map(img => img.imageUrl),
       productAttributes: productData.productAttributes.map(attr => ({
         productAttributeId: attr.productAttributeId,
@@ -175,7 +176,11 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
     name: "productVariants",
   });
 
-  // Watch fields using useWatch
+  const { fields: detailFields, append: appendDetail, remove: removeDetail } = useFieldArray({
+    control,
+    name: "productDetails",
+  });
+
   const imageUrls = useWatch({control, name: 'imageUrls'});
   const productAttributes = useWatch({control, name: 'productAttributes'});
   const productVariants = useWatch({control, name: 'productVariants'});
@@ -308,18 +313,27 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
         attributeValues: Object.keys(cleanedAttributeValues).length > 0 ? cleanedAttributeValues : undefined,
       };
     });
-
+    const productDetailsRecord: { [key: string]: string } | undefined =
+      data.productDetails && Array.isArray(data.productDetails) && data.productDetails.length > 0
+        ? data.productDetails.reduce((acc: { [k: string]: string }, cur) => {
+          if (cur.key && cur.key.trim()) {
+            acc[cur.key.trim()] = cur.value ?? "";
+          }
+          return acc;
+        }, {})
+        : undefined;
     const productUpdateData = {
       shopId: productData.shopId,
       name: data.name,
       description: data.description || "",
       categoryId: parseInt(data.categoryId),
       discount: data.discount,
-      discountStartDate: toLocalISOString(data.discountStartDate),
-      discountEndDate: toLocalISOString(data.discountEndDate),
+      discountStartDate: data.discountStartDate,
+      discountEndDate: data.discountEndDate,
       productAttributes: data.productAttributes || [],
       productVariants: cleanedVariants,
       deletedImageIds: deletedImageIds,
+      productDetails: productDetailsRecord
     };
     formData.append('data', new Blob([JSON.stringify(productUpdateData)], {type: 'application/json'}));
 
@@ -351,7 +365,6 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
     });
   };
 
-  // Initialize variantAttributeValues from existing data
   useEffect(() => {
     const initialValues: { [variantIndex: number]: { [attrName: string]: string } } = {};
 
@@ -503,8 +516,73 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
 
         </div>
 
+        <div className=" rounded-lg py-4 space-y-4 mt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-bold text-primary-c900">2. Thông tin chi tiết sản phẩm</h4>
+            <Button
+              type="button"
+              color={ColorButton.PRIMARY}
+              startIcon={<AddRoundedIcon/>}
+              onClick={() => appendDetail({ key: "", value: "" })}
+            >
+              Thêm thông tin
+            </Button>
+          </div>
+
+          {detailFields.length === 0 ? (
+            <p className="text-sm text-grey-c600 text-center py-4">Chưa có thông tin chi tiết nào.</p>
+          ) : (
+            <div className="space-y-3">
+              {detailFields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-2 gap-3 items-center">
+                  <Controller
+                    name={`productDetails.${index}.key` as const}
+                    control={control}
+                    render={({field}) => (
+                      <TextField
+                        value={field.value}
+                        onChange={field.onChange}
+                        label="Trường"
+                        placeholder=""
+                        required
+                        error={errors.productDetails?.[index]?.key?.message}
+                      />
+                    )}
+                  />
+
+                  <div className="flex gap-2">
+                    <Controller
+                      name={`productDetails.${index}.value` as const}
+                      control={control}
+                      render={({field}) => (
+                        <TextField
+                          value={field.value}
+                          onChange={field.onChange}
+                          label="Giá trị"
+                          placeholder=""
+                          required
+                          error={errors.productDetails?.[index]?.value?.message}
+                        />
+                      )}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => removeDetail(index)}
+                      className="p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-colors"
+                      title="Xóa thông tin"
+                    >
+                      <DeleteRoundedIcon fontSize="small"/>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Product Images */}
-        <h4 className="font-bold text-primary-c900 mb-3">2. Hình ảnh sản phẩm</h4>
+        <h4 className="font-bold text-primary-c900 mb-3">3. Hình ảnh sản phẩm</h4>
 
         <Controller
           name="imageUrls"
@@ -529,7 +607,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
         {/* Product Attributes */}
         <div className="rounded-lg py-4 space-y-4 mt-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="font-bold text-primary-c900">3. Thuộc tính sản phẩm (VD: Màu sắc, Kích thước)</h4>
+            <h4 className="font-bold text-primary-c900">4. Thuộc tính sản phẩm (VD: Màu sắc, Kích thước)</h4>
             <Button
               type="button"
               color={ColorButton.PRIMARY}
@@ -668,7 +746,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
         {/* Product Variants */}
         <div className="rounded-lg py-4 space-y-4 mt-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="font-bold text-primary-c900">4. Biến thể sản phẩm (Giá & Kho)</h4>
+            <h4 className="font-bold text-primary-c900">5. Biến thể sản phẩm (Giá & Kho)</h4>
             <Button
               type="button"
               color={ColorButton.PRIMARY}

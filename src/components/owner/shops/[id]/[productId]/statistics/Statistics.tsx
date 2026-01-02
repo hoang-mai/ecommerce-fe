@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import {ProductView} from "@/types/interface";
-import {formatNumber, formatPrice} from "@/util/FnCommon";
+import {formatNumber, formatPrice} from "@/util/fnCommon";
 import Card from "@/libs/Card";
 import MonetizationOnRoundedIcon from "@mui/icons-material/MonetizationOnRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";

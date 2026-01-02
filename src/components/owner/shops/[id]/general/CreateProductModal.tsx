@@ -37,6 +37,10 @@ const createProductSchema = z.object({
   name: z.string().min(1, "Tên sản phẩm không được để trống"),
   description: z.string().optional(),
   categoryId: z.string().min(1, "Danh mục không được để trống"),
+  productDetails: z.array(z.object({
+    key: z.string().min(1, "Trường không được để trống"),
+    value: z.string().min(1, "Giá trị không được để trống"),
+  })).optional(),
   imageUrls: z.array(z.instanceof(File))
     .min(1, "Vui lòng tải lên ít nhất 1 ảnh")
     .refine((files) => files.every(file => file.size <= 3 * 1024 * 1024),
@@ -64,7 +68,6 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
   const [pageNo, setPageNo] = useState(0);
   const [allCategories, setAllCategories] = useState<{ categoryId: number; categoryName: string }[]>([]);
   const [hasMore, setHasMore] = useState(false);
-  // State to manage variant attribute values locally
   const [variantAttributeValues, setVariantAttributeValues] = useState<{[variantIndex: number]: {[attrName: string]: string}}>({});
 
   const fetcher = (url: string, {arg}: { arg: FormData }) =>
@@ -78,33 +81,30 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
     get<BaseResponse<PageResponse<{ categoryId: number; categoryName: string }>>>(url)
       .then(res => res.data.data);
 
-  const {data: categoriesData, isLoading: isLoadingCategories} = useSWR(
+  const {isLoading: isLoadingCategories} = useSWR(
     isOpen ? `${CATEGORY}/search?keyword=${searchKeyword}&pageNo=${pageNo}&pageSize=10` : null,
     categoryFetcher,
     {
       refreshInterval: 0,
       revalidateOnFocus: false,
+      onSuccess: (data) => {
+        if(!data) return;
+        if (pageNo === 0) {
+          setAllCategories(data.data);
+        } else {
+          setAllCategories(prev => [...prev, ...data.data]);
+        }
+        setHasMore(data.hasNextPage);
+      },
     }
   );
 
-  // Reset page and categories when search keyword changes
   useEffect(() => {
     setPageNo(0);
     setAllCategories([]);
     setHasMore(false);
   }, [searchKeyword]);
 
-  // Update categories when new data arrives
-  useEffect(() => {
-    if (categoriesData) {
-      if (pageNo === 0) {
-        setAllCategories(categoriesData.data);
-      } else {
-        setAllCategories(prev => [...prev, ...categoriesData.data]);
-      }
-      setHasMore(categoriesData.hasNextPage);
-    }
-  }, [categoriesData, pageNo]);
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isLoadingCategories) {
@@ -130,6 +130,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
       name: "",
       description: "",
       categoryId: "",
+      productDetails: [],
       imageUrls: [],
       productAttributes: [],
       productVariants: [{
@@ -149,6 +150,11 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
   const {fields: variantFields, append: appendVariant, remove: removeVariant} = useFieldArray({
     control,
     name: "productVariants",
+  });
+
+  const { fields: detailFields, append: appendDetail, remove: removeDetail } = useFieldArray({
+    control,
+    name: "productDetails",
   });
 
   const attributes = useWatch({
@@ -175,14 +181,21 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
   const onSubmit = (data: CreateProductFormData) => {
     const formData = new FormData();
 
-    // Clean up attributeValues - only keep defined values
+    const productDetailsRecord: { [key: string]: string } | undefined =
+      data.productDetails && Array.isArray(data.productDetails) && data.productDetails.length > 0
+        ? data.productDetails.reduce((acc: { [k: string]: string }, cur) => {
+          if (cur.key && cur.key.trim()) {
+            acc[cur.key.trim()] = cur.value ?? "";
+          }
+          return acc;
+        }, {})
+        : undefined;
+
     const cleanedVariants = data.productVariants.map((variant, index) => {
       const cleanedAttributeValues: {[key: string]: string} = {};
 
-      // Get attribute values from local state instead of form
       const localAttrValues = variantAttributeValues[index] || {};
 
-      // Only include attributes that have actual values
       Object.keys(localAttrValues).forEach(key => {
         const value = localAttrValues[key];
         if (value && value !== "" && value !== undefined) {
@@ -205,6 +218,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
       categoryId: parseInt(data.categoryId),
       productAttributes: data.productAttributes || [],
       productVariants: cleanedVariants,
+      productDetails: productDetailsRecord,
     };
 
     formData.append('data', new Blob([JSON.stringify(productData)], {type: 'application/json'}));
@@ -309,8 +323,72 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
           />
         </div>
 
-        {/* Product Images */}
-        <h4 className="font-bold text-primary-c900 mb-3">2. Hình ảnh sản phẩm</h4>
+        <div className=" rounded-lg py-4 space-y-4 mt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-bold text-primary-c900">2. Thông tin chi tiết sản phẩm</h4>
+            <Button
+              type="button"
+              color={ColorButton.PRIMARY}
+              startIcon={<AddRoundedIcon/>}
+              onClick={() => appendDetail({ key: "", value: "" })}
+            >
+              Thêm thông tin
+            </Button>
+          </div>
+
+          {detailFields.length === 0 ? (
+            <p className="text-sm text-grey-c600 text-center py-4">Chưa có thông tin chi tiết nào.</p>
+          ) : (
+            <div className="space-y-3">
+              {detailFields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-2 gap-3 items-center">
+                  <Controller
+                    name={`productDetails.${index}.key` as const}
+                    control={control}
+                    render={({field}) => (
+                      <TextField
+                        value={field.value}
+                        onChange={field.onChange}
+                        label="Trường"
+                        placeholder=""
+                        required
+                        error={errors.productDetails?.[index]?.key?.message}
+                      />
+                    )}
+                  />
+
+                  <div className="flex gap-2">
+                    <Controller
+                      name={`productDetails.${index}.value` as const}
+                      control={control}
+                      render={({field}) => (
+                        <TextField
+                          value={field.value}
+                          onChange={field.onChange}
+                          label="Giá trị"
+                          placeholder=""
+                          required
+                          error={errors.productDetails?.[index]?.value?.message}
+                        />
+                      )}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => removeDetail(index)}
+                      className="p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-colors"
+                      title="Xóa thông tin"
+                    >
+                      <DeleteRoundedIcon fontSize="small"/>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <h4 className="font-bold text-primary-c900 mb-3">3. Hình ảnh sản phẩm</h4>
 
         <Controller
           name="imageUrls"
@@ -334,7 +412,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
         {/* Product Attributes */}
         <div className=" rounded-lg py-4 space-y-4 mt-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="font-bold text-primary-c900">3. Thuộc tính sản phẩm (VD: Màu sắc, Kích thước)</h4>
+            <h4 className="font-bold text-primary-c900">4. Thuộc tính sản phẩm</h4>
             <Button
               type="button"
               color={ColorButton.PRIMARY}
@@ -443,7 +521,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
         {/* Product Variants */}
         <div className=" rounded-lg py-4 space-y-4 mt-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="font-bold text-primary-c900">4. Biến thể sản phẩm (Giá & Kho)</h4>
+            <h4 className="font-bold text-primary-c900">5. Biến thể sản phẩm (Giá & Kho)</h4>
             <Button
               type="button"
               color={ColorButton.PRIMARY}

@@ -13,7 +13,7 @@ import {AlertType, ColorButton, ProductStatus, ShopStatus} from "@/types/enum";
 import Button from "@/libs/Button";
 import {ProductVariant, ProductView,} from "@/types/interface";
 import ImagePreview from "@/libs/ImagePreview";
-import {formatNumber, formatPrice} from "@/util/FnCommon";
+import {formatNumber, formatPrice} from "@/util/fnCommon";
 import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
 import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
 import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRounded";
@@ -46,6 +46,7 @@ const productDefault: ProductView = {
   categoryId: "",
   categoryName: "",
   shopStatus: ShopStatus.ACTIVE,
+  productDetails: {},
   productImages: [],
   productAttributes: [],
   productVariants: [],
@@ -72,7 +73,6 @@ export default function Main({id}: Props) {
   const product = data?.data ?? productDefault;
   const defaultVariant = useMemo(() =>
     product.productVariants.find(v => v.isDefault) ?? product.productVariants[0], [product.productVariants]);
-
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(defaultVariant || null);
   const [quantity, setQuantity] = useState(1);
@@ -174,6 +174,7 @@ export default function Main({id}: Props) {
         initialAttributes[av.productAttributeId] = av.productAttributeValueId;
       });
       setTimeout(() => {
+        setSelectedVariant(defaultVariant);
         setSelectedAttributes(initialAttributes)
       }, 0);
     }
@@ -184,7 +185,7 @@ export default function Main({id}: Props) {
     <div className="max-w-5xl mx-auto p-6">
       {isLoading && <Loading/>}
       <div className="flex flex-col gap-10">
-        <div className={"flex flex-row gap-10 flex-nowrap"}>
+        <div className={"flex flex-row gap-10 flex-nowrap bg-white p-4"}>
           <div className={"flex-1"}>
             <div className={"aspect-square rounded-lg overflow-hidden mb-3"}>
               {product.productImages.length > 0 ? (
@@ -201,14 +202,8 @@ export default function Main({id}: Props) {
           <div className={"w-md"}>
             <div className={"text-xs text-grey-c600"}>{product.categoryName}</div>
             <div className={"flex flex-row gap-2"}><h3
-              className="text-2xl font-bold truncate ">{product.name}</h3>
-              {isDiscountActive && (
-                <div
-                  className=" bg-gradient-to-r from-support-c900 to-support-c800 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-md flex items-center gap-1">
-                  <span className="text-xs">-</span>
-                  <span>{product.discount}%</span>
-                </div>
-              )}</div>
+              className="text-2xl font-bold ">{product.name}</h3>
+              </div>
             {/* Rating */}
             <div className="flex items-center gap-2 mb-3">
               {Number(product.rating) > 0 ? (
@@ -235,6 +230,13 @@ export default function Main({id}: Props) {
                     <span className="text-gray-400 text-sm line-through">
                       {formatPrice(selectedVariant?.price ?? 0)}
                     </span>
+                    {isDiscountActive && (
+                      <div
+                        className=" bg-gradient-to-r from-support-c900 to-support-c800 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-md flex items-center gap-1">
+                        <span className="text-xs">-</span>
+                        <span>{product.discount}%</span>
+                      </div>
+                    )}
                   </div>
                   <span className="text-xs text-green-600 font-medium ">
                     Tiết kiệm {formatPrice((selectedVariant?.price ?? 0) - (selectedVariant?.price ?? 0) * (100 - (product.discount || 0)) / 100)}
@@ -321,7 +323,21 @@ export default function Main({id}: Props) {
 
           </div>
         </div>
-        <p className="text-gray-600 mt-4">{product.description}</p>
+       <div className="bg-white p-8">
+         <div className={"mb-8"}>
+           <div className={"font-semibold text-2xl mb-4"}>Chi tiết sản phẩm</div>
+           <div
+             className="text-gray-600 mt-4 whitespace-pre-wrap">
+             {product.productDetails && Object.entries(product.productDetails).map(([key, value]) => (
+               <div key={key} className="flex flex-row">
+                 <span className="font-medium text-grey-c800 mr-40">{key}:</span>
+                 <span className="text-grey-c700">{value}</span>
+               </div>
+           ))}</div>
+         </div>
+         
+          <div className={"font-semibold text-2xl mb-4"}>Mô tả sản phẩm</div>
+          <p className="text-gray-600 mt-4 whitespace-pre-wrap">{product.description}</p></div>
       </div>
       <ImagePreview
         imageUrl={selectedImage}

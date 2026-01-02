@@ -9,7 +9,7 @@ import MessageSquare from '@mui/icons-material/Message';
 import ImagePreview from '@/libs/ImagePreview';
 import Chip, {ChipSize, ChipVariant} from '@/libs/Chip';
 import {ReviewView} from "@/types/interface";
-import {formatDate, formatDateTime} from "@/util/FnCommon";
+import {formatDate, formatDateTime} from "@/util/fnCommon";
 import Title from "@/libs/Title";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import DropdownSelect from "@/libs/DropdownSelect";
@@ -26,6 +26,7 @@ import Loading from "@/components/modals/Loading";
 import Pagination from "@/libs/Pagination";
 import useSWRMutation from "swr/mutation";
 import Empty from "@/libs/Empty";
+import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 
 export const ratingOptions: Option[] = [
   {id: '', label: 'Tất cả đánh giá'},
@@ -81,14 +82,17 @@ const ReviewCard: React.FC<ReviewCardProps> = React.memo(function ReviewCard({
   return (
     <div className="bg-white rounded-lg p-6 border border-grey-c200 hover:shadow-md transition-shadow">
       <div className="flex items-start gap-4">
-        <div className="w-12 h-12 relative rounded-full overflow-hidden flex-shrink-0 border-2 border-grey-c200">
-          <Image
-            src={review.avatarUrl || '/avatar_hoat_hinh_db4e0e9cf4.webp'}
-            alt={review.reviewId}
-            width={48}
-            height={48}
-            className="object-cover"
-          />
+        <div className="w-12 h-12 relative rounded-full overflow-hidden flex-shrink-0 border-2 border-grey-c100 flex items-center justify-center">
+          {review?.avatarUrl
+            ? <Image
+              width={48}
+              height={48}
+              src={review?.avatarUrl}
+              alt="User Avatar"
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            : <AccountCircleRoundedIcon className="text-primary-c700 !w-12 !h-12"/>
+          }
         </div>
 
         <div className="flex-1 min-w-0">
@@ -240,10 +244,7 @@ export default function Main() {
     }
   })
   const fetcher = (url: string) => get<BaseResponse<PageResponse<ReviewView>>>(url, {isToken: true}).then(res => res.data);
-  const {data, isLoading, error, mutate} = useSWR(url, fetcher, {
-    refreshInterval: 0,
-    revalidateOnFocus: false,
-  })
+  const {data, isLoading, error, mutate} = useSWR(url, fetcher)
 
   const fetcherCreateReply = (url: string, {arg}: { arg: { reviewId: string, content: string } }) =>
     post<BaseResponse<never>>(url, {reviewId: arg.reviewId, content: arg.content}).then(res => res.data);
