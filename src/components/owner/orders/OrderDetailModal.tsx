@@ -58,6 +58,8 @@ export default function OrderDetailModal({ isOpen, setIsOpen, order }: Props) {
             <InfoRow label={"Khách hàng"} value={order.receiverName} />
             <InfoRow label={"Số điện thoại"} value={order.phoneNumber} />
             <InfoRow label={"Địa chỉ giao hàng"} value={order.address} />
+            <InfoRow label={"Ghi chú"} value={order.note || 'Không có'} />
+            {order.reason && <InfoRow label={"Lý do hủy"} value={order.reason} />}
           </div>
 
         <h3 className="text-lg font-bold text-grey-c800 mb-4 flex items-center gap-2">

@@ -20,7 +20,6 @@ import {openAlert} from "@/redux/slice/alertSlice";
 import DisableAccount from "@/components/user/layout/header/DisableAccount";
 import {useCartData, useCartRef} from "@/components/provider/CartProvider";
 import {clearAllLocalStorage} from "@/services/localStorage";
-import {Cart} from "@/components/user/layout/header/Cart";
 import useSWR from "swr";
 import {ProfileData} from "@/components/user/profile/Main";
 import Image from "next/image";
@@ -64,7 +63,6 @@ export default function Information() {
   const [notificationSelected, setNotificationSelected] = useState<NotificationView | null>(null);
   const router = useRouter();
   const {trigger} = useSWRMutation(LOGOUT, fetcher);
-  const [isOpenCart, setIsOpenCart] = useState<boolean>(false);
   const dispatch = useDispatch();
 
 
@@ -137,7 +135,7 @@ export default function Information() {
           icon={<ShoppingCartRoundedIcon/>}
           badge={data}
           label="Giỏ hàng"
-          onClick={() => setIsOpenCart(true)}
+          onClick={() => router.push('/cart')}
         />
       </div>
 
@@ -184,7 +182,7 @@ export default function Information() {
               label: (
                 <div className="flex items-center gap-2">
                   <ShoppingCartRoundedIcon className="text-success-c700"/>
-                  <span>Đơn mua</span>
+                  <span>Đơn hàng</span>
                 </div>
               ),
               onClick: () => router.push('/orders')
@@ -226,7 +224,6 @@ export default function Information() {
 
       {isOpen && <ChangePassword isOpen={isOpen} setIsOpen={setIsOpen}/>}
       {isOpenDisableAccount && <DisableAccount isOpen={isOpenDisableAccount} setIsOpen={setIsOpenDisableAccount}/>}
-      {isOpenCart && <Cart isOpen={isOpenCart} setIsOpen={setIsOpenCart}/>}
       {isOpenNotification && notificationSelected && <NotificationDetailModal isOpen={isOpenNotification} onClose={()=>setIsOpenNotification(false)} notification={notificationSelected}/>}
     </div>
   );

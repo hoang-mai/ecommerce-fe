@@ -1,7 +1,7 @@
 "use client";
 import React, {useEffect, useMemo, useState} from "react";
 import useSWR from "swr";
-import {CART, PRODUCT_VIEW} from "@/services/api";
+import {CART, CART_VIEW, PRODUCT_VIEW} from "@/services/api";
 import {useAxiosContext} from '@/components/provider/AxiosProvider';
 import Loading from "@/components/modals/Loading";
 import {ReqAddToCartDTO} from "@/components/user/ProductCard";
@@ -11,12 +11,14 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType, ColorButton, ProductStatus, ShopStatus} from "@/types/enum";
 import Button from "@/libs/Button";
-import {ProductVariant, ProductView,} from "@/types/interface";
+import {ProductVariant, ProductView, CartViewDTO,} from "@/types/interface";
 import ImagePreview from "@/libs/ImagePreview";
 import {formatNumber, formatPrice} from "@/util/fnCommon";
 import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
 import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
 import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRounded";
+import ShoppingBagRoundedIcon from "@mui/icons-material/ShoppingBagRounded";
+import {useRouter} from "next/navigation";
 import Carousel from "@/libs/Carousel";
 import CountdownTimer from "@/libs/CountDownTime";
 import Review from "@/components/user/products/[id]/Review";
@@ -79,6 +81,7 @@ export default function Main({id}: Props) {
   const [currentTime] = useState(() => Date.now());
   const {mutate} = useCartData();
   const dispatch = useDispatch();
+  const router = useRouter();
   const {trigger, isMutating} = useSWRMutation(CART, addToCartFetcher);
 
   useEffect(() => {
@@ -124,6 +127,56 @@ export default function Main({id}: Props) {
             type: AlertType.SUCCESS,
           };
           dispatch(openAlert(alert));
+        })
+        .catch((err: ErrorResponse) => {
+          const alert: AlertState = {
+            isOpen: true,
+            title: "Thất bại",
+            message: err.message || "Thêm vào giỏ hàng thất bại",
+            type: AlertType.ERROR,
+          };
+          dispatch(openAlert(alert));
+        });
+    } else {
+      const alert: AlertState = {
+        isOpen: true,
+        title: "Thất bại",
+        message: "Vui lòng chọn biến thể sản phẩm hợp lệ",
+        type: AlertType.ERROR,
+      };
+      dispatch(openAlert(alert));
+    }
+  }
+
+  const handleBuyNow = () => {
+    if (selectedVariant) {
+      trigger({
+        shopId: product.shopId,
+        productId: product.productId,
+        productVariantId: selectedVariant.productVariantId,
+        quantity: quantity,
+      })
+        .then(async () => {
+          mutate();
+          // Fetch cart data để lấy productCartItemId
+          const cartData = await get<BaseResponse<CartViewDTO>>(CART_VIEW).then(res => res.data);
+          const cartItems = cartData.data?.cartItems || [];
+          // Tìm productCartItemId của sản phẩm vừa thêm
+          let productCartItemId: string | null = null;
+          for (const item of cartItems) {
+            const found = item.productCartItems.find(
+              pci => pci.productView.productId === product.productId &&
+                pci.productVariantId === selectedVariant.productVariantId
+            );
+            if (found) {
+              productCartItemId = found.productCartItemId;
+              break;
+            }
+          }
+          if (productCartItemId) {
+            sessionStorage.setItem("selectedCartItems", JSON.stringify([productCartItemId]));
+          }
+          router.push("/checkout");
         })
         .catch((err: ErrorResponse) => {
           const alert: AlertState = {
@@ -310,7 +363,14 @@ export default function Main({id}: Props) {
                 </Button>
               </div>
             </div>
-            <div className="mb-4">
+            <div className="mb-4 flex flex-row gap-3">
+              <Button type="button"
+                      color={ColorButton.PRIMARY}
+                      onClick={handleBuyNow}
+                      disabled={isMutating}
+                      startIcon={<ShoppingBagRoundedIcon/>}>
+                Mua ngay
+              </Button>
               <Button type="button"
                       color={ColorButton.PRIMARY}
                       onClick={handleAddToCart}
@@ -318,6 +378,7 @@ export default function Main({id}: Props) {
                       startIcon={<AddShoppingCartRoundedIcon/>}>
                 Thêm vào giỏ
               </Button>
+
             </div>
 
 

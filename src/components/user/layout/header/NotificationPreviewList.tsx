@@ -171,6 +171,7 @@ function NotificationPreviewItem({notification,setNotificationSelected,setIsOpen
       case NotificationType.PAYMENT:
         return <PaymentRoundedIcon className="text-primary-c700"/>;
       case NotificationType.INFO:
+        return <InfoRoundedIcon className="text-primary-c700"/>;
       default:
         return <InfoRoundedIcon className="text-grey-c700"/>;
     }

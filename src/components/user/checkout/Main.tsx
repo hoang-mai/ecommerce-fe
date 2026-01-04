@@ -1,11 +1,11 @@
 "use client";
-import Title from "@/libs/Title"
+import Title from "@/libs/Title";
 import useSWR from "swr";
 import {ADDRESS, CART_VIEW, ORDER} from "@/services/api";
-import {useAxiosContext} from '@/components/provider/AxiosProvider';
+import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useDispatch} from "react-redux";
 import React, {useCallback, useEffect, useMemo, useState} from "react";
-import {AlertType} from "@/types/enum";
+import {AlertType, ColorButton} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Image from "next/image";
 import Chip, {ChipColor} from "@/libs/Chip";
@@ -17,13 +17,14 @@ import AddressModal from "@/components/user/profile/AddressModal";
 import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import Button from "@/libs/Button";
-import {ColorButton} from "@/types/enum";
 import useSWRMutation from "swr/mutation";
-import Divide from "@/libs/Divide";
 import {CartViewDTO, ProductView} from "@/types/interface";
 import Empty from "@/libs/Empty";
 import {useCartData} from "@/components/provider/CartProvider";
 import Loading from "@/components/modals/Loading";
+import StorefrontIcon from "@mui/icons-material/Storefront";
+import {useRouter} from "next/navigation";
+import TextField from "@/libs/TextField";
 
 interface ResCreateProductOrderItemDTO {
   productId: number;
@@ -35,6 +36,7 @@ interface ResCreateProductOrderItemDTO {
 
 interface ResCreateOrderItemDTO {
   shopId: number;
+  note?: string;
   productOrderItems: ResCreateProductOrderItemDTO[];
 }
 
@@ -46,18 +48,26 @@ interface ResCreateOrderDTO {
 }
 
 const cartDefault: CartViewDTO = {cartId: "", cartItems: []};
+
 export default function Main() {
+  const router = useRouter();
   const {get, post} = useAxiosContext();
-  const fetcherCreateOrder = (url: string, {arg}: {
-    arg: ResCreateOrderDTO
-  }) => post<BaseResponse<never>>(url, arg).then(res => res.data);
+  const dispatch = useDispatch();
+  const {mutate} = useCartData();
+  const {getFullAddress} = useAddressMapping();
+
+  // Fetchers
   const fetcher = (url: string) => get<BaseResponse<CartViewDTO>>(url).then(res => res.data);
   const fetcherAddress = (url: string) => get<BaseResponse<ResInfoAddressDTO>>(url).then(res => res.data);
-  const {mutate} = useCartData();
+  const fetcherCreateOrder = (url: string, {arg}: { arg: ResCreateOrderDTO }) =>
+    post<BaseResponse<never>>(url, arg).then(res => res.data);
+
+  // SWR hooks
   const {data, isLoading, error} = useSWR(CART_VIEW, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   });
+
   const {
     data: dataAddress,
     isLoading: isLoadingAddress,
@@ -66,13 +76,31 @@ export default function Main() {
   } = useSWR(`${ADDRESS}/default`, fetcherAddress, {
     refreshInterval: 0,
     revalidateOnFocus: false,
-  })
-  const dispatch = useDispatch();
+  });
+
+  const {trigger} = useSWRMutation(ORDER, fetcherCreateOrder);
+
+  // States
   const [isOpenAddressModal, setIsOpenAddressModal] = useState(false);
   const [currentTime] = useState(() => Date.now());
-  const {getFullAddress} = useAddressMapping();
-  const {trigger} = useSWRMutation(ORDER, fetcherCreateOrder);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [selectedCartItems, setSelectedCartItems] = useState<Set<string>>(new Set());
+  const [shopNotes, setShopNotes] = useState<Record<string, string>>({});
+
+  // Load selected items from sessionStorage
+  useEffect(() => {
+    const storedSelectedItems = sessionStorage.getItem("selectedCartItems");
+    if (storedSelectedItems) {
+      try {
+        const parsedItems = JSON.parse(storedSelectedItems);
+        setSelectedCartItems(new Set(parsedItems));
+      } catch (error) {
+        console.error("Failed to parse selectedCartItems:", error);
+      }
+    }
+  }, []);
+
+  // Handle errors
   useEffect(() => {
     if (error) {
       const alert: AlertState = {
@@ -80,24 +108,14 @@ export default function Main() {
         message: error.message || "Đã có lỗi xảy ra",
         type: AlertType.ERROR,
         title: "Lỗi tải dữ liệu",
-      }
+      };
       dispatch(openAlert(alert));
     }
-    if (errorAddress) {
-      const alert: AlertState = {
-        isOpen: true,
-        message: errorAddress.message || "Đã có lỗi xảy ra",
-        type: AlertType.ERROR,
-        title: "Lỗi tải dữ liệu",
-      }
-      dispatch(openAlert(alert));
-    }
-
   }, [dispatch, error, errorAddress]);
 
   const address = dataAddress?.data;
+  const cartData: CartViewDTO = data?.data ?? cartDefault;
 
-  // Function to check if a product's discount is active
   const isDiscountActive = useCallback((productView: ProductView) => {
     if (Number(productView.discount) <= 0) return false;
     if (!productView.discountStartDate || !productView.discountEndDate) return false;
@@ -107,6 +125,69 @@ export default function Main() {
 
     return startTime < currentTime && endTime > currentTime;
   }, [currentTime]);
+
+  const filteredCartData: CartViewDTO = useMemo(() => {
+    if (selectedCartItems.size === 0) {
+      return cartDefault;
+    }
+
+    const filteredCartItems = cartData.cartItems
+      .map(item => {
+        const filteredProductCartItems = item.productCartItems.filter(pci =>
+          selectedCartItems.has(pci.productCartItemId)
+        );
+
+        if (filteredProductCartItems.length === 0) {
+          return null;
+        }
+
+        return {
+          ...item,
+          productCartItems: filteredProductCartItems,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+
+    return {
+      cartId: cartData.cartId,
+      cartItems: filteredCartItems,
+    };
+  }, [cartData, selectedCartItems]);
+
+  // Calculate totals
+  const totalQuantity = useMemo(() => filteredCartData.cartItems.reduce(
+    (sum, item) => sum + item.productCartItems.reduce((s, pci) => {
+      const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
+      if (!variant || variant.stockQuantity === 0) return s;
+      return s + pci.quantity;
+    }, 0),
+    0
+  ), [filteredCartData]);
+
+  const totalPrice = useMemo(() => filteredCartData.cartItems.reduce((sum, item) => {
+    const itemTotal = item.productCartItems.reduce((itemSum, pci) => {
+      const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
+      if (!variant || variant.stockQuantity === 0) return itemSum;
+
+      const price = variant.price || 0;
+      const discount = pci.productView.discount || 0;
+      const hasDiscount = isDiscountActive(pci.productView);
+      const discountedPrice = hasDiscount ? Math.round(price * (1 - discount / 100)) : price;
+
+      return itemSum + discountedPrice * pci.quantity;
+    }, 0);
+    return sum + itemTotal;
+  }, 0), [filteredCartData, isDiscountActive]);
+
+  // Handle shop note change
+  const handleShopNoteChange = (shopId: string, note: string) => {
+    setShopNotes(prev => ({
+      ...prev,
+      [shopId]: note
+    }));
+  };
+
+  // Handle create order
   const handleCreateOrder = () => {
     if (!address) {
       const alert: AlertState = {
@@ -114,12 +195,25 @@ export default function Main() {
         message: "Vui lòng thêm địa chỉ nhận hàng trước khi thanh toán",
         type: AlertType.ERROR,
         title: "Thiếu địa chỉ nhận hàng",
-      }
+      };
       dispatch(openAlert(alert));
       return;
     }
+
+    if (filteredCartData.cartItems.length === 0) {
+      const alert: AlertState = {
+        isOpen: true,
+        message: "Vui lòng chọn sản phẩm trước khi thanh toán",
+        type: AlertType.ERROR,
+        title: "Không có sản phẩm",
+      };
+      dispatch(openAlert(alert));
+      return;
+    }
+
     setIsCreatingOrder(true);
-    const orderItems: ResCreateOrderItemDTO[] = cartData.cartItems.map(item => {
+
+    const orderItems: ResCreateOrderItemDTO[] = filteredCartData.cartItems.map(item => {
       const productOrderItems: ResCreateProductOrderItemDTO[] = item.productCartItems
         .map(pci => {
           const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
@@ -136,7 +230,9 @@ export default function Main() {
 
       return {
         shopId: Number(item.shopView.shopId),
-        productOrderItems: productOrderItems,
+        cartItemId: item.cartItemId,
+        note: shopNotes[item.shopView.shopId] || "",
+        productOrderItems,
       };
     });
 
@@ -150,6 +246,7 @@ export default function Main() {
     trigger(reqCreateOrder)
       .then(() => {
         mutate();
+        sessionStorage.removeItem("selectedCartItems");
       })
       .catch((err: ErrorResponse) => {
         const alert: AlertState = {
@@ -157,227 +254,288 @@ export default function Main() {
           message: err.message || "Đặt hàng thất bại",
           type: AlertType.ERROR,
           title: "Thất bại",
-        }
+        };
         dispatch(openAlert(alert));
+      })
+      .finally(() => {
+        setIsCreatingOrder(false);
       });
-  }
+  };
 
-  const cartData: CartViewDTO = data?.data ?? cartDefault;
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-grey-c50 to-grey-c100">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {(isLoading || isLoadingAddress || isCreatingOrder) && <Loading/>}
 
-  const totalQuantity = useMemo(() => cartData.cartItems.reduce(
-    (sum, item) => sum + item.productCartItems.reduce((s, pci) => {
-      const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
-      if (!variant || variant.stockQuantity === 0) return s;
-      return s + pci.quantity;
-    }, 0),
-    0
-  ), [cartData]);
-  const totalPrice = useMemo(() => cartData.cartItems.reduce((sum, item) => {
-    const itemTotal = item.productCartItems.reduce((itemSum, pci) => {
-      const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
-      if (!variant || variant.stockQuantity === 0) return itemSum;
-
-      const price = variant.price || 0;
-      const discount = pci.productView.discount || 0;
-      const hasDiscount = isDiscountActive(pci.productView);
-      const discountedPrice = hasDiscount ? Math.round(price * (100 - discount) / 100) : price;
-
-      return itemSum + discountedPrice * pci.quantity;
-    }, 0);
-    return sum + itemTotal;
-  }, 0), [cartData, isDiscountActive]);
-  return <div className="max-w-6xl mx-auto p-4">
-    {(isLoading || isLoadingAddress || isCreatingOrder) && <Loading/>}
-    <Title title={"Thanh toán & Giao hàng"}/>
-    <div className="flex flex-col gap-6 mt-4">
-      {cartData.cartItems.length > 0 ? cartData.cartItems.map(item => {
-          return (
-            <div key={item.cartItemId} className="border border-primary-c400 rounded-lg p-4 bg-white">
-              {/* Shop Header */}
-              <div className="mb-3 pb-2 border-b border-grey-c300">
-                <h3 className="font-semibold text-lg text-primary-c900">
-                  🏪 {item.shopView.shopName}
-                </h3>
-              </div>
-
-              {/* Products in this shop */}
-              <div className="space-y-3">
-                {item.productCartItems.map(pci => {
-                  const productView = pci.productView;
-                  const discount = productView.discount ?? 0;
-                  const variant = productView.productVariants.find(v => v.productVariantId === pci.productVariantId) ?? productView.productVariants[0];
-                  const price = variant?.price || 0;
-                  const hasDiscount = isDiscountActive(productView);
-                  const discountedPrice = hasDiscount ? Math.round(price * (100 - discount) / 100) : price;
-                  const itemTotal = discountedPrice * pci.quantity;
-
-                  return (
-                    <div
-                      key={pci.productCartItemId}
-                      className="flex flex-row gap-4 items-center p-3 border border-primary-c200 rounded-lg transition-shadow duration-200 bg-grey-c50 hover:shadow-md"
-                    >
-                      <div className="w-24 h-24 flex-shrink-0">
-                        <Image
-                          src={productView.productImages[0]?.imageUrl}
-                          alt={productView.name}
-                          width={100}
-                          height={100}
-                          className="object-cover rounded-md w-full h-full"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1 flex-1">
-                        <h4 className="font-semibold text-base text-primary-c900">{productView.name}</h4>
-                        <p className="truncate max-w-sm text-sm text-gray-700">{productView.description}</p>
-
-                        {/* Variant attributes */}
-                        <div className="flex gap-2 text-sm flex-col">
-                          {productView.productAttributes.map(attr => {
-                            const attrValue = variant?.productVariantAttributeValues.find(
-                              pvav => pvav.productAttributeId === attr.productAttributeId
-                            );
-
-                            const valueObj = attr.productAttributeValues.find(
-                              v => v.productAttributeValueId === attrValue?.productAttributeValueId
-                            );
-
-                            return valueObj ? (
-                              <span
-                                key={valueObj.productAttributeValueId}
-                                className="mr-1 text-gray-700 flex flex-row gap-2"
-                              >
-                                {attr.productAttributeName}:{' '}
-                                <span className="font-medium">{valueObj.productAttributeValue}</span>
-                              </span>
-                            ) : null;
-                          })}
-
-                          {/* Quantity */}
-                          <div className="flex flex-row items-center">
-                            <span className="text-gray-700">Số lượng:</span>
-                            <span
-                              className={`font-medium w-6 text-center items-center flex justify-center ml-1 ${variant?.stockQuantity === 0 ? "text-grey-c600" : "text-primary-c900"}`}>
-                              {pci.quantity}
-                            </span>
-                            {variant?.stockQuantity === 0 && <Chip label={"Hết hàng"} color={ChipColor.ERROR}/>}
-                          </div>
-
-                          {/* Price */}
-                          <div className="mt-1">
-                            {hasDiscount ? (
-                              <span className="text-primary-c900">
-                                Giá sau giảm:{' '}
-                                <span className="font-medium">
-                                  {formatPrice(discountedPrice)}
-                                </span>
-                              </span>
-                            ) : (
-                              <span className="text-primary-c900">
-                                Giá:{' '}
-                                <span className="font-medium">
-                                  {formatPrice(price)}
-                                </span>
-                              </span>
-                            )}
-                            {hasDiscount && (
-                              <span className="text-gray-400 text-xs ml-2">
-                                (Giá gốc:{' '}
-                                <span className="line-through">{formatPrice(price)}</span>)
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="text-sm font-semibold text-primary-c800">
-                          Thành tiền: {formatPrice(itemTotal)}
-                        </div>
-
-                        {hasDiscount && productView.discountEndDate && (
-                          <div className="flex gap-2 items-center text-xs text-gray-600">
-                            <span>Giảm giá đến: {formatDate(productView.discountEndDate)}</span>
-                            <CountdownTimer endDate={productView.discountEndDate}/>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )
-        })
-        :
-        <div className={"items-center flex flex-col justify-center text-grey-c500"}>
-          <Empty/>
-          Giỏ hàng của bạn đang trống.
+        {/* Page Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-primary-c900 mb-2">Thanh toán đơn hàng</h1>
+          <p className="text-grey-c600">Kiểm tra thông tin và xác nhận đơn hàng của bạn</p>
         </div>
-      }
-      {address && (
-        <div className="mt-6">
-          <div className="rounded-lg p-4 bg-white border border-grey-c300 flex justify-between items-start">
-            <div>
-              <div className="flex items-center gap-2">
-                <LocationOnRoundedIcon className={address.isDefault ? 'text-primary-c700' : 'text-grey-c600'}/>
-                <span className="font-semibold text-grey-c800">{address.receiverName}</span>
-                {address.isDefault && (
-                  <span className="bg-primary-c700 text-white text-xs px-2 py-1 rounded ml-2">Mặc định</span>
-                )}
-              </div>
-              <div className="mt-2 text-sm space-y-2">
-                <div className="flex items-center gap-2">
-                  <PhoneRoundedIcon className="text-grey-c600" style={{fontSize: 18}}/>
-                  <span className="text-grey-c700">{address.phoneNumber}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <LocationOnRoundedIcon className="text-grey-c600" style={{fontSize: 18}}/>
-                  <span
-                    className="text-grey-c700">{getFullAddress(address.detail, address.ward, address.province)}</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <button
-                className="cursor-pointer text-primary-c700 hover:text-primary-c900 text-sm font-semibold"
-                onClick={() => setIsOpenAddressModal(true)}
-              >
-                Thay đổi
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {isOpenAddressModal && (
-        <AddressModal
-          isOpen={isOpenAddressModal}
-          setIsOpen={() => setIsOpenAddressModal(false)}
-          mutateParent={() => mutateAddress && mutateAddress()}
-        />
-      )}
-      <div className="p-4">
-        <Divide/>
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-between text-base font-semibold text-grey-c800">
-            <span>Tổng số lượng:</span>
-            <span>{totalQuantity}</span>
-          </div>
-          <div className="flex justify-between text-lg font-bold text-primary-c900">
-            <span>Tổng tiền:</span>
-            <span>{formatPrice(totalPrice)}</span>
-          </div>
-          <div className="mt-4">
+        {!isLoading && filteredCartData.cartItems.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+            <Empty/>
+            <p className="text-grey-c500 text-lg mt-4 mb-6">Không có sản phẩm nào được chọn để thanh toán</p>
             <Button
-              type="button"
-              color={ColorButton.PRIMARY}
-              fullWidth
-              className="!py-3"
-              disabled={cartData.cartItems.length === 0 || !address}
-              onClick={handleCreateOrder}
+              onClick={() => router.push("/cart")}
+              className="bg-primary-c600 hover:bg-primary-c700 text-white"
             >
-              Thanh toán
+              Quay lại giỏ hàng
             </Button>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Left Column - Products & Address */}
+            <div className="flex-1 space-y-6">
+              {/* Delivery Address Section */}
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-primary-c600 to-primary-c700 px-5 py-4">
+                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <LocationOnRoundedIcon/>
+                    Địa chỉ nhận hàng
+                  </h2>
+                </div>
+                <div className="p-5">
+                  {address ? (
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <span className="font-semibold text-lg text-grey-c900">{address.receiverName}</span>
+                          {address.isDefault && (
+                            <Chip label="Mặc định" color={ChipColor.PRIMARY}/>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-grey-c700">
+                          <PhoneRoundedIcon className="text-grey-c500" style={{fontSize: 18}}/>
+                          <span>{address.phoneNumber}</span>
+                        </div>
+                        <div className="flex items-start gap-2 text-grey-c700">
+                          <LocationOnRoundedIcon className="text-grey-c500 mt-0.5" style={{fontSize: 18}}/>
+                          <span>{getFullAddress(address.detail, address.ward, address.province)}</span>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => setIsOpenAddressModal(true)}
+                        className="text-primary-c700 hover:text-primary-c900 hover:bg-primary-c50"
+                      >
+                        Thay đổi
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-grey-c500 mb-4">Bạn chưa có địa chỉ nhận hàng</p>
+                      <Button
+                        onClick={() => setIsOpenAddressModal(true)}
+                        color={ColorButton.PRIMARY}
+                      >
+                        Thêm địa chỉ
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Products by Shop */}
+              {filteredCartData.cartItems.map(item => {
+                const shopId = item.shopView.shopId;
+                return (
+                  <div key={item.cartItemId} className="bg-white rounded-xl shadow-sm overflow-hidden">
+                    {/* Shop Header */}
+                    <div className="bg-gradient-to-r from-primary-c50 to-primary-c100 px-5 py-4 border-b border-primary-c200">
+                      <div className="flex items-center gap-2">
+                        <StorefrontIcon className="text-primary-c700"/>
+                        <h3 className="font-semibold text-lg text-primary-c900">{item.shopView.shopName}</h3>
+                        <Chip label={`${item.productCartItems.length} sản phẩm`} color={ChipColor.PRIMARY}/>
+                      </div>
+                    </div>
+
+                    {/* Products List */}
+                    <div className="divide-y divide-grey-c100">
+                      {item.productCartItems.map(pci => {
+                        const productView = pci.productView;
+                        const discount = productView.discount || 0;
+                        const hasDiscount = isDiscountActive(productView);
+                        const variant = productView.productVariants.find(v => v.productVariantId === pci.productVariantId) ?? productView.productVariants[0];
+                        const price = variant?.price || 0;
+                        const discountedPrice = hasDiscount ? Math.round(price * (1 - discount / 100)) : price;
+                        const itemTotal = discountedPrice * pci.quantity;
+                        const isOutOfStock = variant?.stockQuantity === 0;
+
+                        return (
+                          <div
+                            key={pci.productCartItemId}
+                            className={`p-5 ${isOutOfStock ? "opacity-50 bg-grey-c50" : ""}`}
+                          >
+                            <div className="flex gap-4">
+                              {/* Product Image */}
+                              <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden border border-grey-c200">
+                                <Image
+                                  src={productView.productImages[0]?.imageUrl}
+                                  alt={productView.name}
+                                  width={96}
+                                  height={96}
+                                  className="object-cover w-full h-full"
+                                />
+                                {isOutOfStock && (
+                                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                    <Chip label="Hết hàng" color={ChipColor.ERROR}/>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Product Details */}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold text-base text-primary-c900 line-clamp-2 mb-1">
+                                  {productView.name}
+                                </h4>
+                                <p className="text-sm text-grey-c600 line-clamp-1 mb-2">
+                                  {productView.description}
+                                </p>
+
+                                {/* Variant Attributes */}
+                                <div className="flex flex-wrap gap-2 mb-2">
+                                  {productView.productAttributes.map(attr => {
+                                    const attrValue = variant?.productVariantAttributeValues.find(
+                                      pvav => pvav.productAttributeId === attr.productAttributeId
+                                    );
+                                    const valueObj = attr.productAttributeValues.find(
+                                      v => v.productAttributeValueId === attrValue?.productAttributeValueId
+                                    );
+
+                                    return valueObj ? (
+                                      <span
+                                        key={valueObj.productAttributeValueId}
+                                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-grey-c100 rounded text-xs"
+                                      >
+                                        <span className="text-grey-c600">{attr.productAttributeName}:</span>
+                                        <span className="font-medium text-grey-c800">{valueObj.productAttributeValue}</span>
+                                      </span>
+                                    ) : null;
+                                  })}
+                                </div>
+
+                                {/* Price & Quantity */}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-lg font-bold text-primary-c700">
+                                      {formatPrice(discountedPrice)}
+                                    </span>
+                                    {hasDiscount && (
+                                      <>
+                                        <span className="text-sm text-grey-c400 line-through">
+                                          {formatPrice(price)}
+                                        </span>
+                                        <Chip label={`-${discount}%`} color={ChipColor.SUCCESS}/>
+                                      </>
+                                    )}
+                                    <span className="text-grey-c600">x {pci.quantity}</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-sm text-grey-c600">Thành tiền: </span>
+                                    <span className="text-lg font-bold text-primary-c900">
+                                      {formatPrice(itemTotal)}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Discount Timer */}
+                                {hasDiscount && productView.discountEndDate && (
+                                  <div className="flex items-center gap-2 mt-2 text-xs text-grey-c600">
+                                    <span>Giảm giá kết thúc:</span>
+                                    <CountdownTimer endDate={productView.discountEndDate}/>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Shop Note Section */}
+                    <div className="px-5 py-4 bg-grey-c50 border-t border-grey-c200">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1">
+                          <TextField
+                            label={"Ghi chú cho cửa hàng"}
+                            placeholder="Nhập ghi chú cho đơn hàng"
+                            value={shopNotes[shopId] || ""}
+                            onChange={(e) => handleShopNoteChange(shopId, e)}
+                            className="w-full"
+                            typeTextField={"textarea"}
+                            rows={4}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Right Column - Order Summary */}
+            <div className="lg:w-96">
+              <div className="bg-white rounded-xl shadow-lg p-6 sticky top-6">
+                <h2 className="text-xl font-bold text-primary-c900 mb-6">Chi tiết thanh toán</h2>
+
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between items-center py-3 border-b border-grey-c200">
+                    <span className="text-grey-c700">Số cửa hàng:</span>
+                    <span className="font-semibold text-primary-c900">{filteredCartData.cartItems.length}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center py-3 border-b border-grey-c200">
+                    <span className="text-grey-c700">Tổng sản phẩm:</span>
+                    <span className="font-semibold text-primary-c900">{selectedCartItems.size}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center py-3 border-b border-grey-c200">
+                    <span className="text-grey-c700">Tổng số lượng:</span>
+                    <span className="font-semibold text-primary-c900">{totalQuantity}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center py-3 border-b border-grey-c200">
+                    <span className="text-grey-c700">Phí vận chuyển:</span>
+                    <span className="font-semibold text-green-600">Miễn phí</span>
+                  </div>
+
+                  <div className="flex justify-between items-center py-4 bg-primary-c50 -mx-6 px-6 rounded-lg">
+                    <span className="text-lg font-semibold text-primary-c900">Tổng thanh toán:</span>
+                    <span className="text-2xl font-bold text-primary-c700">
+                      {formatPrice(totalPrice)}
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleCreateOrder}
+                  disabled={filteredCartData.cartItems.length === 0 || !address || isCreatingOrder}
+                  color={ColorButton.PRIMARY}
+                  fullWidth
+                  className="!py-4 text-lg font-semibold"
+                >
+                  {isCreatingOrder ? "Đang xử lý..." : "Xác nhận đặt hàng"}
+                </Button>
+
+                <p className="text-xs text-grey-c500 text-center mt-4">
+                  Bằng việc đặt hàng, bạn đồng ý với các điều khoản sử dụng của chúng tôi
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Address Modal */}
+        {isOpenAddressModal && (
+          <AddressModal
+            isOpen={isOpenAddressModal}
+            setIsOpen={() => setIsOpenAddressModal(false)}
+            mutateParent={() => mutateAddress && mutateAddress()}
+          />
+        )}
       </div>
     </div>
-  </div>
+  );
 }
+

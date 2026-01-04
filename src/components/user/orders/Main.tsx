@@ -30,7 +30,6 @@ import {useRouter} from "next/navigation";
 import CancelOrderModal from "@/components/user/orders/CancelOrderModal";
 import CancelIcon from "@mui/icons-material/Cancel";
 import AssignmentReturnIcon from "@mui/icons-material/AssignmentReturn";
-
 interface ProductAttribute {
   attributeName: string;
   attributeValue: string;
@@ -64,6 +63,7 @@ export interface OrderView {
   receiverName: string;
   address: string;
   phoneNumber: string;
+  note: string;
   createdAt: string;
   updatedAt: string;
   orderItems: OrderItem[];
@@ -285,8 +285,9 @@ export default function Main() {
                 </div>
                 <div className={"border border-primary-c400 rounded-lg p-4 "}>
                   <div className="mb-3 pb-2 border-b border-grey-c300 flex items-center justify-between">
-                    <h3 className="font-semibold text-lg text-primary-c900">
-                      🏪 {order.shopName}
+                    <h3 className="font-semibold text-lg text-primary-c900 flex items-center gap-2">
+                     <StorefrontIcon/>
+                      {order.shopName}
                     </h3>
                     <Button
                       onClick={() => router.push(`/shops/${order.shopId}`)}
