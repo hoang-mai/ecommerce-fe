@@ -271,26 +271,28 @@ const options: Option[] = [
                   </span>
               </div>
               {/* Sắp xếp */}
-              <div>
-                <DropdownSelect
-                  value={sortByLabel}
-                  onChange={(value) => {
-                    setSortByLabel(value);
-                    if (value === "price-asc") {
-                      handleFilterChange('sortDir', 'asc');
-                      handleFilterChange('sortBy', 'basePrice');
-                    } else if (value === "price-desc") {
-                      handleFilterChange('sortDir', 'desc');
-                      handleFilterChange('sortBy', 'basePrice');
-                    } else {
-                      handleFilterChange('sortDir', 'desc');
-                      handleFilterChange('sortBy', value);
-                    }
-                  }}
-                  options={options}
-                  placeholder="Sắp xếp theo"
-                />
-              </div>
+              {!params.searchId && (
+                <div>
+                  <DropdownSelect
+                    value={sortByLabel}
+                    onChange={(value) => {
+                      setSortByLabel(value);
+                      if (value === "price-asc") {
+                        handleFilterChange('sortDir', 'asc');
+                        handleFilterChange('sortBy', 'basePrice');
+                      } else if (value === "price-desc") {
+                        handleFilterChange('sortDir', 'desc');
+                        handleFilterChange('sortBy', 'basePrice');
+                      } else {
+                        handleFilterChange('sortDir', 'desc');
+                        handleFilterChange('sortBy', value);
+                      }
+                    }}
+                    options={options}
+                    placeholder="Sắp xếp theo"
+                  />
+                </div>
+              )}
             </div>
 
 
