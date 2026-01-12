@@ -21,8 +21,6 @@ import DropdownSelect from "@/libs/DropdownSelect";
 import Loading from "@/components/modals/Loading";
 import CheckBox from "@/libs/CheckBox";
 import {ProductView} from "@/types/interface";
-import DateTimePicker from "@/libs/DateTimePicker";
-import {formatDateTime} from "@/util/fnCommon";
 
 const productAttributeSchema = z.object({
   productAttributeId: z.string().optional(),
@@ -39,15 +37,19 @@ const productVariantSchema = z.object({
   stockQuantity: z.number().int().min(0, "Số lượng phải lớn hơn hoặc bằng 0"),
   isDefault: z.boolean().optional(),
   attributeValues: z.record(z.string(), z.string()).optional(),
+  salePrice: z.number().min(0, "Giá bán phải lớn hơn hoặc bằng 0").nullable().optional(),
+}).refine((obj) => {
+  if (obj.salePrice == null) return true;
+  return obj.salePrice < obj.price;
+}, {
+  message: "Giá sale phải nhỏ hơn giá gốc",
+  path: ["salePrice"],
 });
 
 const updateProductSchema = z.object({
   name: z.string().min(1, "Tên sản phẩm không được để trống"),
   description: z.string().optional(),
   categoryId: z.string().min(1, "Danh mục không được để trống"),
-  discount: z.number().min(0, "Phần trăm giả giá phải lớn hơn 0").max(100, "Phần trăm giảm giá phải nhỏ hơn 100").optional(),
-  discountStartDate: z.date().optional(),
-  discountEndDate: z.date().optional(),
   productDetails: z.array(z.object({
     key: z.string().min(1, "Trường không được để trống"),
     value: z.string().min(1, "Giá trị không được để trống"),
@@ -147,9 +149,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
       name: productData.name,
       description: productData.description,
       categoryId: productData.categoryId.toString(),
-      discount: productData.discount || undefined,
-      discountStartDate: productData.discountStartDate ? new Date(productData.discountStartDate +'Z') : undefined,
-      discountEndDate: productData.discountEndDate ? new Date(productData.discountEndDate +'Z') : undefined,
+      // removed product-level discount fields - using per-variant salePrice instead
       productDetails: productData.productDetails ? Object.entries(productData.productDetails).map(([k, v]) => ({ key: k, value: v })) : [],
       imageUrls: productData.productImages.map(img => img.imageUrl),
       productAttributes: productData.productAttributes.map(attr => ({
@@ -163,6 +163,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
         stockQuantity: variant.stockQuantity,
         isDefault: variant.isDefault,
         attributeValues: undefined,
+        salePrice: variant.salePrice ?? undefined,
       })),
     },
   });
@@ -311,6 +312,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
         stockQuantity: variant.stockQuantity,
         isDefault: variant.isDefault,
         attributeValues: Object.keys(cleanedAttributeValues).length > 0 ? cleanedAttributeValues : undefined,
+        salePrice: variant.salePrice ?? undefined,
       };
     });
     const productDetailsRecord: { [key: string]: string } | undefined =
@@ -327,9 +329,6 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
       name: data.name,
       description: data.description || "",
       categoryId: parseInt(data.categoryId),
-      discount: data.discount,
-      discountStartDate: data.discountStartDate,
-      discountEndDate: data.discountEndDate,
       productAttributes: data.productAttributes || [],
       productVariants: cleanedVariants,
       deletedImageIds: deletedImageIds,
@@ -405,27 +404,29 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
         onClose={onClose}
         saveButtonText="Cập nhật"
         isLoading={isMutating}
+        maxWidth={"3xl"}
       >
         {isMutating && <Loading/>}
 
         {/* Basic Information */}
         <h4 className="font-bold text-primary-c900 mb-4">1. Thông tin cơ bản</h4>
         <div className={"flex flex-col gap-4 mb-4"}>
-          <Controller
-            name="name"
-            control={control}
-            render={({field}) => (
-              <TextField
-                value={field.value}
-                onChange={field.onChange}
-                label="Tên sản phẩm"
-                placeholder="Nhập tên sản phẩm"
-                error={errors.name?.message}
-                required
-              />
-            )}
-          />
+
           <div className={"grid gird-cols-1 md:grid-cols-2 gap-4"}>
+            <Controller
+              name="name"
+              control={control}
+              render={({field}) => (
+                <TextField
+                  value={field.value}
+                  onChange={field.onChange}
+                  label="Tên sản phẩm"
+                  placeholder="Nhập tên sản phẩm"
+                  error={errors.name?.message}
+                  required
+                />
+              )}
+            />
             <Controller
               name="categoryId"
               control={control}
@@ -452,50 +453,9 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                 );
               }}
             />
-            <Controller name={"discount"} control={control} render={({field}) => (
-              <TextField
-                value={field.value}
-                onChange={(value) => {
-                  const numericValue = parseFloat(value);
-                  if (isNaN(numericValue)) {
-                    field.onChange(undefined);
-                  } else {
-                    field.onChange(numericValue);
-                  }
-                }}
-                label="Giảm giá (%)"
-                placeholder="Nhập phần trăm giảm giá"
-                type="number"
-                error={errors.discount?.message}
-              />
-            )}/>
           </div>
           <div className={"grid gird-cols-1 md:grid-cols-2 gap-4"}>
 
-            <Controller
-              name="discountStartDate"
-              control={control}
-              render={({field}) => (
-                <DateTimePicker
-                  label="Ngày bắt đầu giảm giá"
-                  value={field.value || null}
-                  onChange={(date) => field.onChange(date || undefined)}
-                  error={errors.discountStartDate?.message}
-                />
-              )}
-            />
-            <Controller
-              name="discountEndDate"
-              control={control}
-              render={({field}) => (
-                <DateTimePicker
-                  label="Ngày kết thúc giảm giá"
-                  value={field.value || null}
-                  onChange={(date) => field.onChange(date || undefined)}
-                  error={errors.discountEndDate?.message}
-                />
-              )}
-            />
           </div>
           <Controller
             name="description"
@@ -751,7 +711,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
               type="button"
               color={ColorButton.PRIMARY}
               startIcon={<AddRoundedIcon/>}
-              onClick={() => appendVariant({price: 0, stockQuantity: 0, attributeValues: {}})}
+              onClick={() => appendVariant({price: 0, stockQuantity: 0, attributeValues: {}, salePrice: undefined})}
             >
               Thêm biến thể
             </Button>
@@ -786,7 +746,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     <Controller
                       name={`productVariants.${index}.price`}
                       control={control}
@@ -815,6 +775,28 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                           error={errors.productVariants?.[index]?.stockQuantity?.message}
                           onChange={(value) => field.onChange(parseInt(value) || 0)}
                           required
+                        />
+                      )}
+                    />
+
+                    <Controller
+                      name={`productVariants.${index}.salePrice`}
+                      control={control}
+                      render={({field}) => (
+                        <TextField
+                          value={field.value != null ? field.value.toString() : ''}
+                          label="Giá sale (VNĐ)"
+                          type="number"
+                          placeholder=""
+                          error={errors.productVariants?.[index]?.salePrice?.message}
+                          onChange={(value) => {
+                            const numeric = value === '' ? undefined : parseFloat(value);
+                            if (numeric === undefined || isNaN(numeric)) {
+                              field.onChange(undefined);
+                            } else {
+                              field.onChange(numeric);
+                            }
+                          }}
                         />
                       )}
                     />

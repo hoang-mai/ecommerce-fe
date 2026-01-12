@@ -150,24 +150,25 @@ export default function Main({id}: Props) {
             </div>
           </div>
         )}
-        <div className="flex gap-2">
-          <Button
-            onClick={handleEdit}
-            color={ColorButton.WARNING}
-            startIcon={<EditRoundedIcon/>}
-            disabled={shop.shopStatus === ShopStatus.SUSPENDED}
-          >
-            Chỉnh sửa
-          </Button>
-          <Button
-            onClick={handleUpdateStatus}
-            color={ColorButton.ERROR}
-            startIcon={<ChangeCircleRoundedIcon/>}
-            disabled={shop.shopStatus === ShopStatus.SUSPENDED}
-          >
-            Đổi trạng thái
-          </Button>
-        </div>
+        {/* Only show action buttons when shop is not suspended */}
+        {shop.shopStatus !== ShopStatus.SUSPENDED && (
+          <div className="flex gap-2">
+            <Button
+              onClick={handleEdit}
+              color={ColorButton.WARNING}
+              startIcon={<EditRoundedIcon/>}
+            >
+              Chỉnh sửa
+            </Button>
+            <Button
+              onClick={handleUpdateStatus}
+              color={ColorButton.ERROR}
+              startIcon={<ChangeCircleRoundedIcon/>}
+            >
+              Đổi trạng thái
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Banner với overlay gradient */}

@@ -11,7 +11,7 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {AlertType, ColorButton, ProductStatus, ShopStatus} from "@/types/enum";
 import Button from "@/libs/Button";
-import {ProductVariant, ProductView, CartViewDTO,} from "@/types/interface";
+import {ProductVariant, ProductView, CartViewDTO, FlashSaleProductView} from "@/types/interface";
 import ImagePreview from "@/libs/ImagePreview";
 import {formatNumber, formatPrice} from "@/util/fnCommon";
 import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
@@ -24,6 +24,9 @@ import CountdownTimer from "@/libs/CountDownTime";
 import Review from "@/components/user/products/[id]/Review";
 import Shop from "@/components/user/products/[id]/Shop";
 import Star from "@/libs/Star";
+import FlashOnRoundedIcon from "@mui/icons-material/FlashOnRounded";
+import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 
 const productDefault: ProductView = {
   productId: "",
@@ -42,9 +45,6 @@ const productDefault: ProductView = {
   description: "",
   productStatus: ProductStatus.ACTIVE,
   totalSold: 0,
-  discount: 0,
-  discountStartDate: null,
-  discountEndDate: null,
   categoryId: "",
   categoryName: "",
   shopStatus: ShopStatus.ACTIVE,
@@ -105,7 +105,10 @@ export default function Main({id}: Props) {
 
   const handleQuantityChange = (delta: number) => {
     const newQuantity = quantity + delta;
-    if (selectedVariant && newQuantity > 0 && newQuantity <= selectedVariant.stockQuantity) {
+    const maxQuantity = activeFlashSale
+      ? Math.min(selectedVariant?.stockQuantity || 99, activeFlashSale.maxQuantityPerUser, activeFlashSale.totalQuantity - activeFlashSale.soldQuantity)
+      : (selectedVariant?.stockQuantity || 99);
+    if (selectedVariant && newQuantity > 0 && newQuantity <= maxQuantity) {
       setQuantity(newQuantity);
     }
   };
@@ -198,15 +201,33 @@ export default function Main({id}: Props) {
     }
   }
 
-  const isDiscountActive = useMemo(() => {
-    if (Number(product.discount) <= 0) return false;
-    if (!product.discountStartDate || !product.discountEndDate) return false;
 
-    const startTime = new Date(product.discountStartDate).getTime();
-    const endTime = new Date(product.discountEndDate).getTime();
+  const variantSaleActive = useMemo(() => {
+    if (!selectedVariant) return false;
+    return (selectedVariant.salePrice != null && selectedVariant.salePrice < selectedVariant.price);
+  }, [selectedVariant]);
 
-    return startTime < currentTime && endTime > currentTime;
-  }, [product.discount, product.discountStartDate, product.discountEndDate, currentTime]);
+  const activeFlashSale = useMemo((): FlashSaleProductView | null => {
+
+    if (!product.flashSaleProductViews || product.flashSaleProductViews.length === 0 || !selectedVariant) return null;
+
+    const flashSale = product.flashSaleProductViews.find(fs =>
+      fs.productVariantId === selectedVariant.productVariantId
+    );
+
+
+    if (!flashSale) return null;
+
+    const startTime = new Date(flashSale.startTime).getTime();
+    const endTime = new Date(flashSale.endTime).getTime();
+
+
+    if (startTime <= currentTime && endTime > currentTime && !flashSale.isSoldOut) {
+      return flashSale;
+    }
+
+    return null;
+  }, [product.flashSaleProductViews, selectedVariant, currentTime]);
   useEffect(() => {
     if (Object.keys(selectedAttributes).length === 0) return;
 
@@ -236,7 +257,7 @@ export default function Main({id}: Props) {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      {isLoading && <Loading/>}
+      {(isLoading || isMutating) && <Loading/>}
       <div className="flex flex-col gap-10">
         <div className={"flex flex-row gap-10 flex-nowrap bg-white p-4"}>
           <div className={"flex-1"}>
@@ -256,7 +277,7 @@ export default function Main({id}: Props) {
             <div className={"text-xs text-grey-c600"}>{product.categoryName}</div>
             <div className={"flex flex-row gap-2"}><h3
               className="text-2xl font-bold ">{product.name}</h3>
-              </div>
+            </div>
             {/* Rating */}
             <div className="flex items-center gap-2 mb-3">
               {Number(product.rating) > 0 ? (
@@ -274,27 +295,55 @@ export default function Main({id}: Props) {
 
             {/* Price */}
             <div className="mb-3">
-              {isDiscountActive ? (
+              {activeFlashSale ? (
+                <div className={"flex flex-col gap-1 relative "}>
+                  <div className={"flex items-center gap-3 bg-gradient-to-b from-primary-c200 to-white"}>
+                    <h2 className="text-xl font-bold text-primary-c500 relative">
+                      <span>F</span><FlashOnRoundedIcon
+                      className="text-primary-c500 animate-pulse absolute top-1.5 left-1.5"/><span className={"ml-3"}>ASH SALE</span>
+                    </h2>
+                  </div>
+                  <div className={"flex items-center gap-3"}>
+                    <span className="text-primary-c900 font-bold text-3xl">
+                      {formatPrice(activeFlashSale.originalPrice * (100 - activeFlashSale.discountPercentage) / 100)}
+                    </span>
+                    <span className="text-gray-400 text-sm line-through">
+                      {formatPrice(activeFlashSale.originalPrice)}
+                    </span>
+                    <div
+                      className="bg-gradient-to-r from-support-c900 to-support-c800 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-md flex items-center gap-1">
+                      <span className="text-xs">-</span>
+                      <span>{activeFlashSale.discountPercentage}%</span>
+                    </div>
+                  </div>
+                  <span className="text-xs text-green-600 font-medium">
+                    Tiết kiệm {formatPrice(activeFlashSale.originalPrice * activeFlashSale.discountPercentage / 100)}
+                  </span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span
+                      className="text-xs text-grey-c600">Đã bán: {activeFlashSale.soldQuantity}/{activeFlashSale.totalQuantity}</span>
+                    <div className="flex-1 max-w-[120px] h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-primary-c400 to-primary-c600 rounded-full"
+                        style={{width: `${Math.min(100, (activeFlashSale.soldQuantity / activeFlashSale.totalQuantity) * 100)}%`}}
+                      />
+                    </div>
+                  </div>
+                  <CountdownTimer endDate={activeFlashSale.endTime}/>
+                </div>
+              ) : variantSaleActive && selectedVariant ? (
                 <div className={"flex flex-col gap-1"}>
                   <div className={"flex items-center gap-3"}>
                     <span className="text-primary-c900 font-bold text-3xl">
-                      {formatPrice((selectedVariant?.price ?? 0) * (100 - (product.discount || 0)) / 100)}
+                      {formatPrice(selectedVariant.salePrice!)}
                     </span>
                     <span className="text-gray-400 text-sm line-through">
-                      {formatPrice(selectedVariant?.price ?? 0)}
+                      {formatPrice(selectedVariant.price)}
                     </span>
-                    {isDiscountActive && (
-                      <div
-                        className=" bg-gradient-to-r from-support-c900 to-support-c800 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-md flex items-center gap-1">
-                        <span className="text-xs">-</span>
-                        <span>{product.discount}%</span>
-                      </div>
-                    )}
                   </div>
                   <span className="text-xs text-green-600 font-medium ">
-                    Tiết kiệm {formatPrice((selectedVariant?.price ?? 0) - (selectedVariant?.price ?? 0) * (100 - (product.discount || 0)) / 100)}
+                    Tiết kiệm {formatPrice(selectedVariant.price - selectedVariant.salePrice!)}
                   </span>
-                  {product.discountEndDate && <CountdownTimer endDate={product.discountEndDate}/>}
                 </div>
               ) : (
                 <div className="text-primary-c900 font-bold text-3xl mb-10.5">
@@ -343,25 +392,35 @@ export default function Main({id}: Props) {
             )}
 
             {/* Quantity Selector */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">Số lượng</label>
+            <div className="flex items-center gap-4 mb-6">
+              <span className="text-sm font-medium text-grey-c700">Số lượng:</span>
               <div className="flex items-center gap-3">
-                <Button
+                <button
                   onClick={() => handleQuantityChange(-1)}
                   disabled={quantity <= 1}
-                  className="rounded-full !p-1 !border-2 border-primary-c600 bg-primary-c100 text-primary-c800 disabled:border-grey-c300"
-                  startIcon={<KeyboardArrowLeftRoundedIcon/>}
+                  className="w-8 h-8 flex items-center justify-center rounded-md border border-grey-c300 bg-white text-grey-c700 hover:border-primary-c600 hover:text-primary-c600 hover:bg-primary-c50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-grey-c300 disabled:hover:bg-white disabled:hover:text-grey-c700 transition-all duration-200"
                 >
-                </Button>
-                <span className="text-xl font-semibold w-12 text-center">{quantity}</span>
-                <Button
+                  <RemoveRoundedIcon className="text-[18px]"/>
+                </button>
+
+                <span className="min-w-[40px] text-center font-semibold text-base text-grey-c900">
+                  {quantity}
+                </span>
+
+                <button
                   onClick={() => handleQuantityChange(1)}
                   disabled={!selectedVariant || quantity >= (selectedVariant.stockQuantity || 99)}
-                  className="rounded-full !p-1 !border-2 border-primary-c600 bg-primary-c100 text-primary-c800 disabled:border-grey-c300"
-                  startIcon={<KeyboardArrowRightRoundedIcon/>}
+                  className="w-8 h-8 flex items-center justify-center rounded-md border border-grey-c300 bg-white text-grey-c700 hover:border-primary-c600 hover:text-primary-c600 hover:bg-primary-c50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-grey-c300 disabled:hover:bg-white disabled:hover:text-grey-c700 transition-all duration-200"
                 >
-                </Button>
+                  <AddRoundedIcon className="text-[18px]"/>
+                </button>
               </div>
+
+              {selectedVariant?.stockQuantity && selectedVariant.stockQuantity < 10 && selectedVariant.stockQuantity > 0 && (
+                <span className="text-xs text-support-c700 font-medium">
+                  Chỉ còn {selectedVariant.stockQuantity} sản phẩm
+                </span>
+              )}
             </div>
             <div className="mb-4 flex flex-row gap-3">
               <Button type="button"
@@ -384,19 +443,19 @@ export default function Main({id}: Props) {
 
           </div>
         </div>
-       <div className="bg-white p-8">
-         <div className={"mb-8"}>
-           <div className={"font-semibold text-2xl mb-4"}>Chi tiết sản phẩm</div>
-           <div
-             className="text-gray-600 mt-4 whitespace-pre-wrap">
-             {product.productDetails && Object.entries(product.productDetails).map(([key, value]) => (
-               <div key={key} className="flex flex-row">
-                 <span className="font-medium text-grey-c800 mr-40">{key}:</span>
-                 <span className="text-grey-c700">{value}</span>
-               </div>
-           ))}</div>
-         </div>
-         
+        <div className="bg-white p-8">
+          <div className={"mb-8"}>
+            <div className={"font-semibold text-2xl mb-4"}>Chi tiết sản phẩm</div>
+            <div className="flex flex-col gap-2">
+              {Object.entries(product.productDetails).map(([key, value]) => (
+                <div key={key} className="flex flex-row p-2">
+                  <span className="font-semibold text-grey-c800 w-40 mr-40 ">{key}:</span>
+                  <span className="text-grey-c700">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className={"font-semibold text-2xl mb-4"}>Mô tả sản phẩm</div>
           <p className="text-gray-600 mt-4 whitespace-pre-wrap">{product.description}</p></div>
       </div>

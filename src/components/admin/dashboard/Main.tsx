@@ -1,11 +1,10 @@
 'use client';
 
 import {useState} from 'react';
-import {ResponsiveLine} from '@nivo/line';
 import {ResponsiveBar} from '@nivo/bar';
 import useSWR from 'swr';
 import {useAxiosContext} from '@/components/provider/AxiosProvider';
-import {ORDER_VIEW, PRODUCT_VIEW, SHOP_VIEW, USER_VIEW} from '@/services/api';
+import {PRODUCT_VIEW, SHOP_VIEW, USER_VIEW} from '@/services/api';
 import Loading from '@/components/modals/Loading';
 import {subMonths} from 'date-fns';
 import Title from '@/libs/Title';
@@ -13,7 +12,6 @@ import {formatNumber, formatPrice} from "@/util/fnCommon";
 import MonthRangePicker from "@/libs/MonthRangePicker";
 import {
   DateRange,
-  OrderViewStatisticRevenueDTO,
   ProductViewStatisticDTO,
   ShopViewStatisticDTO,
   NewShopViewStatisticDTO,

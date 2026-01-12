@@ -6,7 +6,7 @@ import {useDebounce} from "@/hooks/useDebounce";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import useSWR from "swr";
 import {PRODUCT_VIEW, SEARCH_KEYWORD} from "@/services/api";
-import {ProductView, SearchKeyword} from "@/types/interface";
+import {SearchKeyword} from "@/types/interface";
 import {useRouter} from "next/navigation";
 import {useBuildUrl} from "@/hooks/useBuildUrl";
 import {useDispatch} from "react-redux";

@@ -26,6 +26,7 @@ import {usePushNotification} from "@/hooks/usePushNotification";
 import {clearAllLocalStorage} from "@/services/localStorage";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import {clearAllCookie} from "@/services/cookie";
+import FlashOnIcon from "@mui/icons-material/FlashOn";
 interface MenuItem {
   name: string;
   link: string;
@@ -59,6 +60,7 @@ export default function Sidebar() {
     {name: "Quản lý cửa hàng", link: "/owner/shops", icon: StorefrontIcon},
     {name: "Quản lý đơn hàng", link: "/owner/orders", icon: ShoppingCartCheckoutIcon},
     {name: "Quản lý đánh giá", link: "/owner/reviews", icon: RateReviewIcon},
+    {name: "Flash Sale", link: "/owner/flash-sales", icon: FlashOnIcon},
     {name: "Tin nhắn", link: "/owner/chats", icon: ChatRoundedIcon},
     {name: "Thông báo", link: "/owner/notifications", icon: NotificationsRoundedIcon},
   ];

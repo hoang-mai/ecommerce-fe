@@ -78,6 +78,8 @@ export default function Main({productId}: Props) {
     {key: '3', label: 'Thống kê'},
   ];
 
+  const isUpdatable = product.productStatus === ProductStatus.ACTIVE || product.productStatus === ProductStatus.INACTIVE;
+
   const handleBack = () => {
     router.push(`/owner/shops/${product.shopId}`);
   };
@@ -117,29 +119,57 @@ export default function Main({productId}: Props) {
             Quay lại
           </Button>
         </div>
+
+        {/* Status banners */}
         {product.productStatus === ProductStatus.INACTIVE && (
           <div className="flex-1 flex items-center justify-center">
-            <div className="bg-support-c100 border-2 border-support-c500 rounded-lg px-4 py-2 flex items-center gap-2">
-              <WarningRoundedIcon className="text-support-c900"/>
-              <span className="text-support-c900 font-semibold">Sản phẩm đã ngừng hoạt động</span>
+            <div className="bg-yellow-c100 border-2 border-yellow-c500 rounded-lg px-4 py-2 flex items-center gap-2">
+              <WarningRoundedIcon className="text-yellow-c900"/>
+              <span className="text-yellow-c900 font-semibold">Sản phẩm đã ngừng hoạt động.</span>
             </div>
           </div>
         )}
+
+        {product.productStatus === ProductStatus.SUSPENDED && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="bg-support-c100 border-2 border-support-c500 rounded-lg px-4 py-2 flex items-center gap-2">
+              <WarningRoundedIcon className="text-support-c900"/>
+              <span className="text-support-c900 font-semibold">Sản phẩm đã bị đình chỉ. Vui lòng liên hệ Admin để mở lại.</span>
+            </div>
+          </div>
+        )}
+
+        {product.productStatus === ProductStatus.DELETED && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="bg-grey-c50 border-2 border-grey-c200 rounded-lg px-4 py-2 flex items-center gap-2">
+              <WarningRoundedIcon className="text-grey-c600"/>
+              <span className="text-grey-c600 font-semibold">Sản phẩm đã bị xóa.</span>
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2">
-          <Button
-            onClick={handleEdit}
-            color={ColorButton.WARNING}
-            startIcon={<EditRoundedIcon/>}
-          >
-            Chỉnh sửa
-          </Button>
-          <Button
-            onClick={handleUpdateStatus}
-            color={ColorButton.ERROR}
-            startIcon={<ChangeCircleRoundedIcon/>}
-          >
-            Đổi trạng thái
-          </Button>
+          {/* Hide Edit when SUSPENDED or DELETED */}
+          {product.productStatus !== ProductStatus.SUSPENDED && product.productStatus !== ProductStatus.DELETED && (
+            <Button
+              onClick={handleEdit}
+              color={ColorButton.WARNING}
+              startIcon={<EditRoundedIcon/>}
+            >
+              Chỉnh sửa
+            </Button>
+          )}
+
+          {/* Only allow update status when product is ACTIVE or INACTIVE */}
+          {isUpdatable && (
+            <Button
+              onClick={handleUpdateStatus}
+              color={ColorButton.ERROR}
+              startIcon={<ChangeCircleRoundedIcon/>}
+            >
+              Đổi trạng thái
+            </Button>
+          )}
         </div>
       </div>
 

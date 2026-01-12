@@ -8,16 +8,18 @@ interface JwtDecodedPayload extends JwtPayload {
   "user-id": string;
 }
 
+
 export function formatDateTime(date: string) {
-  const parsed = parseISO(date + "Z");
+  const parsed = parseISO(date);
   if (isNaN(parsed.getTime())) return "";
   return format(parsed, "HH:mm:ss dd/MM/yyyy");
 }
 
+
 export function formatDate(date: string) {
-  const parsed = parseISO(date + "Z");
+  const parsed = parseISO(date);
   if (isNaN(parsed.getTime())) return "";
-  return format(parsed, "HH:mm:ss dd/MM/yyyy");
+  return format(parsed, "dd/MM/yyyy");
 }
 
 export function getRoleFromJwtToken(token: string) {

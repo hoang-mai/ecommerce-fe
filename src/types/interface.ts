@@ -8,49 +8,58 @@ import {
   AccountStatus,
   NotificationType
 } from "@/types/enum";
+
 export interface DateRange {
   start: Date | null;
   end: Date | null;
 }
+
 export interface OrderViewStatisticDTO {
   localDate: string;
   newOrders: number;
+
   [key: string]: string | number;
 }
 
-export interface NewShopViewStatisticDTO{
+export interface NewShopViewStatisticDTO {
   localDate: string;
   newShopViews: number;
+
   [key: string]: string | number;
 }
 
-export interface NewUserViewStatisticDTO{
+export interface NewUserViewStatisticDTO {
   localDate: string;
   newUserViews: number;
+
   [key: string]: string | number;
 }
 
-export interface OrderViewStatisticRevenueDTO{
+export interface OrderViewStatisticRevenueDTO {
   localDate: string;
   totalRevenue: number;
+
   [key: string]: string | number;
 }
 
-export interface ProductViewStatisticDTO{
+export interface ProductViewStatisticDTO {
   productId: number;
   productName: string;
   totalSold: number;
   totalRevenue: number;
+
   [key: string]: string | number;
 }
 
-export interface ShopViewStatisticDTO{
+export interface ShopViewStatisticDTO {
   shopId: number;
   shopName: string;
   totalSold: number;
   totalRevenue: number;
+
   [key: string]: string | number;
 }
+
 export interface ProductImage {
   productImageId: string;
   imageUrl: string;
@@ -77,6 +86,7 @@ export interface ProductVariant {
   productVariantId: string;
   productVariantStatus: ProductVariantStatus;
   price: number;
+  salePrice: number | null;
   stockQuantity: number;
   sold: number;
   isDefault: boolean;
@@ -95,9 +105,6 @@ export interface ProductView {
   productDetails: Record<string, string>
   productStatus: ProductStatus;
   totalSold: number;
-  discount: number | null
-  discountStartDate: string | null;
-  discountEndDate: string | null;
   categoryId: string;
   categoryName: string;
   shopStatus: ShopStatus;
@@ -106,6 +113,7 @@ export interface ProductView {
   productVariants: ProductVariant[];
   createdAt: string;
   updatedAt: string;
+  flashSaleProductViews?: FlashSaleProductView[];
 }
 
 export interface ShopView {
@@ -137,6 +145,7 @@ export interface ProductCartItemViewDTO {
   productView: ProductView;
   productVariantId: string;
   quantity: number;
+  flashSaleProductView?: FlashSaleProductView[];
 }
 
 export interface CartItemViewDTO {
@@ -179,7 +188,7 @@ export interface ReviewView {
   updatedAt: string;
 }
 
-export interface MessageDTO{
+export interface MessageDTO {
   messageId: string;
   chatId: string;
   senderId: string;
@@ -213,7 +222,8 @@ export interface ShopCache {
   isOnline: boolean;
   shopStatus: ShopStatus;
 }
-export interface UserCache{
+
+export interface UserCache {
   userId: string;
   avatarUrl: string;
   fullName: string;
@@ -223,11 +233,11 @@ export interface UserCache{
   isOnline: boolean;
 }
 
-export interface ReqPrivateMessageDTO{
-  receiverId : string;
+export interface ReqPrivateMessageDTO {
+  receiverId: string;
   chatId?: string;
-  messageContent : string;
-  messageType : MessageType;
+  messageContent: string;
+  messageType: MessageType;
   shopId: string;
 }
 
@@ -249,4 +259,64 @@ export interface SearchKeyword {
   keyword: string;
   searchCount: number;
   lastSearchedAt: string;
+}
+
+export interface FlashSaleSchedule {
+  flashSaleCampaignScheduleId: string;
+  startTime: string;
+  endTime: string;
+  flashSaleCampaignScheduleStatus: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
+export interface FlashSale {
+  flashSaleCampaignId: string;
+  campaignName: string;
+  description: string | null;
+  startTime: string;
+  endTime: string;
+  countRegisteredProducts: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FlashSaleProductView {
+  flashSaleProductId: string;
+  flashSaleCampaignId: string;
+  ownerId?: string;
+  shopId?: string;
+  productId: string;
+  productVariantId?: string;
+  productName: string;
+  flashSaleCampaignName?: string | null;
+  startTime: string;
+  endTime: string;
+  originalPrice: number;
+  discountPercentage: number;
+  totalQuantity: number;
+  soldQuantity: number;
+  maxQuantityPerUser: number;
+  isSoldOut: boolean;
+  score: number;
+  totalSold: number;
+  rating: number;
+  productImages?: { _id: string; imageUrl: string }[];
+  productAttributes?: { attributeName: string; attributeValue: string }[];
+}
+
+export interface ReqUpdateProductStatusDTO {
+  productStatus: ProductStatus;
+}
+
+export interface FlashSaleStatisticDTO {
+  flashSaleCampaignId: string;
+  flashSaleCampaignName: string;
+  startTime: string;
+  endTime: string
+  totalQuantity: number;
+  totalSoldQuantity: number;
+  soldRate: number;
+  totalRevenue: number;
 }

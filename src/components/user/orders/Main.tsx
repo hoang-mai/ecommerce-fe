@@ -1,17 +1,11 @@
 'use client';
 import React, {useEffect, useState} from 'react';
-
-import Calendar from '@mui/icons-material/CalendarMonth';
-import User from '@mui/icons-material/Person';
-import MapPin from '@mui/icons-material/LocationOn';
-import Phone from '@mui/icons-material/Phone';
 import Title from "@/libs/Title";
 import TextField from "@/libs/TextField";
 import DropdownSelect from "@/libs/DropdownSelect";
-import {formatDate, formatPrice} from "@/util/fnCommon";
-import {AlertType, ColorButton, OrderStatus} from "@/types/enum";
+import { formatPrice} from "@/util/fnCommon";
+import {AlertType, OrderStatus} from "@/types/enum";
 import Divide from "@/libs/Divide";
-import OrderItemDetailModal from "@/components/user/orders/OrderItemDetailModal";
 import Chip, {ChipColor} from "@/libs/Chip";
 import {useDebounce} from "@/hooks/useDebounce";
 import {useBuildUrl} from "@/hooks/useBuildUrl";
@@ -24,12 +18,12 @@ import {useDispatch} from "react-redux";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import Image from "next/image";
 import Pagination from "@/libs/Pagination";
-import Button from "@/libs/Button";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import {useRouter} from "next/navigation";
 import CancelOrderModal from "@/components/user/orders/CancelOrderModal";
 import CancelIcon from "@mui/icons-material/Cancel";
 import AssignmentReturnIcon from "@mui/icons-material/AssignmentReturn";
+
 interface ProductAttribute {
   attributeName: string;
   attributeValue: string;
@@ -127,16 +121,12 @@ export const statusOptions: Option[] = [
 
 export default function Main() {
   const {get} = useAxiosContext();
-  const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
   const [selectedOrderIdToCancel, setSelectedOrderIdToCancel] = useState<string>("");
   const [actionType, setActionType] = useState<"CANCELLED" | "RETURNED">("CANCELLED");
   const [pageNo, setPageNo] = useState<number>(0);
   const [status, setStatus] = useState<string>("");
   const [keyword, setKeyword] = useState<string>('');
-  const [selectOrderItem, setSelectOrderItem] = useState<OrderItem | null>(null);
-  const [selectOrder, setSelectOrder] = useState<OrderView | null>(null);
-  const [selectedOrderStatus, setSelectedOrderStatus] = useState<OrderStatus | "">("");
   const debounce = useDebounce(keyword);
   const dispatch = useDispatch();
   const router = useRouter();
@@ -185,7 +175,6 @@ export default function Main() {
     <div className="max-w-6xl mx-auto px-4 py-6">
       {isLoading && <Loading/>}
       <Title title={"Quản lý đơn hàng"}/>
-
       <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-grey-c200 p-4 mb-6">
@@ -241,73 +230,56 @@ export default function Main() {
         <div className="grid gap-4 ">
           {orders.map((order) => (
             <div key={order.orderId}
-                 className="bg-white rounded-xl shadow-sm border border-grey-c200 overflow-hidden hover:shadow-md transition-shadow">
+                 className="bg-white rounded-lg shadow-sm border border-grey-c200 overflow-hidden hover:shadow-md transition-shadow">
 
               <div className="p-5">
                 {/* Order Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-grey-c800">#{order.orderId}</h3>
+                <div className={""}>
+                  <div className={"flex justify-between items-center"}>
+                    <div className="mb-3 pb-2 flex items-center justify-start gap-2">
+                      <h3 className="font-semibold text-lg text-primary-c900 flex items-center gap-2">
+                        <StorefrontIcon/>
+                        {order.shopName}
+                      </h3>
+                      <button
+                        onClick={() => router.push(`/shops/${order.shopId}`)}
+                        className={"py-1 px-2 text-xs border border-primary-c600 rounded-lg text-primary-c500 bg-primary-c50"}
+                      >
+
+                        Xem Shop
+                      </button>
+                    </div>
+                    <div className={"flex items-center gap-3"}>
                       <Chip
                         label={getLabelStatusColor(order.orderStatus)}
                         color={getStatusColor(order.orderStatus)}
+
                       />
                       {order.orderStatus === OrderStatus.PAID && (
                         <Chip
                           label="Hủy đơn hàng"
                           onClick={() => handleOpenCancelModal(order.orderId)}
                           color={ChipColor.CANCELLED}
-                          icon={<CancelIcon/>}
+                          icon={<CancelIcon className={"!text-sm"}/>}
                         />
                       )}
                       {order.orderStatus === OrderStatus.COMPLETED && order.updatedAt &&
                         (new Date().getTime() - new Date(order.updatedAt).getTime()) <= 7 * 24 * 60 * 60 * 1000 && (
-                        <Chip
-                          label="Trả hàng"
-                          onClick={() => handleOpenCancelModal(order.orderId, "RETURNED")}
-                          color={ChipColor.RETURNED}
-                          icon={<AssignmentReturnIcon/>}
-                        />
-                      )}
+                          <Chip
+                            label="Trả hàng"
+                            onClick={() => handleOpenCancelModal(order.orderId, "RETURNED")}
+                            color={ChipColor.RETURNED}
+                            icon={<AssignmentReturnIcon className={"!text-sm"}/>}
+                          />
+                        )}
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-grey-c600">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4"/>
-                        <span>{formatDate(order.createdAt)}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <User className="w-4 h-4"/>
-                        <span>{order.receiverName}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className={"border border-primary-c400 rounded-lg p-4 "}>
-                  <div className="mb-3 pb-2 border-b border-grey-c300 flex items-center justify-between">
-                    <h3 className="font-semibold text-lg text-primary-c900 flex items-center gap-2">
-                     <StorefrontIcon/>
-                      {order.shopName}
-                    </h3>
-                    <Button
-                      onClick={() => router.push(`/shops/${order.shopId}`)}
-                      className={"!py-1"}
-                      color={ColorButton.PRIMARY}
-                      startIcon={<StorefrontIcon className="!w-5 !h-5"/>}>
-
-                      Xem Shop
-                    </Button>
                   </div>
                   {/* Order Items */}
-                  <div className="space-y-3 mb-4">
+                  <div className="space-y-3 mb-4"
+                  onClick={()=> router.push(`/orders/${order.orderId}`)}
+                  >
                     {order.orderItems.map((item) => (
                       <div key={item.orderItemId}
-                           onClick={() => {
-                             setSelectOrderItem(item)
-                             setSelectedOrderStatus(order.orderStatus);
-                             setIsOpen(true)
-                             setSelectOrder(order);
-                           }}
                            className="flex gap-4 p-3 bg-grey-c50 rounded-lg hover:bg-grey-c100 cursor-pointer transition-colors">
                         <Image
                           src={item.productImageUrl}
@@ -342,21 +314,9 @@ export default function Main() {
 
                 {/* Order Footer */}
                 <Divide/>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-6 text-sm text-grey-c600">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4"/>
-                      <span className="max-w-xs truncate">{order.address}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4"/>
-                      <span>{order.phoneNumber}</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-grey-c600 mb-1">Tổng tiền</p>
-                    <p className="text-xl font-bold text-primary-c900">{formatPrice(order.totalPrice)}</p>
-                  </div>
+                <div className="flex items-center justify-end gap-2">
+                    <span className="text-sm text-grey-c600 mb-1">Tổng tiền:</span>
+                    <span className="text-2xl font-bold text-primary-c800">{formatPrice(order.totalPrice)}</span>
                 </div>
               </div>
             </div>
@@ -365,16 +325,6 @@ export default function Main() {
       </div>
       {/* Pagination Buttons */}
       <Pagination totalPages={totalPages} currentPage={pageNo} onPageChange={setPageNo}/>
-      {/* Order Detail Modal */}
-      {selectOrderItem && isOpen && selectOrder && (
-        <OrderItemDetailModal
-          isOpen={isOpen}
-          setIsOpen={setIsOpen}
-          selectedOrder={selectOrder}
-          selectedOrderItem={selectOrderItem}
-          orderStatus={selectedOrderStatus}
-        />
-      )}
       {/* Cancel Order Modal */}
       {selectedOrderIdToCancel && isCancelModalOpen && (
       <CancelOrderModal

@@ -24,13 +24,20 @@ import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useDispatch} from "react-redux";
 import Loading from "@/components/modals/Loading";
 import useSWRMutation from "swr/mutation";
+import CancelIcon from "@mui/icons-material/Cancel";
+import CancelOrderModal from "@/components/user/orders/CancelOrderModal";
+import Image from "next/image";
 
 interface Props {
   id: string;
 }
 export default function Orders({id}: Props) {
-
-
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
+  const [selectedOrderIdToCancel, setSelectedOrderIdToCancel] = useState<string>("");
+  const handleOpenCancelModal = (orderId: string) => {
+    setSelectedOrderIdToCancel(orderId);
+    setIsCancelModalOpen(true);
+  };
   const {get, patch} = useAxiosContext();
   const [status, setStatus] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
@@ -135,9 +142,9 @@ export default function Orders({id}: Props) {
       key: 'products',
       label: 'Sản phẩm',
       render: (row) => (
-        <div className="text-sm">
+        <div className="text-sm flex flex-col">
           <div>
-            {row.orderItems[0]?.productName}
+            <div className={"w-40 truncate"}>{row.orderItems[0]?.productName}</div>
             {row.orderItems.length > 1 && (
               <span className="text-xs text-grey-c600"> +{row.orderItems.length - 1}</span>
             )}
@@ -167,7 +174,7 @@ export default function Orders({id}: Props) {
     },
     {
       key: 'actions', label: 'Hành động', className: 'text-center', render: (row) => (
-        <div className="flex gap-2 justify-center">
+        <div className="flex gap-2 justify-start">
           <button onClick={() => viewOrderDetail(row)}
                   className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
                   title="Xem chi tiết"><VisibilityIcon/></button>
@@ -210,7 +217,15 @@ export default function Orders({id}: Props) {
               <CheckCircleRoundedIcon/>
             </button>
           )}
-
+          {(row.orderStatus === OrderStatus.PAID) && (
+            <button
+              onClick={() => handleOpenCancelModal(row.orderId)}
+              title="Hủy đơn hàng"
+              className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
+            >
+              <CancelIcon/>
+            </button>
+          )}
         </div>
       )
     },
@@ -286,6 +301,14 @@ export default function Orders({id}: Props) {
       {isOpen && selectedOrder &&
         <OrderDetailModal isOpen={isOpen} setIsOpen={() => setIsOpen(false)} order={selectedOrder}/>
       }
+      {selectedOrderIdToCancel && isCancelModalOpen && (
+        <CancelOrderModal
+          isOpen={isCancelModalOpen}
+          setIsOpen={setIsCancelModalOpen}
+          orderId={selectedOrderIdToCancel}
+          mutate={mutate}
+          actionType={"CANCELLED"}
+        /> )}
     </div>
   );
 };

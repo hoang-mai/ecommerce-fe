@@ -16,6 +16,7 @@ import {ProductView} from "@/types/interface";
 import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 import CountdownTimer from "@/libs/CountDownTime";
 import Star from "@/libs/Star";
+import {FlashSaleProductView} from "@/types/interface";
 
 interface ProductCardProps {
   product: ProductView;
@@ -50,15 +51,29 @@ export default function ProductCard({product}: ProductCardProps) {
   const fetcherClick = (url: string, {arg}: { arg: UserCategoryDTO }) =>
     post<BaseResponse<never>>(url, arg, {}).then(res => res.data);
   const {trigger: triggerClick} = useSWRMutation(USER_CATEGORY, fetcherClick);
-  const isDiscountActive = useMemo(() => {
-    if (Number(product.discount) <= 0) return false;
-    if (!product.discountStartDate || !product.discountEndDate) return false;
+  const variantSaleActive = useMemo(() => {
+    if (!defaultVariant) return false;
+    return (defaultVariant.salePrice != null && defaultVariant.salePrice < defaultVariant.price);
+  }, [defaultVariant]);
 
-    const startTime = new Date(product.discountStartDate).getTime();
-    const endTime = new Date(product.discountEndDate).getTime();
+  const activeFlashSale = useMemo((): FlashSaleProductView | null => {
+    if (!product.flashSaleProductViews || product.flashSaleProductViews.length === 0 || !defaultVariant) return null;
 
-    return startTime < currentTime && endTime > currentTime;
-  }, [product.discount, product.discountStartDate, product.discountEndDate, currentTime]);
+    const flashSale = product.flashSaleProductViews.find(fs =>
+      fs.productVariantId === defaultVariant.productVariantId
+    );
+
+    if (!flashSale) return null;
+
+    const startTime = new Date(flashSale.startTime).getTime();
+    const endTime = new Date(flashSale.endTime).getTime();
+
+    if (startTime <= currentTime && endTime > currentTime && !flashSale.isSoldOut) {
+      return flashSale;
+    }
+
+    return null;
+  }, [product.flashSaleProductViews, defaultVariant, currentTime]);
 
   const handleAddToCart = () => {
     if (product.productVariants.length > 1) {
@@ -163,12 +178,12 @@ export default function ProductCard({product}: ProductCardProps) {
               fill
               className="object-contain group-hover:scale-110 transition duration-300"
             />
-          {isDiscountActive && (
-            <div
-              className="absolute top-3 left-3 bg-gradient-to-r from-support-c900 to-support-c800 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
-              <span className="text-xs">-</span>
-              <span>{product.discount}%</span>
-            </div>
+          { activeFlashSale && (
+              <div
+                className="absolute top-3 left-3 bg-gradient-to-r from-support-c900 to-support-c800 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
+                <span className="text-xs">-</span>
+                <span>{activeFlashSale.discountPercentage}%</span>
+              </div>
           )}
         </div>
 
@@ -200,25 +215,38 @@ export default function ProductCard({product}: ProductCardProps) {
           </div>
 
           <div className="mb-3">
-            {isDiscountActive ? (
+            {activeFlashSale ? (
               <div className={"flex flex-col"}>
                 <div className={"flex items-center gap-2"}>
-                      <span className="text-primary-c900 font-bold text-lg">
-                      {formatPrice(defaultVariant.price * (100 - (product.discount || 0)) / 100)}
-                    </span>
+                  <span className="text-primary-c900 font-bold text-lg">
+                    {formatPrice(activeFlashSale.originalPrice * (100 - activeFlashSale.discountPercentage) / 100)}
+                  </span>
                   <span className="text-gray-400 text-sm line-through">
-                      {formatPrice(defaultVariant.price)}
-                    </span>
+                    {formatPrice(activeFlashSale.originalPrice)}
+                  </span>
+                </div>
+                <span className="text-xs text-green-600 font-medium">
+                  Tiết kiệm {formatPrice(activeFlashSale.originalPrice * activeFlashSale.discountPercentage / 100)}
+                </span>
+                <CountdownTimer endDate={activeFlashSale.endTime}/>
+              </div>
+            ) : variantSaleActive ? (
+              <div className={"flex flex-col mb-7"}>
+                <div className={"flex items-center gap-2"}>
+                  <span className="text-primary-c900 font-bold text-lg">
+                    {formatPrice(defaultVariant.salePrice!)}
+                  </span>
+                  <span className="text-gray-400 text-sm line-through">
+                    {formatPrice(defaultVariant.price)}
+                  </span>
                 </div>
                 <span className="text-xs text-green-600 font-medium ">
-                      Tiết kiệm {formatPrice(defaultVariant.price - defaultVariant.price * (100 - (product.discount || 0)) / 100)}
-
-                    </span>
-                {product.discountEndDate && <CountdownTimer endDate={product.discountEndDate}/>}
+                  Tiết kiệm {formatPrice(defaultVariant.price - defaultVariant.salePrice!)}
+                </span>
               </div>
             ) : (
               <div className="text-primary-c900 font-bold text-lg mb-10.5">
-                {formatPrice(defaultVariant.price * (100 - (product.discount || 0)) / 100)}
+                {formatPrice(defaultVariant.price)}
               </div>
             )}
           </div>

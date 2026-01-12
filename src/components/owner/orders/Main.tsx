@@ -24,10 +24,14 @@ import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useDispatch} from "react-redux";
 import Loading from "@/components/modals/Loading";
 import useSWRMutation from "swr/mutation";
+import Image from "next/image";
+import CancelIcon from '@mui/icons-material/Cancel';
+import CancelOrderModal from "@/components/user/orders/CancelOrderModal";
 
 export default function Main() {
 
-
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
+  const [selectedOrderIdToCancel, setSelectedOrderIdToCancel] = useState<string>("");
   const {get, patch} = useAxiosContext();
   const [status, setStatus] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
@@ -96,6 +100,10 @@ export default function Main() {
       dispatch(openAlert(alert));
     });
   };
+  const handleOpenCancelModal = (orderId: string) => {
+    setSelectedOrderIdToCancel(orderId);
+    setIsCancelModalOpen(true);
+  };
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -132,10 +140,15 @@ export default function Main() {
       label: 'Shop',
       sortable: true,
       render: (row) => (
-        <div className="flex items-center gap-3">
-          <div className="max-w-[200px]">
-            <div className="text-sm font-semibold truncate">{row.shopName}</div>
-          </div>
+        <div className="flex items-center">
+          <Image
+            src={row.shopLogoUrl}
+            alt={row.shopName}
+            width={40}
+            height={40}
+            className="w-10 h-10 rounded-full object-cover"
+          />
+          <div className="text-sm font-semibold truncate">{row.shopName}</div>
         </div>
       )
     },
@@ -153,9 +166,9 @@ export default function Main() {
       key: 'products',
       label: 'Sản phẩm',
       render: (row) => (
-        <div className="text-sm">
+        <div className="text-sm flex flex-col">
           <div>
-            {row.orderItems[0]?.productName}
+            <div className={"w-40 truncate"}>{row.orderItems[0]?.productName}</div>
             {row.orderItems.length > 1 && (
               <span className="text-xs text-grey-c600"> +{row.orderItems.length - 1}</span>
             )}
@@ -179,13 +192,13 @@ export default function Main() {
     },
     {
       key: 'createdAt',
-      label: 'Thời gian',
+      label: 'Ngày đặt hàng',
       sortable: true,
       render: (row) => (<span className="text-sm text-grey-c700">{formatDateTime(row.createdAt)}</span>)
     },
     {
       key: 'actions', label: 'Hành động', className: 'text-center', render: (row) => (
-        <div className="flex gap-2 justify-center">
+        <div className="flex gap-2 justify-start">
           <button onClick={() => viewOrderDetail(row)}
                   className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
                   title="Xem chi tiết"><VisibilityIcon/></button>
@@ -228,7 +241,15 @@ export default function Main() {
               <CheckCircleRoundedIcon/>
             </button>
           )}
-
+          {(row.orderStatus === OrderStatus.PAID) && (
+            <button
+              onClick={() => handleOpenCancelModal(row.orderId)}
+              title="Hủy đơn hàng"
+              className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
+            >
+              <CancelIcon/>
+            </button>
+          )}
         </div>
       )
     },
@@ -307,6 +328,14 @@ export default function Main() {
       {isOpen && selectedOrder &&
         <OrderDetailModal isOpen={isOpen} setIsOpen={() => setIsOpen(false)} order={selectedOrder}/>
       }
+      {selectedOrderIdToCancel && isCancelModalOpen && (
+        <CancelOrderModal
+          isOpen={isCancelModalOpen}
+          setIsOpen={setIsCancelModalOpen}
+          orderId={selectedOrderIdToCancel}
+          mutate={mutate}
+          actionType={"CANCELLED"}
+        /> )}
     </div>
   );
 };

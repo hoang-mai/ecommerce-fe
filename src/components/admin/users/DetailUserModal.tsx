@@ -73,7 +73,7 @@ export default function DetailUserModal({isOpen, setIsOpen, user}: Props) {
           <InfoRow label={"Tên đăng nhập"}
                    icon={<AccountCircleIcon/>}
                    value={
-            <div className={"flex items-center gap-2 justify-between"}>
+            <div className={"flex items-center gap-2 justify-start"}>
               <span>{user.username}</span>
               <Chip
                 label={getStatusLabel(user.accountStatus)}

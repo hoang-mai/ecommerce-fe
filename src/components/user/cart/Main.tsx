@@ -18,11 +18,14 @@ import useSWRMutation from "swr/mutation";
 import CountdownTimer from "@/libs/CountDownTime";
 import {useCartData} from "@/components/provider/CartProvider";
 import {useRouter} from "next/navigation";
-import {CartViewDTO} from "@/types/interface";
+import {CartViewDTO, FlashSaleProductView} from "@/types/interface";
 import Empty from "@/libs/Empty";
 import {useDebounce} from "@/hooks/useDebounce";
 import CheckBox from "@/libs/CheckBox";
 import StorefrontIcon from "@mui/icons-material/Storefront";
+import FlashOnRoundedIcon from "@mui/icons-material/FlashOnRounded";
+import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 
 export default function Main() {
   const router = useRouter();
@@ -64,6 +67,7 @@ export default function Main() {
   const [pendingUpdates, setPendingUpdates] = useState<Record<string, number>>({});
   const debouncedPendingUpdates = useDebounce(pendingUpdates, 500);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [currentTime] = useState(() => Date.now());
 
   useEffect(() => {
     if (data && data.data) {
@@ -204,38 +208,68 @@ export default function Main() {
     return shopProductCartItemIds.every(id => selectedItems.has(id));
   };
 
-  const isDiscountValid = (discountStartDate?: string | null, discountEndDate?: string | null): boolean => {
-    if (!discountStartDate || !discountEndDate) return false;
+  const isFlashSaleValid = (flashSaleList?: FlashSaleProductView[] | null): boolean => {
+    if (!flashSaleList || flashSaleList.length === 0) return false;
+    const flashSale = flashSaleList[0];
     const now = new Date();
-    const startDate = new Date(discountStartDate);
-    const endDate = new Date(discountEndDate);
-    return now >= startDate && now <= endDate;
+    const startTime = new Date(flashSale.startTime);
+    const endTime = new Date(flashSale.endTime);
+    return now >= startTime && now <= endTime && !flashSale.isSoldOut;
   };
 
-  const totalQuantity = useMemo(() => cartData.cartItems.reduce(
-    (sum, item) => sum + item.productCartItems.reduce((s, pci) => {
-      if (!selectedItems.has(pci.productCartItemId)) return s;
-      const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
-      if (!variant || variant.stockQuantity === 0) return s;
-      return s + pci.quantity;
-    }, 0),
-    0
-  ), [cartData, selectedItems]);
+  const cartSummary = useMemo(() => {
+    let selectedCount = 0;
+    let totalQty = 0;
+    let totalOriginal = 0;
+    let totalFinal = 0;
 
-  const totalPrice = useMemo(() => cartData.cartItems.reduce((sum, item) => {
-    const itemTotal = item.productCartItems.reduce((itemSum, pci) => {
-      if (!selectedItems.has(pci.productCartItemId)) return itemSum;
-      const discount = pci.productView.discount || 0;
-      const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
-      if (!variant || variant.stockQuantity === 0) return itemSum;
-      const price = variant.price || 0;
-      const hasValidDiscount = discount > 0 && isDiscountValid(pci.productView.discountStartDate, pci.productView.discountEndDate);
-      const discountedPrice = hasValidDiscount ? Math.round(price * (1 - discount / 100)) : price;
-      return itemSum + discountedPrice * pci.quantity;
-    }, 0);
-    return sum + itemTotal;
-  }, 0), [cartData, selectedItems]);
+    for (const item of cartData.cartItems) {
+      for (const pci of item.productCartItems) {
+        if (!selectedItems.has(pci.productCartItemId)) continue;
+        selectedCount += 1;
 
+        const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId) ?? pci.productView.productVariants[0];
+        if (!variant || variant.stockQuantity === 0) continue;
+
+        const qty = pci.quantity || 0;
+        totalQty += qty;
+
+        const flashSaleList = pci.flashSaleProductView;
+        const flashSale = flashSaleList?.[0];
+        const hasValidFlashSale = flashSaleList && flashSaleList.length > 0 && (() => {
+          if (!flashSale) return false;
+          const now = currentTime;
+          const start = new Date(flashSale.startTime).getTime();
+          const end = new Date(flashSale.endTime).getTime();
+          return now >= start && now <= end && !flashSale.isSoldOut;
+        })();
+
+        const originalUnitPrice = (hasValidFlashSale && flashSale && flashSale.originalPrice) ? flashSale.originalPrice : (variant.price || 0);
+        totalOriginal += originalUnitPrice * qty;
+
+        // final unit price (apply flash sale first, then variant.salePrice)
+        let finalUnitPrice = originalUnitPrice;
+        if (hasValidFlashSale && flashSale) {
+          finalUnitPrice = Math.round((variant.price || 0) * (1 - (flashSale.discountPercentage || 0) / 100));
+        } else if (variant.salePrice != null && variant.salePrice < variant.price) {
+          finalUnitPrice = Math.round(variant.salePrice);
+        }
+        totalFinal += finalUnitPrice * qty;
+      }
+    }
+
+    const totalSavings = Math.max(0, totalOriginal - totalFinal);
+    const savingsPercent = totalOriginal > 0 ? Math.round((totalSavings / totalOriginal) * 100) : 0;
+
+    return {
+      selectedCount,
+      totalQuantity: totalQty,
+      totalOriginal,
+      totalSavings,
+      totalPrice: totalFinal,
+      savingsPercent,
+    };
+  }, [cartData, selectedItems, currentTime]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-grey-c50 to-grey-c100">
@@ -289,13 +323,32 @@ export default function Main() {
                   <div className="divide-y divide-grey-c200">
                     {item.productCartItems.map(pci => {
                       const productView = pci.productView;
-                      const discount = productView.discount;
-                      const hasDiscount = !!(discount && productView.discountEndDate && productView.discountStartDate && isDiscountValid(productView.discountStartDate, productView.discountEndDate));
                       const variant = productView.productVariants.find(v => v.productVariantId === pci.productVariantId) ?? productView.productVariants[0];
                       const price = variant?.price || 0;
-                      const discountedPrice = hasDiscount ? Math.round(price * (1 - discount / 100)) : price;
-                      const itemTotal = discountedPrice * pci.quantity;
                       const isOutOfStock = variant?.stockQuantity === 0;
+
+                      // Flash Sale logic (lấy phần tử đầu tiên trong mảng)
+                      const flashSaleList = pci.flashSaleProductView;
+                      const hasFlashSale = isFlashSaleValid(flashSaleList);
+                      const flashSale = flashSaleList?.[0];
+
+                      const hasVariantSale = variant.salePrice != null && variant.salePrice < variant.price;
+
+                      let discountedPrice = price;
+                      let activeDiscountPercent = 0;
+                      let activeEndDate: string | null = null;
+                      let isFlashSaleApplied = false;
+
+                      if (hasFlashSale && flashSale) {
+                        discountedPrice = Math.round(price * (1 - flashSale.discountPercentage / 100));
+                        activeDiscountPercent = flashSale.discountPercentage;
+                        activeEndDate = flashSale.endTime;
+                        isFlashSaleApplied = true;
+                      } else if (hasVariantSale) {
+                        discountedPrice = Math.round(variant.salePrice || 0);
+                      }
+
+                      const itemTotal = discountedPrice * pci.quantity;
 
                       return (
                         <div
@@ -337,9 +390,6 @@ export default function Main() {
                                   <h4 className="font-semibold text-lg text-primary-c900 mb-1 line-clamp-2">
                                     {productView.name}
                                   </h4>
-                                  <p className="text-sm text-grey-c600 line-clamp-2 mb-3">
-                                    {productView.description}
-                                  </p>
 
                                   {/* Variant Attributes */}
                                   <div className="flex flex-wrap gap-2 mb-3">
@@ -366,52 +416,61 @@ export default function Main() {
 
                                   {/* Price Display */}
                                   <div className="flex items-baseline gap-2 mb-3">
-                                    Đơn giá:
+                                    <span className={"text-sm font-medium text-grey-c700"}> Đơn giá:</span>
                                     <span className="text-xl font-bold text-primary-c700">
                                       {formatPrice(discountedPrice)}
                                     </span>
-                                    {hasDiscount && (
+                                    {(hasFlashSale || hasVariantSale) && (
                                       <>
                                         <span className="text-sm text-grey-c400 line-through">
                                           {formatPrice(price)}
                                         </span>
-                                        <Chip
-                                          label={`-${discount}%`}
-                                          color={ChipColor.SUCCESS}
-                                        />
+                                        {isFlashSaleApplied &&
+                                          <Chip
+                                            iconPosition={"end"}
+                                            icon={<FlashOnRoundedIcon className=" animate-pulse !text-sm"/>}
+                                            label={`-${activeDiscountPercent}%`}
+                                            color={ChipColor.ERROR}
+                                          />}
                                       </>
                                     )}
                                   </div>
 
-                                  {/* Discount Timer */}
-                                  {hasDiscount && productView.discountEndDate && (
-                                    <div className="flex items-center gap-2 mb-3 text-sm">
-                                      <CountdownTimer endDate={productView.discountEndDate}/>
+                                  {/* Countdown Timer */}
+                                  {hasFlashSale && activeEndDate && (
+                                    <div className="flex items-center gap-2 mb-3 text-xs text-grey-c600">
+                                      <span>{isFlashSaleApplied ? "Flash Sale kết thúc:" : "Giảm giá kết thúc:"}</span>
+                                      <CountdownTimer endDate={activeEndDate}/>
                                     </div>
                                   )}
 
                                   {/* Quantity Controls */}
                                   <div className="flex items-center gap-4">
                                     <span className="text-sm font-medium text-grey-c700">Số lượng:</span>
-                                    <div className="flex items-center gap-2">
-                                      <Button
+                                    <div className="flex items-center gap-3">
+                                      <button
                                         onClick={() => handleChangeQuantity(item.cartItemId, pci.productCartItemId, -1)}
                                         disabled={pci.quantity <= 1 || isOutOfStock}
-                                        className="!w-8 !h-8 !min-w-0 !p-0 rounded-lg border-2 border-primary-c600 bg-white text-primary-c600 hover:bg-primary-c50 disabled:!border-grey-c300"
-                                        startIcon={<KeyboardArrowLeftRoundedIcon/>}
-                                      />
-                                      <span className="w-12 text-center font-semibold text-lg text-primary-c900">
+                                        className="w-8 h-8 flex items-center justify-center rounded-md border border-grey-c300 bg-white text-grey-c700 hover:border-primary-c600 hover:text-primary-c600 hover:bg-primary-c50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-grey-c300 disabled:hover:bg-white disabled:hover:text-grey-c700 transition-all duration-200"
+                                      >
+                                        <RemoveRoundedIcon className="text-[18px]"/>
+                                      </button>
+
+                                      <span className="min-w-[40px] text-center font-semibold text-base text-grey-c900">
                                         {pci.quantity}
                                       </span>
-                                      <Button
+
+                                      <button
                                         onClick={() => handleChangeQuantity(item.cartItemId, pci.productCartItemId, 1)}
                                         disabled={pci.quantity >= (variant?.stockQuantity || 99) || isOutOfStock}
-                                        className="!w-8 !h-8 !min-w-0 !p-0 rounded-lg border-2 border-primary-c600 bg-white text-primary-c600 hover:bg-primary-c50 disabled:!border-grey-c300"
-                                        startIcon={<KeyboardArrowRightRoundedIcon/>}
-                                      />
+                                        className="w-8 h-8 flex items-center justify-center rounded-md border border-grey-c300 bg-white text-grey-c700 hover:border-primary-c600 hover:text-primary-c600 hover:bg-primary-c50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-grey-c300 disabled:hover:bg-white disabled:hover:text-grey-c700 transition-all duration-200"
+                                      >
+                                        <AddRoundedIcon className="text-[18px]"/>
+                                      </button>
                                     </div>
+
                                     {variant?.stockQuantity && variant.stockQuantity < 10 && variant.stockQuantity > 0 && (
-                                      <span className="text-xs text-support-c700">
+                                      <span className="text-xs text-support-c700 font-medium">
                                         Chỉ còn {variant.stockQuantity} sản phẩm
                                       </span>
                                     )}
@@ -460,36 +519,47 @@ export default function Main() {
                   </button>
                 </div>
 
-                <div className="space-y-4 mb-6">
+                <div className="space-y-2 mb-6">
                   <div className="flex justify-between items-center py-3 border-b border-grey-c200">
                     <span className="text-grey-c700">Số sản phẩm đã chọn:</span>
-                    <span className="font-semibold text-primary-c900 text-lg">{selectedItems.size}</span>
+                    <span className="font-semibold text-primary-c900 text-lg">{cartSummary.selectedCount}</span>
                   </div>
 
                   <div className="flex justify-between items-center py-3 border-b border-grey-c200">
                     <span className="text-grey-c700">Tổng số lượng:</span>
-                    <span className="font-semibold text-primary-c900 text-lg">{totalQuantity}</span>
+                    <span className="font-semibold text-primary-c900 text-lg">{cartSummary.totalQuantity}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center py-3 border-b border-grey-c200">
+                    <span className="text-grey-c700">Tổng tiền hàng</span>
+                    <span
+                      className="font-semibold text-primary-c900 text-lg">{formatPrice(cartSummary.totalOriginal)}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center py-3 border-b border-grey-c200">
+                    <span className="text-grey-c700">Tiết kiệm</span>
+                    <span
+                      className="font-semibold text-primary-c900 text-lg">{formatPrice(cartSummary.totalSavings)}</span>
                   </div>
 
                   <div className="flex justify-between items-center py-4 bg-primary-c50 -mx-6 px-6 rounded-lg">
                     <span className="text-lg font-semibold text-primary-c900">Tổng thanh toán:</span>
                     <span className="text-2xl font-bold text-primary-c700">
-                      {formatPrice(totalPrice)}
+                      {formatPrice(cartSummary.totalPrice)}
                     </span>
                   </div>
                 </div>
 
                 <Button
                   onClick={() => {
-                    router.push("/checkout")
                     sessionStorage.setItem("selectedCartItems", JSON.stringify(Array.from(selectedItems)));
+                    router.push("/checkout");
                   }}
                   disabled={selectedItems.size === 0}
                   className="w-full py-4 text-lg font-semibold bg-primary-c600 hover:bg-primary-c700 text-white disabled:bg-grey-c300 disabled:text-grey-c600 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
                 >
-                 Đặt hàng
+                  Đặt hàng
                 </Button>
-
               </div>
             </div>
           </div>
@@ -498,4 +568,3 @@ export default function Main() {
     </div>
   );
 }
-

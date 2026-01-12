@@ -36,7 +36,7 @@ type FilterKey = keyof Filters;
 const options: Option[] = [
   {id: "", label: "Mặc định"},
   {id: "totalSold", label: "Phổ biến nhất"},
-  {id: "createAt", label: "Mới nhất"},
+  {id: "createdAt", label: "Mới nhất"},
   {id: "price-asc", label: "Giá thấp đến cao"},
   {id: "price-desc", label: "Giá cao đến thấp"},
   {id: "rating", label: "Đánh giá cao nhất"},
@@ -82,6 +82,7 @@ const options: Option[] = [
       endPrice: filters.priceRange[1] < 50000000 ? filters.priceRange[1] : null,
       star: filters.minRating > 0 ? filters.minRating : null,
       searchId: params.searchId || null,
+      categoryId: params.categoryId || null,
     }
   })
   const fetcher = (url: string) => get<BaseResponse<PageResponse<ProductView>>>(url).then(res => res.data);
@@ -145,6 +146,7 @@ const options: Option[] = [
     // Keep existing params like keyword and searchId
     if (params.keyword) newParams.set('keyword', params.keyword);
     if (params.searchId) newParams.set('searchId', params.searchId);
+    if (params.categoryId) newParams.set('categoryId', params.categoryId);
 
     // Add filter params
     if (newFilters.priceRange[0] > 0) newParams.set('startPrice', newFilters.priceRange[0].toString());
@@ -320,10 +322,12 @@ const options: Option[] = [
               ))}
             </div>
 
-          )}</div>
-        <Pagination totalPages={totalPages} currentPage={filters.pageNo} onPageChange={(currentPage) => {
-          handleFilterChange('pageNo', currentPage);
-        }}/>
+          )}
+          <Pagination totalPages={totalPages} currentPage={filters.pageNo} onPageChange={(currentPage) => {
+            handleFilterChange('pageNo', currentPage);
+          }}/>
+        </div>
+
       </div>
     </div>
   );

@@ -62,9 +62,9 @@ export default function Header() {
 
       {/* Main Header */}
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-12 gap-4 py-4 items-center">
+        <div className="flex gap-4 py-4 items-center flex-wrap">
           {/* Logo */}
-          <div className="col-span-12 md:col-span-3 lg:col-span-2">
+          <div className=" ">
             <Link href="/" className="flex items-center">
               <Image
                 src="/evoway.svg"
@@ -78,12 +78,12 @@ export default function Header() {
           </div>
 
           {/* Search */}
-          <div className="col-span-12 md:col-span-6 lg:col-span-7">
+          <div className=" flex-1">
             <SearchInput/>
           </div>
 
           {/* User Info */}
-          <div className="col-span-12 md:col-span-3 lg:col-span-3 flex justify-end">
+          <div className="">
             <Information/>
           </div>
         </div>

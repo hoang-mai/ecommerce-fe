@@ -22,6 +22,8 @@ import Loading from "@/components/modals/Loading";
 import {useAddressMapping} from "@/hooks/useAddressMapping";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import { useBuildUrl } from "@/hooks/useBuildUrl";
+import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
+import {useRouter} from "next/navigation";
 
 interface Shop {
   shopId: number;
@@ -56,7 +58,7 @@ export default function Main() {
   const debouncedKeyword = useDebounce(keyword, 500);
   const dispatch = useDispatch();
   const {getProvinceName, getWardName} = useAddressMapping();
-
+  const router = useRouter();
   // Build URL với query params
   const url = useBuildUrl({
     baseUrl: `${SHOP_VIEW}/search`,
@@ -167,7 +169,9 @@ export default function Main() {
     setSelectedShop(shop);
     setIsUpdateStatusOpen(true);
   };
-
+  const handleViewShop = (id: number) => {
+    router.push(`/admin/shops/${id}`);
+  };
 
   // Define columns for the table
   const columns: Column<Shop>[] = [
@@ -278,7 +282,13 @@ export default function Main() {
       className: "text-center",
       render: (row) => (
         <div className="flex gap-2 justify-center">
-
+          <button
+            onClick={() => handleViewShop(Number(row.shopId))}
+            className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+            title="Xem chi tiết"
+          >
+            <VisibilityRoundedIcon/>
+          </button>
           <button
             onClick={() => handleUpdateStatus(row)}
             className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"

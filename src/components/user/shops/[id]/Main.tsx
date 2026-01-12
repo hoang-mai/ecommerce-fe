@@ -9,7 +9,7 @@ import {ProductView, ShopView} from "@/types/interface";
 import {AlertType, ColorButton, ShopStatus} from "@/types/enum";
 import ProductCard from "@/components/user/ProductCard";
 import Title from "@/libs/Title"
-import {formatDate, formatNumber} from "@/util/fnCommon";
+import {formatDate, formatNumber, getTimeAgo} from "@/util/fnCommon";
 import Image from "next/image";
 import Button from "@/libs/Button";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
@@ -28,6 +28,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {useDebounce} from "@/hooks/useDebounce";
 import {openChat} from "@/redux/slice/chatSlice";
 import StoreRoundedIcon from "@mui/icons-material/Storefront";
+import { useAddressMapping } from "@/hooks/useAddressMapping";
 
 const sampleShop: ShopView = {
   shopId: "",
@@ -60,7 +61,7 @@ type Props = {
 const options: Option[] = [
   {id: "", label: "Mặc định"},
   {id: "totalSold", label: "Phổ biến nhất"},
-  {id: "createAt", label: "Mới nhất"},
+  {id: "createdAt", label: "Mới nhất"},
   {id: "price-asc", label: "Giá thấp đến cao"},
   {id: "price-desc", label: "Giá cao đến thấp"},
   {id: "rating", label: "Đánh giá cao nhất"},
@@ -97,6 +98,7 @@ export default function Main({id}: Props) {
   });
   const totalPages = data?.data?.totalPages || 0;
   const dispatch = useDispatch();
+  const {getFullAddress} = useAddressMapping();
   useEffect(() => {
     if (error) {
       const alert: AlertState = {
@@ -127,50 +129,35 @@ export default function Main({id}: Props) {
     <div className="">
       {(isLoading || isLoadingShop) && <Loading/>}
       {/* Shop Info Card */}
-      <div className="bg-white shadow-sm">
-        {/* Banner */}
-        <div className="relative h-48 md:h-64 overflow-hidden">
-          <Image
-            src={shop.bannerUrl || "/imageBanner.jpg"}
-            alt={shop.shopName}
-            fill
-            className="object-cover transition-transform duration-500 hover:scale-105"
-          />
-        </div>
-
-        {/* Shop Header */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative pb-6">
-            {/* Logo */}
-            <div className="absolute -top-12 left-0">
+      <div className={"w-full bg-white p-4 border-b border-grey-c200 shadow-sm"}>
+        <div className={"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-row flex-wrap justify-between"}>
+          <div className={`w-100 h-30 bg-cover bg-center rounded-md relative `}
+               style={{
+                 backgroundImage: `url(${shop.bannerUrl || "/imageBanner.jpg"})`,
+               }}
+          >
+            <div className={"absolute inset-0 bg-black/20 rounded-md backdrop-blur-xs"}></div>
+            <div className="absolute z-1 flex flex-row gap-2 top-4 left-2">
               <div
-                className="w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-white shadow-lg">
+                className="w-20 h-20 rounded-full border-4 border-white overflow-hidden bg-white shadow-lg">
                 {shop.logoUrl ? (
                   <Image
                     src={shop.logoUrl}
                     alt={shop.shopName}
-                    width={64}
-                    height={64}
+                    width={40}
+                    height={40}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <StoreRoundedIcon style={{fontSize: '64px'}} className="text-primary-c700"/>
+                    <StoreRoundedIcon style={{fontSize: '40px'}} className="text-primary-c700"/>
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Shop Name & Status */}
-            <div className="pt-16">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-bold text-grey-c900">{shop.shopName}</h1>
-                  </div>
-                  <p className="mt-2 text-grey-c600">{shop.description}</p>
-                </div>
-                <Button
+              <div>
+                <h1 className="text-2xl font-bold text-white">{shop.shopName}</h1>
+                <p className="text-grey-c100 text-xs mb-1">{shop.description}</p>
+                <button
                   onClick={() => {
                     const chatState: ChatState = {
                       isOpen: true,
@@ -182,79 +169,80 @@ export default function Main({id}: Props) {
                     }
                     dispatch(openChat(chatState));
                   }}
-                  color={ColorButton.PRIMARY}
-                  startIcon={<ChatBubbleOutlineIcon className=""/>}>
+                  className={"border text-xs p-1 rounded-md border-white bg-white/30 text-white flex items-center gap-1 cursor-pointer"}
+                >
+                  <ChatBubbleOutlineIcon className="!text-xs"/>
                   Chat ngay
-                </Button>
+                </button>
               </div>
-
-              {/* Shop Stats */}
-              <div
-                className="flex flex-wrap items-center gap-8 mt-6 py-4 border-t border-b border-grey-c200">
-                <div className="flex items-center gap-2">
-                  <Inventory2Icon className="w-5 h-5 text-primary-c500"/>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-sm text-grey-c600">Sản phẩm:</span>
-                    <span
-                      className="text-base font-semibold text-grey-c900">{shop.activeProducts}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <TrendingUpIcon className="w-5 h-5 text-primary-c500"/>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-sm text-grey-c600">Đã bán:</span>
-                    <span
-                      className="text-base font-semibold text-grey-c900">{formatNumber(shop.totalSold || 0)}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <StarIcon className="w-5 h-5 text-yellow-500"/>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-sm text-grey-c600">Đánh giá:</span>
-                    {shop.numberOfRatings && shop.numberOfRatings > 0 ? (
-                      <span className="text-base font-semibold text-grey-c900">
-                                                {(Number(shop.rating || 0) / shop.numberOfRatings).toFixed(1)}/5 ({formatNumber(shop.numberOfRatings)})
-                                            </span>
-                    ) : (
-                      <span className="text-base font-semibold text-grey-c900">Chưa có đánh giá</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <CalendarTodayIcon className="w-5 h-5 text-primary-c500"/>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-sm text-grey-c600">Tham gia:</span>
-                    <span
-                      className="text-base font-semibold text-grey-c900">{formatDate(shop.createdAt)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contact Info */}
-              <div className="flex flex-wrap gap-6 mt-6 pb-4">
-                <div className="flex items-center gap-2 text-grey-c600">
-                  <LocationOnIcon className="w-4 h-4"/>
-                  <span className="text-sm">{shop.detail}, {shop.ward}, {shop.province}</span>
-                </div>
-                <div className="flex items-center gap-2 text-grey-c600">
-                  <PhoneIcon className="w-4 h-4"/>
-                  <span className="text-sm">{shop.phoneNumber}</span>
-                </div>
-              </div>
-              <Divide/>
             </div>
+          </div>
+          <div className={"flex flex-col gap-4 justify-center"}>
+            <div className={"flex flex-row gap-1 items-center"}>
+              <Inventory2Icon className="!w-5 !h-5 text-grey-c800"/>
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm text-grey-c600">Sản phẩm:</span>
+                <span
+                  className="text-base font-semibold text-primary-c900">{shop.activeProducts}</span>
+              </div>
+            </div>
+            <div className={"flex flex-row gap-1 items-center "}>
+              <TrendingUpIcon className="!w-5 !h-5 text-grey-c800"/>
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm text-grey-c600">Đã bán:</span>
+                <span
+                  className="text-base font-semibold text-primary-c900">{formatNumber(shop.totalSold || 0)}</span>
+              </div>
+            </div>
+            <div className={"flex flex-row gap-1  "}>
+              <LocationOnIcon className="!w-5 !h-5 text-grey-c800"/>
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm text-grey-c600">Địa chỉ:</span>
+                <span
+                  className="text-base font-semibold text-primary-c900 text-wrap w-60">{getFullAddress(shop.detail, shop.ward, shop.province)}</span>
+              </div>
+            </div>
+          </div>
+          <div className={"flex flex-col gap-4 justify-center"}>
+            <div className={"flex flex-row gap-1 items-center "}>
+              <StarIcon className="!w-5 !h-5 "/>
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm text-grey-c600">Đánh giá:</span>
+                {shop.numberOfRatings && shop.numberOfRatings > 0 ? (
+                  <span className="text-base font-semibold text-primary-c900">
+                    {(Number(shop.rating || 0) / shop.numberOfRatings).toFixed(1)} ({formatNumber(shop.numberOfRatings)} đánh giá)
+                     </span>
+                ) : (
+                  <span className="text-base font-semibold text-primary-c900">Chưa có đánh giá</span>
+                )}
+              </div>
+            </div>
+            <div className={"flex flex-row gap-1 items-center"}>
+              <PhoneIcon className="!w-5 !h-5 text-grey-c800"/>
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm text-grey-c600">Số điện thoại:</span>
+                <span
+                  className="text-base font-semibold text-primary-c900">{shop.phoneNumber}</span>
+              </div>
+            </div>
+            <div className={"flex flex-row gap-1 items-center"}>
+              <CalendarTodayIcon className="!w-5 !h-5 text-grey-c800"/>
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm text-grey-c600">Tham gia:</span>
+                <span
+                  className="text-base font-semibold text-primary-c900">{getTimeAgo(shop.createdAt)}</span>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
 
       {/* Products Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Title title={"Sản phẩm của shop"}/>
+
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-grey-c200 p-4 mb-6">
+        <div className="bg-white rounded-lg shadow-sm border border-grey-c200 p-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search */}
             <div className="flex-1 relative">
@@ -312,7 +300,7 @@ export default function Main({id}: Props) {
             </div>
           )}
         </div>
-        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6`}>
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-6`}>
           {data && data.data && data.data.data.map((product) => (
             <ProductCard product={product} key={product.productId}/>
           ))}

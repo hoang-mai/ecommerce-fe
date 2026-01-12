@@ -78,6 +78,8 @@ export enum CategoryStatus {
 export enum ProductStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
+  DELETED = "DELETED",
+  SUSPENDED = "SUSPENDED"
 }
 
 export enum ProductVariantStatus {
@@ -123,4 +125,9 @@ export enum MessageType {
   REACTION = "REACTION",
   LINK = "LINK",
   OTHER = "OTHER",
+}
+
+export enum FlashSaleScheduleStatus{
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
 }

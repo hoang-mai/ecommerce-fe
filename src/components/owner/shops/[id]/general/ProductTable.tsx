@@ -10,10 +10,12 @@ import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import ChangeCircleRoundedIcon from '@mui/icons-material/ChangeCircleRounded';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import {formatDateTime, formatPrice} from "@/util/fnCommon";
 import CreateProductModal from "./CreateProductModal";
 import UpdateProductModal from "./UpdateProductModal";
 import UpdateStatusProductModal from "./UpdateStatusProductModal";
+import DeleteProductModal from "./DeleteProductModal";
 import useSWR from "swr";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {PRODUCT_VIEW} from "@/services/api";
@@ -25,7 +27,7 @@ import Loading from "@/components/modals/Loading";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import {ProductView} from "@/types/interface";
-import { useBuildUrl } from "@/hooks/useBuildUrl";
+import {useBuildUrl} from "@/hooks/useBuildUrl";
 import {useRouter} from "next/navigation";
 
 interface ProductTableProps {
@@ -35,7 +37,7 @@ interface ProductTableProps {
 export default function ProductTable({shopId}: ProductTableProps) {
   const {get} = useAxiosContext();
   const productFetcher = (url: string) =>
-    get<BaseResponse<PageResponse<ProductView>>>(url, {isToken : true}).then((res) => res.data);
+    get<BaseResponse<PageResponse<ProductView>>>(url, {isToken: true}).then((res) => res.data);
   const router = useRouter();
   const [pageNo, setPageNo] = useState(0);
   const [pageSize, setPageSize] = useState("10");
@@ -48,6 +50,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
   const dispatch = useDispatch();
 
   const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductView | null>(null);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -88,6 +91,8 @@ export default function ProductTable({shopId}: ProductTableProps) {
     {id: "", label: "Tất cả trạng thái"},
     {id: ProductStatus.ACTIVE, label: "Đang bán"},
     {id: ProductStatus.INACTIVE, label: "Ngừng bán"},
+    {id: ProductStatus.SUSPENDED, label: "Đình chỉ"},
+    {id: ProductStatus.DELETED, label: "Đã xóa"},
   ];
 
   const getStatusColor = (status: ProductStatus): ChipColor => {
@@ -95,6 +100,10 @@ export default function ProductTable({shopId}: ProductTableProps) {
       case ProductStatus.ACTIVE:
         return ChipColor.SUCCESS;
       case ProductStatus.INACTIVE:
+        return ChipColor.WARNING;
+      case ProductStatus.SUSPENDED:
+        return ChipColor.ERROR;
+      case ProductStatus.DELETED:
         return ChipColor.SECONDARY;
       default:
         return ChipColor.SECONDARY;
@@ -107,6 +116,10 @@ export default function ProductTable({shopId}: ProductTableProps) {
         return "Đang bán";
       case ProductStatus.INACTIVE:
         return "Ngừng bán";
+      case ProductStatus.SUSPENDED:
+        return "Đình chỉ";
+      case ProductStatus.DELETED:
+        return "Đã xóa";
       default:
         return status;
     }
@@ -301,7 +314,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
       label: "Hành động",
       className: "text-center",
       render: (row) => (
-        <div className="flex gap-2 justify-center">
+        <div className="flex gap-2 justify-start ">
           <button
             onClick={() => {
               router.push(`/owner/shops/${shopId}/${row.productId}`);
@@ -311,26 +324,42 @@ export default function ProductTable({shopId}: ProductTableProps) {
           >
             <VisibilityRoundedIcon/>
           </button>
-          <button
-            onClick={() => {
-              setSelectedProduct(row);
-              setIsEditModalOpen(true);
-            }}
-            className="cursor-pointer p-2 text-yellow-c800 hover:bg-yellow-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-            title="Chỉnh sửa"
-          >
-            <EditRoundedIcon/>
-          </button>
-          <button
-            onClick={() => {
-              setSelectedProduct(row);
-              setIsUpdateStatusModalOpen(true);
-            }}
-            className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-            title="Đổi trạng thái"
-          >
-            <ChangeCircleRoundedIcon/>
-          </button>
+
+          {/* Nếu trạng thái là SUSPENDED hoặc DELETED thì chỉ hiện nút xem */}
+          {row.productStatus !== ProductStatus.SUSPENDED && row.productStatus !== ProductStatus.DELETED && (
+            <>
+              <button
+                onClick={() => {
+                  setSelectedProduct(row);
+                  setIsEditModalOpen(true);
+                }}
+                className="cursor-pointer p-2 text-yellow-c800 hover:bg-yellow-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                title="Chỉnh sửa"
+              >
+                <EditRoundedIcon/>
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedProduct(row);
+                  setIsUpdateStatusModalOpen(true);
+                }}
+                className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                title="Đổi trạng thái"
+              >
+                <ChangeCircleRoundedIcon/>
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedProduct(row);
+                  setIsDeleteModalOpen(true);
+                }}
+                className="cursor-pointer p-2 text-grey-c800 hover:bg-grey-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                title="Xóa"
+              >
+                <DeleteOutlineRoundedIcon/>
+              </button>
+            </>
+          )}
         </div>
       ),
     },
@@ -400,7 +429,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
             Tìm thấy <strong className="text-primary-c800">{pageData?.totalElements || 0}</strong> sản phẩm
             {keyword && <> với từ khóa &ldquo;<strong className="text-primary-c800">{keyword}</strong>&rdquo;</>}
             {selectedStatus && <> - Trạng thái: <strong
-                className="text-primary-c800">{statusOptions.find(o => o.id === selectedStatus)?.label}</strong></>}
+              className="text-primary-c800">{statusOptions.find(o => o.id === selectedStatus)?.label}</strong></>}
           </span>
           <button
             onClick={handleClearSearch}
@@ -462,6 +491,16 @@ export default function ProductTable({shopId}: ProductTableProps) {
           productName={selectedProduct.name}
           currentStatus={selectedProduct.productStatus}
           reload={mutate}
+        />
+      )}
+
+      {/* Delete Product Modal */}
+      {isDeleteModalOpen && selectedProduct && (
+        <DeleteProductModal
+          isOpen={isDeleteModalOpen}
+          setIsOpen={setIsDeleteModalOpen}
+          reload={() => mutate()}
+          product={selectedProduct}
         />
       )}
 

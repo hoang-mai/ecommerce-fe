@@ -2,6 +2,7 @@
 import {createContext, useContext, useCallback, useMemo, FC, ReactNode} from 'react';
 import axios, {AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig} from 'axios';
 import {
+  CATEGORY, FLASH_SALE_CAMPAIGN, FLASH_SALE_PRODUCT_VIEW,
   LOGIN,
   PRODUCT_VIEW,
   PUSH_SUBSCRIPTION,
@@ -27,8 +28,8 @@ type RefreshTokenResponse = {
 
 type AxiosContextValue = {
   get<T>(url: string, config?: AxiosRequestConfig & {isToken? : boolean}): Promise<AxiosResponse<T>>;
-  post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
-  patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
+  post<T>(url: string, data?: unknown, config?: AxiosRequestConfig & {isToken? : boolean}): Promise<AxiosResponse<T>>;
+  patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig & {isToken? : boolean}): Promise<AxiosResponse<T>>;
   put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
   del<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
 };
@@ -45,6 +46,10 @@ const ROUTER_NOT_AUTHS = [
   `${USER_VIEW}/search-address`,
   `${PUSH_SUBSCRIPTION}/unsubscribe`,
   SEARCH_KEYWORD,
+  `${CATEGORY}/search`,
+  `${FLASH_SALE_PRODUCT_VIEW}/`,
+  FLASH_SALE_CAMPAIGN,
+  FLASH_SALE_PRODUCT_VIEW,
 ];
 
 export const AxiosProvider: FC<{ children: ReactNode }> = ({children}) => {

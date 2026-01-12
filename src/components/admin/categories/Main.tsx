@@ -28,7 +28,7 @@ import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useBuildUrl} from "@/hooks/useBuildUrl";
 
 
-interface ResCategorySearchDTO {
+export interface ResCategorySearchDTO {
   categoryId: number;
   categoryName: string;
   description: string;

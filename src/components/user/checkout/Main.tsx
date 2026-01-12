@@ -1,7 +1,6 @@
 "use client";
-import Title from "@/libs/Title";
 import useSWR from "swr";
-import {ADDRESS, CART_VIEW, ORDER} from "@/services/api";
+import {ADDRESS, CART_VIEW, ORDER_FLASH_SALE} from "@/services/api";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {useDispatch} from "react-redux";
 import React, {useCallback, useEffect, useMemo, useState} from "react";
@@ -9,7 +8,7 @@ import {AlertType, ColorButton} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Image from "next/image";
 import Chip, {ChipColor} from "@/libs/Chip";
-import {formatDate, formatPrice} from "@/util/fnCommon";
+import {formatPrice} from "@/util/fnCommon";
 import CountdownTimer from "@/libs/CountDownTime";
 import {ResInfoAddressDTO} from "@/components/user/profile/AddressModal";
 import {useAddressMapping} from "@/hooks/useAddressMapping";
@@ -18,13 +17,14 @@ import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import Button from "@/libs/Button";
 import useSWRMutation from "swr/mutation";
-import {CartViewDTO, ProductView} from "@/types/interface";
+import {CartViewDTO, FlashSaleProductView} from "@/types/interface";
 import Empty from "@/libs/Empty";
 import {useCartData} from "@/components/provider/CartProvider";
 import Loading from "@/components/modals/Loading";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import {useRouter} from "next/navigation";
 import TextField from "@/libs/TextField";
+import FlashOnRoundedIcon from "@mui/icons-material/FlashOnRounded";
 
 interface ResCreateProductOrderItemDTO {
   productId: number;
@@ -32,6 +32,7 @@ interface ResCreateProductOrderItemDTO {
   productVariantId: number;
   quantity: number;
   price: number;
+  isFlashSale: boolean;
 }
 
 interface ResCreateOrderItemDTO {
@@ -56,13 +57,11 @@ export default function Main() {
   const {mutate} = useCartData();
   const {getFullAddress} = useAddressMapping();
 
-  // Fetchers
   const fetcher = (url: string) => get<BaseResponse<CartViewDTO>>(url).then(res => res.data);
   const fetcherAddress = (url: string) => get<BaseResponse<ResInfoAddressDTO>>(url).then(res => res.data);
   const fetcherCreateOrder = (url: string, {arg}: { arg: ResCreateOrderDTO }) =>
     post<BaseResponse<never>>(url, arg).then(res => res.data);
 
-  // SWR hooks
   const {data, isLoading, error} = useSWR(CART_VIEW, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
@@ -78,7 +77,7 @@ export default function Main() {
     revalidateOnFocus: false,
   });
 
-  const {trigger} = useSWRMutation(ORDER, fetcherCreateOrder);
+  const {trigger} = useSWRMutation(ORDER_FLASH_SALE, fetcherCreateOrder);
 
   // States
   const [isOpenAddressModal, setIsOpenAddressModal] = useState(false);
@@ -87,13 +86,12 @@ export default function Main() {
   const [selectedCartItems, setSelectedCartItems] = useState<Set<string>>(new Set());
   const [shopNotes, setShopNotes] = useState<Record<string, string>>({});
 
-  // Load selected items from sessionStorage
   useEffect(() => {
     const storedSelectedItems = sessionStorage.getItem("selectedCartItems");
     if (storedSelectedItems) {
       try {
         const parsedItems = JSON.parse(storedSelectedItems);
-        setSelectedCartItems(new Set(parsedItems));
+        setTimeout(() => setSelectedCartItems(new Set(parsedItems)), 0);
       } catch (error) {
         console.error("Failed to parse selectedCartItems:", error);
       }
@@ -116,14 +114,12 @@ export default function Main() {
   const address = dataAddress?.data;
   const cartData: CartViewDTO = data?.data ?? cartDefault;
 
-  const isDiscountActive = useCallback((productView: ProductView) => {
-    if (Number(productView.discount) <= 0) return false;
-    if (!productView.discountStartDate || !productView.discountEndDate) return false;
-
-    const startTime = new Date(productView.discountStartDate).getTime();
-    const endTime = new Date(productView.discountEndDate).getTime();
-
-    return startTime < currentTime && endTime > currentTime;
+  const isFlashSaleValid = useCallback((flashSaleList?: FlashSaleProductView[] | null): boolean => {
+    if (!flashSaleList || flashSaleList.length === 0) return false;
+    const flashSale = flashSaleList[0];
+    const startTime = new Date(flashSale.startTime).getTime();
+    const endTime = new Date(flashSale.endTime).getTime();
+    return startTime < currentTime && endTime > currentTime && !flashSale.isSoldOut;
   }, [currentTime]);
 
   const filteredCartData: CartViewDTO = useMemo(() => {
@@ -170,16 +166,25 @@ export default function Main() {
       if (!variant || variant.stockQuantity === 0) return itemSum;
 
       const price = variant.price || 0;
-      const discount = pci.productView.discount || 0;
-      const hasDiscount = isDiscountActive(pci.productView);
-      const discountedPrice = hasDiscount ? Math.round(price * (1 - discount / 100)) : price;
+
+      const flashSaleList = pci.flashSaleProductView;
+      const hasValidFlashSale = isFlashSaleValid(flashSaleList);
+      const flashSale = flashSaleList?.[0];
+
+      const hasVariantSale = variant.salePrice != null && variant.salePrice < price;
+
+      let discountedPrice = price;
+      if (hasValidFlashSale && flashSale) {
+        discountedPrice = Math.round(price * (1 - flashSale.discountPercentage / 100));
+      } else if (hasVariantSale) {
+        discountedPrice = Math.round(variant.salePrice || 0);
+      }
 
       return itemSum + discountedPrice * pci.quantity;
     }, 0);
     return sum + itemTotal;
-  }, 0), [filteredCartData, isDiscountActive]);
+  }, 0), [filteredCartData, isFlashSaleValid]);
 
-  // Handle shop note change
   const handleShopNoteChange = (shopId: string, note: string) => {
     setShopNotes(prev => ({
       ...prev,
@@ -187,8 +192,7 @@ export default function Main() {
     }));
   };
 
-  // Handle create order
-  const handleCreateOrder = () => {
+  const handleCreateOrder = async () => {
     if (!address) {
       const alert: AlertState = {
         isOpen: true,
@@ -218,12 +222,23 @@ export default function Main() {
         .map(pci => {
           const variant = pci.productView.productVariants.find(v => v.productVariantId === pci.productVariantId);
           if (!variant) return null;
+
+          const flashSaleList = pci.flashSaleProductView;
+          const hasValidFlashSale = isFlashSaleValid(flashSaleList);
+          const flashSale = flashSaleList?.[0];
+
+          let activeDiscount = 0;
+          if (hasValidFlashSale && flashSale) {
+            activeDiscount = flashSale.discountPercentage;
+          }
+
           return {
             productId: Number(pci.productView.productId),
             productVariantId: Number(pci.productVariantId),
             quantity: pci.quantity,
-            price: variant.price || 0,
-            discount: isDiscountActive(pci.productView) ? (pci.productView.discount || 0) : 0,
+            price: variant.salePrice || variant.price || 0,
+            discount: activeDiscount,
+            isFlashSale: hasValidFlashSale,
           };
         })
         .filter((x): x is ResCreateProductOrderItemDTO => x !== null);
@@ -238,7 +253,7 @@ export default function Main() {
 
     const reqCreateOrder: ResCreateOrderDTO = {
       receiverName: address.receiverName,
-      address: getFullAddress(address.detail, address.ward, address.province),
+      address: address.detail,
       phoneNumber: address.phoneNumber,
       items: orderItems,
     };
@@ -256,10 +271,8 @@ export default function Main() {
           title: "Thất bại",
         };
         dispatch(openAlert(alert));
-      })
-      .finally(() => {
         setIsCreatingOrder(false);
-      });
+      })
   };
 
   return (
@@ -274,7 +287,7 @@ export default function Main() {
         </div>
 
         {!isLoading && filteredCartData.cartItems.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+          <div className="bg-white rounded-xl shadow-sm p-12 text-center justify-center">
             <Empty/>
             <p className="text-grey-c500 text-lg mt-4 mb-6">Không có sản phẩm nào được chọn để thanh toán</p>
             <Button
@@ -354,13 +367,31 @@ export default function Main() {
                     <div className="divide-y divide-grey-c100">
                       {item.productCartItems.map(pci => {
                         const productView = pci.productView;
-                        const discount = productView.discount || 0;
-                        const hasDiscount = isDiscountActive(productView);
                         const variant = productView.productVariants.find(v => v.productVariantId === pci.productVariantId) ?? productView.productVariants[0];
                         const price = variant?.price || 0;
-                        const discountedPrice = hasDiscount ? Math.round(price * (1 - discount / 100)) : price;
-                        const itemTotal = discountedPrice * pci.quantity;
                         const isOutOfStock = variant?.stockQuantity === 0;
+
+                        const flashSaleList = pci.flashSaleProductView;
+                        const hasFlashSale = isFlashSaleValid(flashSaleList);
+                        const flashSale = flashSaleList?.[0];
+
+                        const hasVariantSale = variant?.salePrice != null && variant.salePrice < price;
+
+                        let discountedPrice = price;
+                        let activeDiscountPercent = 0;
+                        let activeEndDate: string | null = null;
+                        let isFlashSaleApplied = false;
+
+                        if (hasFlashSale && flashSale) {
+                          discountedPrice = Math.round(price * (1 - flashSale.discountPercentage / 100));
+                          activeDiscountPercent = flashSale.discountPercentage;
+                          activeEndDate = flashSale.endTime;
+                          isFlashSaleApplied = true;
+                        } else if (hasVariantSale) {
+                          discountedPrice = Math.round(variant.salePrice || 0);
+                        }
+
+                        const itemTotal = discountedPrice * pci.quantity;
 
                         return (
                           <div
@@ -389,9 +420,6 @@ export default function Main() {
                                 <h4 className="font-semibold text-base text-primary-c900 line-clamp-2 mb-1">
                                   {productView.name}
                                 </h4>
-                                <p className="text-sm text-grey-c600 line-clamp-1 mb-2">
-                                  {productView.description}
-                                </p>
 
                                 {/* Variant Attributes */}
                                 <div className="flex flex-wrap gap-2 mb-2">
@@ -418,17 +446,24 @@ export default function Main() {
                                 {/* Price & Quantity */}
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
+                                    <span className={"text-sm font-medium text-grey-c700"}> Đơn giá:</span>
                                     <span className="text-lg font-bold text-primary-c700">
                                       {formatPrice(discountedPrice)}
                                     </span>
-                                    {hasDiscount && (
-                                      <>
-                                        <span className="text-sm text-grey-c400 line-through">
-                                          {formatPrice(price)}
-                                        </span>
-                                        <Chip label={`-${discount}%`} color={ChipColor.SUCCESS}/>
-                                      </>
-                                    )}
+                                    {(hasFlashSale || hasVariantSale) && (
+                                       <>
+                                         <span className="text-sm text-grey-c400 line-through">
+                                           {formatPrice(price)}
+                                         </span>
+                                         {isFlashSaleApplied &&
+                                           <Chip
+                                             iconPosition={"end"}
+                                             icon={<FlashOnRoundedIcon className=" animate-pulse !text-sm"/>}
+                                             label={`-${activeDiscountPercent}%`}
+                                             color={ChipColor.ERROR}
+                                           />}
+                                       </>
+                                     )}
                                     <span className="text-grey-c600">x {pci.quantity}</span>
                                   </div>
                                   <div className="text-right">
@@ -439,11 +474,11 @@ export default function Main() {
                                   </div>
                                 </div>
 
-                                {/* Discount Timer */}
-                                {hasDiscount && productView.discountEndDate && (
+                                {/* Countdown Timer */}
+                                {hasFlashSale && activeEndDate && (
                                   <div className="flex items-center gap-2 mt-2 text-xs text-grey-c600">
-                                    <span>Giảm giá kết thúc:</span>
-                                    <CountdownTimer endDate={productView.discountEndDate}/>
+                                    <span>{isFlashSaleApplied ? "Flash Sale kết thúc:" : "Giảm giá kết thúc:"}</span>
+                                    <CountdownTimer endDate={activeEndDate}/>
                                   </div>
                                 )}
                               </div>
@@ -479,7 +514,7 @@ export default function Main() {
               <div className="bg-white rounded-xl shadow-lg p-6 sticky top-6">
                 <h2 className="text-xl font-bold text-primary-c900 mb-6">Chi tiết thanh toán</h2>
 
-                <div className="space-y-4 mb-6">
+                <div className="space-y-2 mb-6">
                   <div className="flex justify-between items-center py-3 border-b border-grey-c200">
                     <span className="text-grey-c700">Số cửa hàng:</span>
                     <span className="font-semibold text-primary-c900">{filteredCartData.cartItems.length}</span>
@@ -538,4 +573,3 @@ export default function Main() {
     </div>
   );
 }
-

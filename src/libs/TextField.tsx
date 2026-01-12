@@ -68,7 +68,7 @@ export default function TextField(
             disabled={disabled}
             rows={rows}
             maxLength={maxLength}
-            className={`${className} w-full px-5 py-3 border-2 rounded-xl outline-0 text-grey-c700 transition-all ease-linear resize-none
+            className={`${className} w-full px-5 py-3 border-2 rounded-xl outline-0 text-grey-c700 transition-all ease-linear resize-y
             ${disabled ? "bg-grey-c50 cursor-not-allowed" : error ? "bg-support-c300 border-support-c500 hover:border-support-c700 focus:border-support-c900" : "bg-white border-primary-c300 hover:border-primary-c500 focus:border-primary-c700"} `}
           />
           {maxLength && typeof value === "string" && (

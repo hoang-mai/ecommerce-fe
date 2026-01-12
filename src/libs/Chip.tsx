@@ -40,6 +40,7 @@ interface ChipProps {
   color?: ChipColor;
   size?: ChipSize;
   icon?: ReactNode;
+  iconPosition?: 'start' | 'end';
   onDelete?: () => void;
   onClick?: () => void;
   className?: string;
@@ -52,6 +53,7 @@ export default function Chip({
   color = ChipColor.PRIMARY,
   size = ChipSize.MEDIUM,
   icon,
+  iconPosition = 'start',
   onDelete,
   onClick,
   className = '',
@@ -178,13 +180,19 @@ export default function Chip({
         }
       }}
     >
-      {icon && (
+      {icon && iconPosition === 'start' && (
         <span className={`${getIconSize()} flex items-center`}>
           {icon}
         </span>
       )}
 
       <span className="truncate">{label}</span>
+
+      {icon && iconPosition === 'end' && (
+        <span className={`${getIconSize()} flex items-center`}>
+          {icon}
+        </span>
+      )}
 
       {onDelete && (
         <button

@@ -8,10 +8,8 @@ import {AlertType} from "@/types/enum";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
 import Loading from "@/components/modals/Loading";
+import {ReqUpdateProductStatusDTO} from "@/types/interface";
 
-interface ReqUpdateProductStatusDTO {
-  productStatus: ProductStatus;
-}
 
 type Props = {
   isOpen: boolean;
@@ -43,9 +41,11 @@ export default function UpdateStatusProductModal({
     }
   );
 
-  const newStatus = currentStatus === ProductStatus.ACTIVE
-    ? ProductStatus.INACTIVE
-    : ProductStatus.ACTIVE;
+  const isUpdatable = currentStatus === ProductStatus.ACTIVE || currentStatus === ProductStatus.INACTIVE;
+
+  const newStatus = isUpdatable
+    ? (currentStatus === ProductStatus.ACTIVE ? ProductStatus.INACTIVE : ProductStatus.ACTIVE)
+    : currentStatus;
 
   const getStatusLabel = (status: ProductStatus) => {
     switch (status) {
@@ -53,6 +53,10 @@ export default function UpdateStatusProductModal({
         return "Đang bán";
       case ProductStatus.INACTIVE:
         return "Ngừng bán";
+      case ProductStatus.SUSPENDED:
+        return "Đình chỉ";
+      case ProductStatus.DELETED:
+        return "Đã xóa";
       default:
         return status;
     }
@@ -63,6 +67,10 @@ export default function UpdateStatusProductModal({
       case ProductStatus.ACTIVE:
         return ChipColor.SUCCESS;
       case ProductStatus.INACTIVE:
+        return ChipColor.WARNING;
+      case ProductStatus.SUSPENDED:
+        return ChipColor.ERROR;
+      case ProductStatus.DELETED:
         return ChipColor.SECONDARY;
       default:
         return ChipColor.SECONDARY;
@@ -70,6 +78,16 @@ export default function UpdateStatusProductModal({
   };
 
   const handleUpdateStatus = () => {
+    if (!isUpdatable) {
+      const alert: AlertState = {
+        isOpen: true,
+        title: "Không thể đổi trạng thái",
+        message: "Chỉ các sản phẩm ở trạng thái 'Đang bán' hoặc 'Ngừng bán' mới có thể đổi trạng thái.",
+        type: AlertType.WARNING,
+      };
+      dispatch(openAlert(alert));
+      return;
+    }
     trigger({ productStatus: newStatus })
       .then(() => {
         setIsOpen();

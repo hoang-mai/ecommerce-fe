@@ -45,7 +45,7 @@ export default function UpdateStatusShopModal({
   );
 
   const newStatus = currentStatus === ShopStatus.SUSPENDED
-    ? ShopStatus.ACTIVE
+    ? ShopStatus.INACTIVE
     : ShopStatus.SUSPENDED;
 
   const getStatusLabel = (status: ShopStatus) => {

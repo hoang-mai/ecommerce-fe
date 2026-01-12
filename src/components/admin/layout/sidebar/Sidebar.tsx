@@ -20,7 +20,8 @@ import {clearAllLocalStorage} from "@/services/localStorage";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import {ProfileData} from "@/components/user/profile/Main";
 import useSWR from "swr";
-
+import FlashOnIcon from '@mui/icons-material/FlashOn';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 interface MenuItem {
   name: string;
   link: string;
@@ -39,8 +40,10 @@ export default function Sidebar() {
     {name: "Tổng quan", link: "/admin/dashboard", icon: DashboardIcon},
     {name: "Người dùng", link: "/admin/users", icon: PeopleIcon},
     {name: "Cửa hàng", link: "/admin/shops", icon: StorefrontIcon},
+    {name: "Sản phẩm", link: "/admin/products", icon: ShoppingBagIcon},
     {name: "Đăng ký bán hàng", link: "/admin/register-owners", icon: StorefrontIcon},
     {name: "Loại mặt hàng", link: "/admin/categories", icon: CategoryRoundedIcon},
+    {name: "Flash Sale", link: "/admin/flash-sales", icon: FlashOnIcon},
   ];
   const router = useRouter();
   const {trigger} = useSWRMutation(LOGOUT, fetcher);

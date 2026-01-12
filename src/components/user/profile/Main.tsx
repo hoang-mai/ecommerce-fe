@@ -295,7 +295,7 @@ export default function Main() {
                   <InfoRow
                     icon={<CalendarTodayRoundedIcon/>}
                     label={"Tạo lúc"}
-                    value={data?.createdAt ? formatDateTime(data.createdAt) : formatDateTime("2025-11-03T14:54:16.260363Z")}
+                    value={data?.createdAt ? formatDateTime(data.createdAt) : null}
                   />
                   <InfoRow
                     icon={<CalendarTodayRoundedIcon/>}
