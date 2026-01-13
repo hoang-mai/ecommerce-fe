@@ -306,13 +306,13 @@ export default function Main() {
       {isLoading && isCreatingReply && <Loading />}
       <Title title={"Đánh giá sản phẩm"} isDivide={true} />
       {/* Filter */}
-      <div className="bg-white rounded-lg p-4  border border-grey-c100 hover:shadow-md transition-shadow mb-4">
+      <div className="bg-white rounded-lg p-4  border border-grey-c100 hover:shadow-md transition-shadow mb-4 max-w-5xl mx-auto">
         <div className="flex items-center gap-2 mb-4">
           <FilterListIcon className="w-5 h-5 text-grey-c500" />
           <span className="text-sm font-medium text-grey-c700">Lọc và sắp xếp</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
           <DropdownSelect
             label="Đánh giá"
             placeholder="Chọn đánh giá"

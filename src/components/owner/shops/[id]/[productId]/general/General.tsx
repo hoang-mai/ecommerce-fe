@@ -1,6 +1,6 @@
 import React from "react";
-import {ProductView, ProductVariant} from "@/types/interface";
-import {formatPrice, formatDateTime} from "@/util/fnCommon";
+import { ProductView, ProductVariant } from "@/types/interface";
+import { formatPrice, formatDateTime } from "@/util/fnCommon";
 import InfoRow from "@/libs/InfoRow";
 import Image from "next/image";
 import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
@@ -10,8 +10,8 @@ import ToggleOnRoundedIcon from '@mui/icons-material/ToggleOnRounded';
 import AttachMoneyRoundedIcon from '@mui/icons-material/AttachMoneyRounded';
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
 import UpdateRoundedIcon from '@mui/icons-material/UpdateRounded';
-import {ProductStatus, ProductVariantStatus} from "@/types/enum";
-import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
+import { ProductStatus, ProductVariantStatus } from "@/types/enum";
+import Chip, { ChipColor, ChipSize, ChipVariant } from "@/libs/Chip";
 import Table from "@/libs/Table";
 import ImagePreview from "@/libs/ImagePreview";
 
@@ -21,7 +21,7 @@ type Props = {
   mutate: () => void;
 }
 
-export default function General({product}: Props) {
+export default function General({ product }: Props) {
   const [previewImage, setPreviewImage] = React.useState<string | null>(null);
   const defaultVariant = product.productVariants.find(v => v.isDefault) || product.productVariants[0] || null;
 
@@ -85,10 +85,10 @@ export default function General({product}: Props) {
   const variantColumns = [
     {
       key: "productVariantId",
-      label: "ID",
+      label: "STT",
       sortable: false,
-      render: (row: ProductVariant) => (
-        <span className="text-sm text-grey-c900">{row.productVariantId}</span>
+      render: (row: ProductVariant, index: number) => (
+        <span className="text-sm text-grey-c900">{index + 1}</span>
       ),
     },
     {
@@ -172,17 +172,17 @@ export default function General({product}: Props) {
             Thông tin cơ bản
           </h3>
           <div className="bg-grey-c50 rounded-lg p-4 space-y-0">
-            <InfoRow icon={<LabelRoundedIcon/>} label="Tên sản phẩm" value={product.name}/>
-            <InfoRow icon={<CategoryRoundedIcon/>} label="Danh mục" value={product.categoryName}/>
-            <InfoRow icon={<DescriptionRoundedIcon/>} label="Mô tả" value={product.description || "Không có mô tả"} maxLines={3}/>
-            <InfoRow icon={<ToggleOnRoundedIcon/>} label="Trạng thái" value={
+            <InfoRow icon={<LabelRoundedIcon />} label="Tên sản phẩm" value={product.name} />
+            <InfoRow icon={<CategoryRoundedIcon />} label="Danh mục" value={product.categoryName} />
+            <InfoRow icon={<DescriptionRoundedIcon />} label="Mô tả" value={product.description || "Không có mô tả"} maxLines={3} />
+            <InfoRow icon={<ToggleOnRoundedIcon />} label="Trạng thái" value={
               <Chip
                 label={getStatusLabel(product.productStatus)}
                 color={getStatusColor(product.productStatus)}
                 variant={ChipVariant.SOFT}
                 size={ChipSize.MEDIUM}
               />
-            }/>
+            } />
           </div>
         </div>
         <div className={"w-96"}>
@@ -194,7 +194,7 @@ export default function General({product}: Props) {
             {defaultVariant ? (
               <>
                 <InfoRow
-                  icon={<AttachMoneyRoundedIcon/>}
+                  icon={<AttachMoneyRoundedIcon />}
                   label={defaultVariant.salePrice != null && defaultVariant.salePrice < defaultVariant.price ? "Giá bán" : "Giá"}
                   value={
                     defaultVariant.salePrice != null && defaultVariant.salePrice < defaultVariant.price
@@ -204,7 +204,7 @@ export default function General({product}: Props) {
                 />
                 {defaultVariant.salePrice != null && defaultVariant.salePrice < defaultVariant.price && (
                   <InfoRow
-                    icon={<AttachMoneyRoundedIcon/>}
+                    icon={<AttachMoneyRoundedIcon />}
                     label="Giá gốc"
                     value={formatPrice(defaultVariant.price)}
                   />
@@ -219,8 +219,8 @@ export default function General({product}: Props) {
             Lịch sử
           </h3>
           <div className="bg-grey-c50 rounded-lg p-4 space-y-0">
-            <InfoRow icon={<HistoryRoundedIcon/>} label="Ngày tạo" value={formatDateTime(product.createdAt)}/>
-            <InfoRow icon={<UpdateRoundedIcon/>} label="Cập nhật lần cuối" value={formatDateTime(product.updatedAt)}/>
+            <InfoRow icon={<HistoryRoundedIcon />} label="Ngày tạo" value={formatDateTime(product.createdAt)} />
+            <InfoRow icon={<UpdateRoundedIcon />} label="Cập nhật lần cuối" value={formatDateTime(product.updatedAt)} />
           </div>
         </div>
       </div>
@@ -249,66 +249,66 @@ export default function General({product}: Props) {
         <div className="w-1 h-6 bg-primary-c700 rounded"></div>
         Hình ảnh sản phẩm
       </h3>
-        <div className="flex flex-wrap gap-4">
-          {product.productImages.map((image,index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => setPreviewImage(image.imageUrl)}
-              className="w-20 h-20 relative rounded-lg overflow-hidden border-2 border-grey-c200 hover:border-blue-400 transition-all transform hover:scale-105"
-            >
-              <Image
-                src={image.imageUrl}
-                alt="Product"
-                fill
-                className="object-cover"
-              />
-            </button>
-          ))}
-          {product.productImages.length === 0 && (
-            <div className="col-span-full text-center py-8 text-grey-c600">
-              Không có hình ảnh
-            </div>
-          )}
-        </div>
+      <div className="flex flex-wrap gap-4">
+        {product.productImages.map((image, index) => (
+          <button
+            key={index}
+            type="button"
+            onClick={() => setPreviewImage(image.imageUrl)}
+            className="w-20 h-20 relative rounded-lg overflow-hidden border-2 border-grey-c200 hover:border-blue-400 transition-all transform hover:scale-105"
+          >
+            <Image
+              src={image.imageUrl}
+              alt="Product"
+              fill
+              className="object-cover"
+            />
+          </button>
+        ))}
+        {product.productImages.length === 0 && (
+          <div className="col-span-full text-center py-8 text-grey-c600">
+            Không có hình ảnh
+          </div>
+        )}
+      </div>
 
       {/* Thuộc tính */}
       <h3 className="text-lg font-bold text-grey-c800 mb-4 flex items-center gap-2">
         <div className="w-1 h-6 bg-primary-c700 rounded"></div>
         Thuộc tính
       </h3>
-        {product.productAttributes.length === 0 ? (
-          <div className="text-center py-8 text-grey-c600">Không có thuộc tính</div>
-        ) : (
-          <div className="space-y-4">
-            {product.productAttributes.map((attr) => (
-              <div key={attr.productAttributeId}>
-                <h4 className="font-semibold mb-2 text-grey-c800">{attr.productAttributeName}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {attr.productAttributeValues.map((val) => (
-                    <Chip
-                      key={val.productAttributeValueId}
-                      label={val.productAttributeValue}
-                    />
-                  ))}
-                </div>
+      {product.productAttributes.length === 0 ? (
+        <div className="text-center py-8 text-grey-c600">Không có thuộc tính</div>
+      ) : (
+        <div className="space-y-4">
+          {product.productAttributes.map((attr) => (
+            <div key={attr.productAttributeId}>
+              <h4 className="font-semibold mb-2 text-grey-c800">{attr.productAttributeName}</h4>
+              <div className="flex flex-wrap gap-2">
+                {attr.productAttributeValues.map((val) => (
+                  <Chip
+                    key={val.productAttributeValueId}
+                    label={val.productAttributeValue}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Biến thể */}
       <h3 className="text-lg font-bold text-grey-c800 mb-4 flex items-center gap-2">
         <div className="w-1 h-6 bg-primary-c700 rounded"></div>
         Danh sách biến thể sản phẩm
       </h3>
-        <Table<ProductVariant>
-          columns={variantColumns}
-          data={product.productVariants}
-          keyExtractor={(row) => row.productVariantId}
-          emptyMessage="Không có biến thể"
-        />
-      {previewImage && <ImagePreview imageUrl={previewImage} onClose={() => setPreviewImage(null)}/>}
+      <Table<ProductVariant>
+        columns={variantColumns}
+        data={product.productVariants}
+        keyExtractor={(row) => row.productVariantId}
+        emptyMessage="Không có biến thể"
+      />
+      {previewImage && <ImagePreview imageUrl={previewImage} onClose={() => setPreviewImage(null)} />}
 
     </div>
   );

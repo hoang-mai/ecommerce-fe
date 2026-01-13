@@ -1,5 +1,5 @@
 'use client';
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
@@ -9,19 +9,19 @@ import Chip from '@/libs/Chip';
 import OrderDetailModal from '@/components/owner/orders/OrderDetailModal';
 import DropdownSelect from '@/libs/DropdownSelect';
 import TextField from '@/libs/TextField';
-import Table, {Column} from '@/libs/Table';
+import Table, { Column } from '@/libs/Table';
 import Title from '@/libs/Title';
-import {formatDateTime, formatPrice} from '@/util/fnCommon';
-import {AlertType, OrderStatus} from '@/types/enum';
-import {getLabelStatusColor, getStatusColor, OrderView, statusOptions} from "@/components/user/orders/Main";
+import { formatDateTime, formatPrice } from '@/util/fnCommon';
+import { AlertType, OrderStatus } from '@/types/enum';
+import { getLabelStatusColor, getStatusColor, OrderView, statusOptions } from "@/components/user/orders/Main";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
-import {ORDER, ORDER_VIEW} from "@/services/api";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
+import { ORDER, ORDER_VIEW } from "@/services/api";
 import useSWR from "swr";
-import {openAlert} from "@/redux/slice/alertSlice";
-import {useDebounce} from "@/hooks/useDebounce";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {useDispatch} from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { useDispatch } from "react-redux";
 import Loading from "@/components/modals/Loading";
 import useSWRMutation from "swr/mutation";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -30,14 +30,14 @@ import CancelOrderModal from "@/components/user/orders/CancelOrderModal";
 interface Props {
   id: string;
 }
-export default function Orders({id}: Props) {
+export default function Orders({ id }: Props) {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
   const [selectedOrderIdToCancel, setSelectedOrderIdToCancel] = useState<string>("");
   const handleOpenCancelModal = (orderId: string) => {
     setSelectedOrderIdToCancel(orderId);
     setIsCancelModalOpen(true);
   };
-  const {get, patch} = useAxiosContext();
+  const { get, patch } = useAxiosContext();
   const [status, setStatus] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
   const debounce = useDebounce(keyword);
@@ -58,19 +58,19 @@ export default function Orders({id}: Props) {
     }
   })
   const fetcher = (url: string) => get<BaseResponse<PageResponse<OrderView>>>(url).then(res => res.data);
-  const {data, isLoading, error, mutate} = useSWR(url, fetcher, {
+  const { data, isLoading, error, mutate } = useSWR(url, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   })
 
-  const fetcherUpdateOrderStatus = (url: string, {arg}: {
+  const fetcherUpdateOrderStatus = (url: string, { arg }: {
     arg: { orderId: string, orderStatus: OrderStatus, reason: string }
   }) =>
     patch<BaseResponse<unknown>>(`${url}/${arg.orderId}/status`, {
       orderStatus: arg.orderStatus,
       reason: arg.reason
     }).then(res => res.data);
-  const {trigger, isMutating} = useSWRMutation(ORDER, fetcherUpdateOrderStatus, {revalidate: false})
+  const { trigger, isMutating } = useSWRMutation(ORDER, fetcherUpdateOrderStatus, { revalidate: false })
   const pageData = data?.data;
   const orders = pageData?.data || [];
   const totalPages = pageData?.totalPages || 0;
@@ -86,7 +86,7 @@ export default function Orders({id}: Props) {
     }
   }, [dispatch, error]);
   const handleUpdateStatus = (orderId: string, newStatus: OrderStatus) => {
-    trigger({orderId, orderStatus: newStatus, reason: ''}).then(res => {
+    trigger({ orderId, orderStatus: newStatus, reason: '' }).then(res => {
       const alert: AlertState = {
         isOpen: true,
         title: "Cập nhật trạng thái đơn hàng",
@@ -119,11 +119,11 @@ export default function Orders({id}: Props) {
   const columns: Column<OrderView>[] = [
     {
       key: 'orderId',
-      label: 'Mã đơn',
+      label: 'STT',
       sortable: true,
-      render: (row) => (
-        <div className="text-sm font-semibold text-grey-c900">{row.orderId}
-          <div className="text-xs text-grey-c600">{row.paymentId}</div>
+      render: (row, index) => (
+        <div className="text-sm font-semibold text-grey-c900">
+          {currentPage * parseInt(pageSize) + index + 1}
         </div>
       )
     },
@@ -175,8 +175,8 @@ export default function Orders({id}: Props) {
       key: 'actions', label: 'Hành động', className: 'text-center', render: (row) => (
         <div className="flex gap-2 justify-start">
           <button onClick={() => viewOrderDetail(row)}
-                  className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
-                  title="Xem chi tiết"><VisibilityIcon/></button>
+            className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
+            title="Xem chi tiết"><VisibilityIcon /></button>
 
           {(row.orderStatus === OrderStatus.PAID) && (
             <button
@@ -184,7 +184,7 @@ export default function Orders({id}: Props) {
               title="Xác nhận"
               className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
             >
-              <CheckCircleIcon/>
+              <CheckCircleIcon />
             </button>
           )}
           {row.orderStatus === OrderStatus.CONFIRMED && (
@@ -193,7 +193,7 @@ export default function Orders({id}: Props) {
               title="Giao hàng"
               className="cursor-pointer p-2 text-orange-800 hover:bg-orange-200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
             >
-              <MoveToInboxIcon/>
+              <MoveToInboxIcon />
             </button>
           )}
           {row.orderStatus === OrderStatus.DELIVERED && (
@@ -202,7 +202,7 @@ export default function Orders({id}: Props) {
               title="Giao hàng"
               className="cursor-pointer p-2 text-purple-800 hover:bg-purple-200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
             >
-              <LocalShippingIcon/>
+              <LocalShippingIcon />
             </button>
           )}
 
@@ -213,7 +213,7 @@ export default function Orders({id}: Props) {
               title="Hoàn thành"
               className="cursor-pointer p-2 text-success-c800 hover:bg-success-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
             >
-              <CheckCircleRoundedIcon/>
+              <CheckCircleRoundedIcon />
             </button>
           )}
           {(row.orderStatus === OrderStatus.PAID) && (
@@ -222,7 +222,7 @@ export default function Orders({id}: Props) {
               title="Hủy đơn hàng"
               className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
             >
-              <CancelIcon/>
+              <CancelIcon />
             </button>
           )}
         </div>
@@ -232,8 +232,8 @@ export default function Orders({id}: Props) {
 
   return (
     <div>
-      {(isLoading && isMutating )&& <Loading/>}
-      <Title title="Quản lý đơn hàng" isDivide/>
+      {(isLoading && isMutating) && <Loading />}
+      <Title title="Quản lý đơn hàng" isDivide />
 
       {/* Filters */}
       <div className="flex gap-4 mb-2 flex-wrap items-center">
@@ -267,7 +267,7 @@ export default function Orders({id}: Props) {
       {(keyword || status) && (
         <div
           className="mb-4 flex items-center gap-2 text-sm text-grey-c700 bg-primary-c50 px-4 py-3 rounded-lg border border-primary-c200 mt-4">
-          <SearchRoundedIcon className="text-primary-c700"/>
+          <SearchRoundedIcon className="text-primary-c700" />
           <span>
             Tìm thấy <strong className="text-primary-c800">{pageData?.totalElements || 0}</strong> đơn hàng
             {keyword && <> với từ khóa &ldquo;<strong className="text-primary-c800">{keyword}</strong>&rdquo;</>}
@@ -298,7 +298,7 @@ export default function Orders({id}: Props) {
         emptyMessage={keyword || status !== '' ? 'Không tìm thấy đơn hàng phù hợp' : 'Không có đơn hàng'}
       />
       {isOpen && selectedOrder &&
-        <OrderDetailModal isOpen={isOpen} setIsOpen={() => setIsOpen(false)} order={selectedOrder}/>
+        <OrderDetailModal isOpen={isOpen} setIsOpen={() => setIsOpen(false)} order={selectedOrder} />
       }
       {selectedOrderIdToCancel && isCancelModalOpen && (
         <CancelOrderModal
@@ -307,7 +307,7 @@ export default function Orders({id}: Props) {
           orderId={selectedOrderIdToCancel}
           mutate={mutate}
           actionType={"CANCELLED"}
-        /> )}
+        />)}
     </div>
   );
 };

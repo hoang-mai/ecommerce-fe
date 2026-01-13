@@ -1,25 +1,25 @@
 "use client";
-import React, {useState} from "react";
+import React, { useState } from "react";
 import useSWR from "swr";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {AlertType, ColorButton} from "@/types/enum";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { AlertType, ColorButton } from "@/types/enum";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
-import Table, {Column} from "@/libs/Table";
+import Table, { Column } from "@/libs/Table";
 import Button from "@/libs/Button";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import {useEffect} from "react";
+import { useEffect } from "react";
 import CreateFlashSaleModal from "@/components/admin/flash-sales/all/CreateFlashSaleModal";
-import {FlashSale} from "@/types/interface";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
-import {FLASH_SALE_CAMPAIGN} from "@/services/api";
-import {formatDateTime} from "@/util/fnCommon";
+import { FlashSale } from "@/types/interface";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
+import { FLASH_SALE_CAMPAIGN } from "@/services/api";
+import { formatDateTime } from "@/util/fnCommon";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import { useRouter } from "next/navigation";
 
 export default function AllFlashSale() {
-  const {get} = useAxiosContext();
+  const { get } = useAxiosContext();
   const dispatch = useDispatch();
   const [isFlashSaleModalOpen, setIsFlashSaleModalOpen] = useState(false);
 
@@ -30,7 +30,7 @@ export default function AllFlashSale() {
   const router = useRouter();
   const url = useBuildUrl({
     baseUrl: FLASH_SALE_CAMPAIGN,
-    queryParams:{
+    queryParams: {
       pageNo: currentPage,
       pageSize: pageSize,
       sortBy: sortBy,
@@ -39,7 +39,7 @@ export default function AllFlashSale() {
   })
 
   const fetchAllFlashSales = (url: string) =>
-    get<BaseResponse<PageResponse<FlashSale>>>(url,{isToken: true}).then(res => res.data.data);
+    get<BaseResponse<PageResponse<FlashSale>>>(url, { isToken: true }).then(res => res.data.data);
 
   const {
     data: allData,
@@ -87,11 +87,11 @@ export default function AllFlashSale() {
   const flashSaleColumns: Column<FlashSale>[] = [
     {
       key: "flashSaleCampaignId",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (row) => (
+      render: (row, index) => (
         <span className="text-grey-c800">
-          {row.flashSaleCampaignId}
+          {currentPage * parseInt(pageSize) + index + 1}
         </span>
       ),
     },
@@ -155,7 +155,7 @@ export default function AllFlashSale() {
           className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
           title="Xem chi tiết"
         >
-          <VisibilityRoundedIcon/>
+          <VisibilityRoundedIcon />
         </button>
       ),
     },
@@ -163,12 +163,12 @@ export default function AllFlashSale() {
 
   return (
     <div className="mt-4">
-      {allLoading && <Loading/>}
+      {allLoading && <Loading />}
       <div className="flex items-center justify-end mb-4">
         <Button
           onClick={() => setIsFlashSaleModalOpen(true)}
           color={ColorButton.SUCCESS}
-          startIcon={<AddRoundedIcon/>}
+          startIcon={<AddRoundedIcon />}
         >
           Tạo Flash Sale mới
         </Button>

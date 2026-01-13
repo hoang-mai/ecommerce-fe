@@ -6,7 +6,7 @@ export interface Column<T> {
   key: string;
   label: string;
   sortable?: boolean;
-  render?: (row: T) => React.ReactNode;
+  render?: (row: T, index: number) => React.ReactNode;
   className?: string;
 }
 
@@ -87,11 +87,10 @@ export default function Table<T>({
                   <th
                     key={column.key}
                     onClick={() => column.sortable && onSort?.(column.key)}
-                    className={`px-6 py-4 text-left text-sm font-bold text-primary-c900 whitespace-nowrap ${
-                      column.sortable
+                    className={`px-6 py-4 text-left text-sm font-bold text-primary-c900 whitespace-nowrap ${column.sortable
                         ? "cursor-pointer hover:bg-primary-c200 transition-colors duration-200"
                         : ""
-                    } ${column.className || ""}`}
+                      } ${column.className || ""}`}
                   >
                     <div className={"flex flex-row items-center"}>{column.label}
                       {column.sortable && renderSortIcon(column.key)}</div>
@@ -100,22 +99,22 @@ export default function Table<T>({
               </tr>
             </thead>
             <tbody className="divide-y divide-grey-c200">
-              { data.length === 0 ? (
+              {data.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length} className="px-6 py-12 text-center text-grey-c600">
                     <div className={"flex flex-col items-center justify-center gap-4"}>
-                      <Empty/>
+                      <Empty />
                       {emptyMessage}
                     </div>
                   </td>
                 </tr>
               ) : (
-                data.map((row) => (
+                data.map((row, index) => (
                   <tr key={keyExtractor(row)} className={"hover:bg-primary-c50 transition-colors"}>
                     {columns.map((column) => (
                       <td key={column.key} className={`px-6 py-4 whitespace-nowrap ${column.className || ""}`}>
                         {column.render
-                          ? column.render(row)
+                          ? column.render(row, index)
                           : ((row as Record<string, unknown>)[column.key]?.toString() || "-")}
                       </td>
                     ))}
@@ -143,7 +142,7 @@ export default function Table<T>({
 
         {/* Pagination Buttons */}
         {onPageChange && (
-          <Pagination  totalPages={totalPages} currentPage={currentPage} onPageChange={onPageChange}/>
+          <Pagination totalPages={totalPages} currentPage={currentPage} onPageChange={onPageChange} />
         )}
       </div>
     </div>

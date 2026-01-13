@@ -1,33 +1,33 @@
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
-import {FLASH_SALE_PRODUCT_VIEW} from "@/services/api";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
+import { FLASH_SALE_PRODUCT_VIEW } from "@/services/api";
 import useSWR from "swr";
-import React, {useEffect, useState} from "react";
-import {AlertType} from "@/types/enum";
-import {openAlert} from "@/redux/slice/alertSlice";
-import {useDispatch} from "react-redux";
+import React, { useEffect, useState } from "react";
+import { AlertType } from "@/types/enum";
+import { openAlert } from "@/redux/slice/alertSlice";
+import { useDispatch } from "react-redux";
 import Loading from "@/components/modals/Loading";
-import {FlashSaleProductView, FlashSaleStatisticDTO} from "@/types/interface";
+import { FlashSaleProductView, FlashSaleStatisticDTO } from "@/types/interface";
 import Card from "@/libs/Card";
-import {formatNumber, formatPrice} from "@/util/fnCommon";
+import { formatNumber, formatPrice } from "@/util/fnCommon";
 import MonetizationOnRoundedIcon from "@mui/icons-material/MonetizationOnRounded";
 import LocalMallRoundedIcon from "@mui/icons-material/LocalMallRounded";
 import InventoryRoundedIcon from "@mui/icons-material/InventoryRounded";
 import PercentRoundedIcon from "@mui/icons-material/PercentRounded";
 import Title from "@/libs/Title";
-import Table, {Column} from "@/libs/Table";
+import Table, { Column } from "@/libs/Table";
 import Image from "next/image";
 
 type Props = {
   id: string;
 }
-export default function Main({id}: Props) {
-  const {get} = useAxiosContext();
+export default function Main({ id }: Props) {
+  const { get } = useAxiosContext();
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState("10");
   const [sortBy, setSortBy] = useState("flashSaleProductId");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const fetcher = (url: string) => get<BaseResponse<FlashSaleStatisticDTO>>(url, {isToken: true}).then(res => res.data.data);
+  const fetcher = (url: string) => get<BaseResponse<FlashSaleStatisticDTO>>(url, { isToken: true }).then(res => res.data.data);
   const url = useBuildUrl({
     baseUrl: `${FLASH_SALE_PRODUCT_VIEW}/statistic`,
     queryParams: {
@@ -35,7 +35,7 @@ export default function Main({id}: Props) {
     }
   });
   const dispatch = useDispatch();
-  const {data, error, isLoading} = useSWR(url, fetcher, {
+  const { data, error, isLoading } = useSWR(url, fetcher, {
     revalidateOnFocus: false,
     refreshInterval: 0,
   });
@@ -51,7 +51,7 @@ export default function Main({id}: Props) {
   });
 
   const fetchFlashSaleProducts = (url: string) =>
-    get<BaseResponse<PageResponse<FlashSaleProductView>>>(url, {isToken: true}).then(res => res.data.data);
+    get<BaseResponse<PageResponse<FlashSaleProductView>>>(url, { isToken: true }).then(res => res.data.data);
 
   const {
     data: productsData,
@@ -92,11 +92,11 @@ export default function Main({id}: Props) {
   const flashSaleProductColumns: Column<FlashSaleProductView>[] = [
     {
       key: "_id",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (row) => (
+      render: (row, index) => (
         <span className="text-grey-c800">
-          {row.flashSaleProductId}
+          {currentPage * parseInt(pageSize) + index + 1}
         </span>
       ),
     },
@@ -201,14 +201,14 @@ export default function Main({id}: Props) {
     },
   ];
   return <div>
-    {(isLoading || productsLoading) && <Loading/>}
-    <Title title={`Thống Kê ${data?.flashSaleCampaignName || ''}`} isDivide={true}/>
+    {(isLoading || productsLoading) && <Loading />}
+    <Title title={`Thống Kê ${data?.flashSaleCampaignName || ''}`} isDivide={true} />
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card
         isStats
         title="Tổng Doanh Thu"
         value={formatPrice(data?.totalRevenue || 0)}
-        icon={<MonetizationOnRoundedIcon className="text-4xl"/>}
+        icon={<MonetizationOnRoundedIcon className="text-4xl" />}
         iconBg="bg-primary-c200"
         iconColor="text-primary-c700"
         baseClasses={"bg-gradient-to-br from-primary-c50 to-white rounded-2xl shadow-sm border border-primary-c100"}
@@ -217,7 +217,7 @@ export default function Main({id}: Props) {
         isStats
         title="Tổng Số Lượng Đã Bán"
         value={formatNumber(data?.totalSoldQuantity || 0)}
-        icon={<LocalMallRoundedIcon className="text-4xl"/>}
+        icon={<LocalMallRoundedIcon className="text-4xl" />}
         iconBg="bg-success-c100"
         iconColor="text-success-c600"
         baseClasses={"bg-gradient-to-br from-success-c50 to-white rounded-2xl shadow-sm border border-success-c100"}
@@ -226,7 +226,7 @@ export default function Main({id}: Props) {
         isStats
         title="Tổng Sản Phẩm"
         value={formatNumber(data?.totalQuantity || 0)}
-        icon={<InventoryRoundedIcon className="text-4xl"/>}
+        icon={<InventoryRoundedIcon className="text-4xl" />}
         iconBg="bg-purple-100"
         iconColor="text-purple-600"
         baseClasses={"bg-gradient-to-br from-purple-50 to-white rounded-2xl shadow-sm border border-purple-100"}
@@ -235,7 +235,7 @@ export default function Main({id}: Props) {
         isStats
         title="Tỷ Lệ Bán Hàng"
         value={`${formatNumber(data?.soldRate || 0)}%`}
-        icon={<PercentRoundedIcon className="text-4xl"/>}
+        icon={<PercentRoundedIcon className="text-4xl" />}
         iconBg="bg-orange-100"
         iconColor="text-orange-600"
         baseClasses={"bg-gradient-to-br from-orange-50 to-white rounded-2xl shadow-sm border border-orange-100"}

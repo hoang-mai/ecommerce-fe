@@ -1,32 +1,32 @@
 'use client';
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Chip from '@/libs/Chip';
 import OrderDetailModal from '@/components/owner/orders/OrderDetailModal';
 import DropdownSelect from '@/libs/DropdownSelect';
 import TextField from '@/libs/TextField';
-import Table, {Column} from '@/libs/Table';
+import Table, { Column } from '@/libs/Table';
 import Title from '@/libs/Title';
-import {formatDateTime, formatPrice} from '@/util/fnCommon';
-import {AlertType} from '@/types/enum';
-import {getLabelStatusColor, getStatusColor, OrderView, statusOptions} from "@/components/user/orders/Main";
+import { formatDateTime, formatPrice } from '@/util/fnCommon';
+import { AlertType } from '@/types/enum';
+import { getLabelStatusColor, getStatusColor, OrderView, statusOptions } from "@/components/user/orders/Main";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
-import {ORDER_VIEW} from "@/services/api";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
+import { ORDER_VIEW } from "@/services/api";
 import useSWR from "swr";
-import {openAlert} from "@/redux/slice/alertSlice";
-import {useDebounce} from "@/hooks/useDebounce";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {useDispatch} from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { useDispatch } from "react-redux";
 import Loading from "@/components/modals/Loading";
 
 interface Props {
   id: string;
 }
-export default function Orders({id}: Props) {
+export default function Orders({ id }: Props) {
 
 
-  const {get} = useAxiosContext();
+  const { get } = useAxiosContext();
   const [status, setStatus] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
   const debounce = useDebounce(keyword);
@@ -46,7 +46,7 @@ export default function Orders({id}: Props) {
     }
   })
   const fetcher = (url: string) => get<BaseResponse<PageResponse<OrderView>>>(url).then(res => res.data);
-  const {data, isLoading, error} = useSWR(url, fetcher, {
+  const { data, isLoading, error } = useSWR(url, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   })
@@ -79,11 +79,11 @@ export default function Orders({id}: Props) {
   const columns: Column<OrderView>[] = [
     {
       key: 'orderId',
-      label: 'Mã đơn',
+      label: 'STT',
       sortable: true,
-      render: (row) => (
-        <div className="text-sm font-semibold text-grey-c900">{row.orderId}
-          <div className="text-xs text-grey-c600">{row.paymentId}</div>
+      render: (row, index) => (
+        <div className="text-sm font-semibold text-grey-c900">
+          {currentPage * parseInt(pageSize) + index + 1}
         </div>
       )
     },
@@ -135,8 +135,8 @@ export default function Orders({id}: Props) {
       key: 'actions', label: 'Hành động', className: 'text-center', render: (row) => (
         <div className="flex gap-2 justify-center">
           <button onClick={() => viewOrderDetail(row)}
-                  className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
-                  title="Xem chi tiết"><VisibilityIcon/>
+            className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
+            title="Xem chi tiết"><VisibilityIcon />
           </button>
 
         </div>
@@ -146,8 +146,8 @@ export default function Orders({id}: Props) {
 
   return (
     <div>
-      {(isLoading )&& <Loading/>}
-      <Title title="Quản lý đơn hàng" isDivide/>
+      {(isLoading) && <Loading />}
+      <Title title="Quản lý đơn hàng" isDivide />
 
       {/* Filters */}
       <div className="flex gap-4 mb-2 flex-wrap items-center">
@@ -181,7 +181,7 @@ export default function Orders({id}: Props) {
       {(keyword || status) && (
         <div
           className="mb-4 flex items-center gap-2 text-sm text-grey-c700 bg-primary-c50 px-4 py-3 rounded-lg border border-primary-c200 mt-4">
-          <SearchRoundedIcon className="text-primary-c700"/>
+          <SearchRoundedIcon className="text-primary-c700" />
           <span>
             Tìm thấy <strong className="text-primary-c800">{pageData?.totalElements || 0}</strong> đơn hàng
             {keyword && <> với từ khóa &ldquo;<strong className="text-primary-c800">{keyword}</strong>&rdquo;</>}
@@ -212,7 +212,7 @@ export default function Orders({id}: Props) {
         emptyMessage={keyword || status !== '' ? 'Không tìm thấy đơn hàng phù hợp' : 'Không có đơn hàng'}
       />
       {isOpen && selectedOrder &&
-        <OrderDetailModal isOpen={isOpen} setIsOpen={() => setIsOpen(false)} order={selectedOrder}/>
+        <OrderDetailModal isOpen={isOpen} setIsOpen={() => setIsOpen(false)} order={selectedOrder} />
       }
     </div>
   );

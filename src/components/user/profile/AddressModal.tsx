@@ -5,7 +5,7 @@ import {AlertType, ColorButton} from "@/types/enum";
 import Modal from "@/libs/Modal";
 import useSWR from "swr";
 import {ADDRESS} from "@/services/api";
-import { useAxiosContext } from '@/components/provider/AxiosProvider';
+import {useAxiosContext} from '@/components/provider/AxiosProvider';
 import React, {useEffect, useState} from "react";
 import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
@@ -16,7 +16,7 @@ import DeleteAddressModal from "@/components/user/profile/DeleteAddressModal";
 import SetDefaultAddressModal from "@/components/user/profile/SetDefaultAddressModal";
 import {useAddressMapping} from "@/hooks/useAddressMapping";
 
-export  interface ResInfoAddressDTO {
+export interface ResInfoAddressDTO {
   addressId: number;
   userId: number;
   receiverName: string;
@@ -36,7 +36,7 @@ type Props = {
 export default function AddressModal({isOpen, setIsOpen, mutateParent}: Props) {
   const [isOpenAddress, setIsOpenAddress] = useState<boolean[]>([false, false, false, false]);
   const [selectedAddress, setSelectedAddress] = useState<ResInfoAddressDTO | null>(null);
-  const { get } = useAxiosContext();
+  const {get} = useAxiosContext();
   const fetcher = (url: string) => get<BaseResponse<ResInfoAddressDTO[]>>(url).then(res => res.data.data);
   const {data, isLoading, error, mutate} = useSWR(`${ADDRESS}`, fetcher, {
     refreshInterval: 0,
@@ -134,7 +134,10 @@ export default function AddressModal({isOpen, setIsOpen, mutateParent}: Props) {
             <div className="flex items-start gap-2">
               <LocationOnRoundedIcon className="text-grey-c600" style={{fontSize: 18}}/>
               <span className="text-grey-c700">
-                    {address.detail}, {getWardName(address.ward)}, {getProvinceName(address.province)}
+                    <div>
+                            <div>{address.detail}</div>
+                            <div>{`${getWardName(address.ward)}, ${getProvinceName(address.province)}`}</div>
+                          </div>
                   </span>
             </div>
           </div>

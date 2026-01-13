@@ -1,29 +1,29 @@
 "use client";
-import React, {useState} from "react";
+import React, { useState } from "react";
 import useSWR from "swr";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {AlertType, ColorButton, FlashSaleScheduleStatus} from "@/types/enum";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { AlertType, ColorButton, FlashSaleScheduleStatus } from "@/types/enum";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
-import Table, {Column} from "@/libs/Table";
-import Chip, {ChipColor, ChipSize} from "@/libs/Chip";
+import Table, { Column } from "@/libs/Table";
+import Chip, { ChipColor, ChipSize } from "@/libs/Chip";
 import Button from "@/libs/Button";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import {useEffect} from "react";
+import { useEffect } from "react";
 import CreateScheduleModal from "@/components/admin/flash-sales/schedule/CreateScheduleModal";
 import UpdateStatusScheduleModal from "@/components/admin/flash-sales/schedule/UpdateStatusScheduleModal";
 import ChangeCircleRoundedIcon from '@mui/icons-material/ChangeCircleRounded';
-import {useBuildUrl} from "@/hooks/useBuildUrl";
-import {FLASH_SALE_CAMPAIGN_SCHEDULE} from "@/services/api";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
+import { FLASH_SALE_CAMPAIGN_SCHEDULE } from "@/services/api";
 import DropdownSelect from "@/libs/DropdownSelect";
-import {formatDateTime} from "@/util/fnCommon";
-import {FlashSaleSchedule} from "@/types/interface";
+import { formatDateTime } from "@/util/fnCommon";
+import { FlashSaleSchedule } from "@/types/interface";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import DetailScheduleModal from "@/components/admin/flash-sales/schedule/DetailScheduleModal";
 
 export default function ScheduleFlashSale() {
-  const {get} = useAxiosContext();
+  const { get } = useAxiosContext();
   const dispatch = useDispatch();
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
@@ -36,9 +36,9 @@ export default function ScheduleFlashSale() {
   const [status, setStatus] = useState<string>("");
 
   const statusOptions: Option[] = [
-    {id: "", label: "Tất cả trạng thái"},
-    {id: FlashSaleScheduleStatus.ACTIVE, label: "Hoạt động"},
-    {id: FlashSaleScheduleStatus.INACTIVE, label: "Không hoạt động"},
+    { id: "", label: "Tất cả trạng thái" },
+    { id: FlashSaleScheduleStatus.ACTIVE, label: "Hoạt động" },
+    { id: FlashSaleScheduleStatus.INACTIVE, label: "Không hoạt động" },
   ];
   const url = useBuildUrl({
     baseUrl: FLASH_SALE_CAMPAIGN_SCHEDULE,
@@ -51,7 +51,7 @@ export default function ScheduleFlashSale() {
     }
   })
   const fetchSchedules = (url: string) =>
-    get<BaseResponse<PageResponse<FlashSaleSchedule>>>(url,{isToken: true}).then(res => res.data.data);
+    get<BaseResponse<PageResponse<FlashSaleSchedule>>>(url, { isToken: true }).then(res => res.data.data);
 
   const {
     data: scheduleData,
@@ -102,10 +102,10 @@ export default function ScheduleFlashSale() {
   const scheduleColumns: Column<FlashSaleSchedule>[] = [
     {
       key: "flashSaleCampaignScheduleId",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (row) => (
-        <span className="font-mono text-grey-c900">{row.flashSaleCampaignScheduleId}</span>
+      render: (row, index) => (
+        <span className="font-mono text-grey-c900">{currentPage * parseInt(pageSize) + index + 1}</span>
       ),
     },
     {
@@ -169,14 +169,14 @@ export default function ScheduleFlashSale() {
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
           >
-            <VisibilityRoundedIcon/>
+            <VisibilityRoundedIcon />
           </button>
           <button
             onClick={() => handleUpdateStatus(row)}
             className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Đổi trạng thái"
           >
-            <ChangeCircleRoundedIcon/>
+            <ChangeCircleRoundedIcon />
           </button>
         </div>
       ),
@@ -185,7 +185,7 @@ export default function ScheduleFlashSale() {
 
   return (
     <div className="mt-4">
-      {scheduleLoading && <Loading/>}
+      {scheduleLoading && <Loading />}
       <div className="flex items-center justify-end mb-4 gap-4">
         <div className="min-w-[200px]">
           <DropdownSelect
@@ -201,7 +201,7 @@ export default function ScheduleFlashSale() {
         <Button
           onClick={() => setIsScheduleModalOpen(true)}
           color={ColorButton.SUCCESS}
-          startIcon={<AddRoundedIcon/>}
+          startIcon={<AddRoundedIcon />}
         >
           Tạo lịch mới
         </Button>

@@ -1,33 +1,33 @@
 'use client';
-import React, {useState, useEffect} from 'react';
-import Chip, {ChipColor} from '@/libs/Chip';
+import React, { useState, useEffect } from 'react';
+import Chip, { ChipColor } from '@/libs/Chip';
 import DropdownSelect from '@/libs/DropdownSelect';
 import TextField from '@/libs/TextField';
-import Table, {Column} from '@/libs/Table';
+import Table, { Column } from '@/libs/Table';
 import Title from '@/libs/Title';
-import {formatDateTime} from '@/util/fnCommon';
-import {AlertType, NotificationType, SortDir} from '@/types/enum';
+import { formatDateTime } from '@/util/fnCommon';
+import { AlertType, NotificationType, SortDir } from '@/types/enum';
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
 import useSWR from "swr";
-import {openAlert} from "@/redux/slice/alertSlice";
-import {useDebounce} from "@/hooks/useDebounce";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {useDispatch} from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { useDispatch } from "react-redux";
 import Loading from "@/components/modals/Loading";
 import useSWRMutation from "swr/mutation";
-import {NotificationView} from "@/types/interface";
-import {NOTIFICATION} from "@/services/api";
-import {mutate} from "swr";
+import { NotificationView } from "@/types/interface";
+import { NOTIFICATION } from "@/services/api";
+import { mutate } from "swr";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import NotificationDetailModal from "@/components/owner/notifications/NotificationDetailModal";
 
 const notificationTypeOptions = [
-  {id: '', label: 'Tất cả'},
-  {id: NotificationType.ERROR, label: 'Lỗi'},
-  {id: NotificationType.SUCCESS, label: 'Thành công'},
-  {id: NotificationType.INFO, label: 'Thông tin'},
-  {id: NotificationType.WARNING, label: 'Cảnh báo'},
+  { id: '', label: 'Tất cả' },
+  { id: NotificationType.ERROR, label: 'Lỗi' },
+  { id: NotificationType.SUCCESS, label: 'Thành công' },
+  { id: NotificationType.INFO, label: 'Thông tin' },
+  { id: NotificationType.WARNING, label: 'Cảnh báo' },
 ];
 
 // Get notification type color
@@ -47,7 +47,7 @@ const getNotificationTypeColor = (type: NotificationType): ChipColor => {
 };
 
 export default function Main() {
-  const {get, patch} = useAxiosContext();
+  const { get, patch } = useAxiosContext();
   const [notificationType, setNotificationType] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
   const debounce = useDebounce(keyword);
@@ -56,7 +56,7 @@ export default function Main() {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [pageSize, setPageSize] = useState("10");
   const [isReadFilter, setIsReadFilter] = useState<string>('');
-  const [open , setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [notification, setNotification] = useState<NotificationView | null>(null);
   const dispatch = useDispatch();
 
@@ -74,14 +74,14 @@ export default function Main() {
   })
 
   const fetcher = (url: string) => get<BaseResponse<PageResponse<NotificationView>>>(url).then(res => res.data);
-  const {data, isLoading, error, mutate: mutateTable} = useSWR(url, fetcher, {
+  const { data, isLoading, error, mutate: mutateTable } = useSWR(url, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   })
 
-  const fetcherMarkAsRead = (url: string, {arg}: { arg: { notificationId: string } }) =>
+  const fetcherMarkAsRead = (url: string, { arg }: { arg: { notificationId: string } }) =>
     patch<BaseResponse<unknown>>(`${url}/${arg.notificationId}/mark-as-read`, {}).then(res => res.data);
-  const {trigger: triggerMarkAsRead} = useSWRMutation(NOTIFICATION, fetcherMarkAsRead, {revalidate: false})
+  const { trigger: triggerMarkAsRead } = useSWRMutation(NOTIFICATION, fetcherMarkAsRead, { revalidate: false })
 
   const pageData = data?.data;
   const notifications = pageData?.data || [];
@@ -100,7 +100,7 @@ export default function Main() {
   }, [dispatch, error]);
 
   const handleViewNotification = (notification: NotificationView) => {
-    if(notification.isRead) {
+    if (notification.isRead) {
       setNotification(notification);
       setOpen(true);
       return;
@@ -140,11 +140,11 @@ export default function Main() {
   const columns: Column<NotificationView>[] = [
     {
       key: 'notificationId',
-      label: 'Mã thông báo',
+      label: 'STT',
       sortable: true,
-      render: (row) => (
+      render: (row, index) => (
         <div className="text-sm font-semibold text-grey-c900">
-          #{row.notificationId.substring(0, 8)}
+          {currentPage * parseInt(pageSize) + index + 1}
         </div>
       )
     },
@@ -207,13 +207,13 @@ export default function Main() {
       render: (row) => (
         <div className="flex gap-2 justify-center">
 
-            <button
-              onClick={() => handleViewNotification(row)}
-              className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-              title="Xem chi tiết"
-            >
-              <VisibilityRoundedIcon/>
-            </button>
+          <button
+            onClick={() => handleViewNotification(row)}
+            className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+            title="Xem chi tiết"
+          >
+            <VisibilityRoundedIcon />
+          </button>
 
         </div>
       )
@@ -222,8 +222,8 @@ export default function Main() {
 
   return (
     <div className={"overflow-y-auto min-h-0"}>
-      {(isLoading) && <Loading/>}
-      <Title title="Quản lý thông báo" isDivide/>
+      {(isLoading) && <Loading />}
+      <Title title="Quản lý thông báo" isDivide />
 
       {/* Filters */}
       <div className="flex gap-4 mb-2 flex-wrap items-center">
@@ -263,9 +263,9 @@ export default function Main() {
               setCurrentPage(0);
             }}
             options={[
-              {id: '', label: 'Tất cả'},
-              {id: 'true', label: 'Đã đọc'},
-              {id: 'false', label: 'Chưa đọc'},
+              { id: '', label: 'Tất cả' },
+              { id: 'true', label: 'Đã đọc' },
+              { id: 'false', label: 'Chưa đọc' },
             ]}
             placeholder="Trạng thái"
           />
@@ -275,7 +275,7 @@ export default function Main() {
       {(keyword || notificationType || isReadFilter) && (
         <div
           className="mb-4 flex items-center gap-2 text-sm text-grey-c700 bg-primary-c50 px-4 py-3 rounded-lg border border-primary-c200 mt-4">
-          <SearchRoundedIcon className="text-primary-c700"/>
+          <SearchRoundedIcon className="text-primary-c700" />
           <span>
             Tìm thấy <strong className="text-primary-c800">{pageData?.totalElements || 0}</strong> thông báo
             {keyword && <> với từ khóa &ldquo;<strong className="text-primary-c800">{keyword}</strong>&rdquo;</>}
@@ -311,7 +311,7 @@ export default function Main() {
         }}
         emptyMessage={keyword || notificationType || isReadFilter ? 'Không tìm thấy thông báo phù hợp' : 'Không có thông báo'}
       />
-      {open && notification && <NotificationDetailModal isOpen={open} onClose={() => setOpen(false)} notification={notification}/>}
+      {open && notification && <NotificationDetailModal isOpen={open} onClose={() => setOpen(false)} notification={notification} />}
     </div>
   );
 };

@@ -1,19 +1,19 @@
 "use client";
-import React, {useEffect, useState, useCallback} from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import DropdownSelect from "@/libs/DropdownSelect";
 import TextField from "@/libs/TextField";
-import Table, {Column} from "@/libs/Table";
-import {AccountStatus, AlertType, Role} from "@/types/enum";
+import Table, { Column } from "@/libs/Table";
+import { AccountStatus, AlertType, Role } from "@/types/enum";
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import Title from "@/libs/Title";
-import {formatDateTime} from "@/util/fnCommon";
+import { formatDateTime } from "@/util/fnCommon";
 import useSWR from "swr";
-import {USER_VIEW} from "@/services/api";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
-import {useDebounce} from "@/hooks/useDebounce";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { USER_VIEW } from "@/services/api";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import Chip, { ChipColor, ChipVariant } from "@/libs/Chip";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
@@ -62,7 +62,7 @@ export default function Main() {
     }
   });
 
-  const {data, error, isLoading, mutate} = useSWR(url, fetcher, {
+  const { data, error, isLoading, mutate } = useSWR(url, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   });
@@ -109,9 +109,9 @@ export default function Main() {
   }
 
   const statusOptions = [
-    {id: AccountStatus.ACTIVE, label: "Hoạt động"},
-    {id: AccountStatus.INACTIVE, label: "Vô hiệu hóa"},
-    {id: AccountStatus.SUSPENDED, label: "Đình chỉ"},
+    { id: AccountStatus.ACTIVE, label: "Hoạt động" },
+    { id: AccountStatus.INACTIVE, label: "Vô hiệu hóa" },
+    { id: AccountStatus.SUSPENDED, label: "Đình chỉ" },
   ];
 
   const getLabelRole = (role: Role) => {
@@ -174,11 +174,11 @@ export default function Main() {
   const columns: Column<UserViewDto>[] = [
     {
       key: "userId",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (row) => (
+      render: (row, index) => (
         <span className="text-sm text-grey-c700 font-semibold">
-          {row.userId}
+          {pageNo * parseInt(pageSize) + index + 1}
         </span>
       ),
     },
@@ -214,7 +214,7 @@ export default function Main() {
                 alt="User Avatar"
                 className="w-full h-full rounded-full object-cover"
               />
-              : <AccountCircleRoundedIcon className="text-primary-c700 !w-[40px] !h-[40px]"/>
+              : <AccountCircleRoundedIcon className="text-primary-c700 !w-[40px] !h-[40px]" />
             }
           </div>
           <div className="text-sm font-semibold text-grey-c900">
@@ -277,7 +277,7 @@ export default function Main() {
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
           >
-            <VisibilityRoundedIcon/>
+            <VisibilityRoundedIcon />
           </button>
           <button
             className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
@@ -287,7 +287,7 @@ export default function Main() {
               setIsChangeStatusModalOpen(true);
             }}
           >
-            <ChangeCircleRoundedIcon/>
+            <ChangeCircleRoundedIcon />
           </button>
 
         </div>
@@ -301,8 +301,8 @@ export default function Main() {
 
   return (
     <div>
-      {isLoading && <Loading/>}
-      <Title title={"Tài khoản"} isDivide={true}/>
+      {isLoading && <Loading />}
+      <Title title={"Tài khoản"} isDivide={true} />
 
       {/* Filters */}
       <div className="flex gap-4 mb-6 flex-wrap items-center">
@@ -323,7 +323,7 @@ export default function Main() {
               className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-grey-c200 rounded-full transition-all"
               title="Xóa tìm kiếm"
             >
-              <ClearRoundedIcon className="text-grey-c600 text-xl"/>
+              <ClearRoundedIcon className="text-grey-c600 text-xl" />
             </button>
           )}
         </div>
@@ -345,12 +345,12 @@ export default function Main() {
       {(keyword || status) && (
         <div
           className="mb-4 flex items-center gap-2 text-sm text-grey-c700 bg-primary-c50 px-4 py-3 rounded-lg border border-primary-c200">
-          <SearchRoundedIcon className="text-primary-c700"/>
+          <SearchRoundedIcon className="text-primary-c700" />
           <span>
             Tìm thấy <strong className="text-primary-c800">{pageData?.totalElements || 0}</strong> yêu cầu
             {keyword && <> với từ khóa &ldquo;<strong className="text-primary-c800">{keyword}</strong>&rdquo;</>}
             {status && <> - Trạng thái: <strong
-                className="text-primary-c800">{statusOptions.find(o => o.id === status)?.label}</strong></>}
+              className="text-primary-c800">{statusOptions.find(o => o.id === status)?.label}</strong></>}
           </span>
           <button
             onClick={handleClearSearch}
@@ -387,13 +387,13 @@ export default function Main() {
           reload={mutate}
           userId={selectedData.userId}
           currentStatus={selectedData.accountStatus}
-          />
+        />
       )}
       {isDetailModalOpen && selectedData && (
         <DetailUserModal
           isOpen={isDetailModalOpen}
           setIsOpen={setIsDetailModalOpen}
-          user={selectedData}/>
+          user={selectedData} />
       )}
 
     </div>

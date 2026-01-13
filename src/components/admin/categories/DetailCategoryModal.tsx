@@ -1,21 +1,21 @@
 import Modal from "@/libs/Modal";
-import {AlertType, CategoryStatus} from "@/types/enum";
-import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
-import {formatDateTime} from "@/util/fnCommon";
+import { AlertType, CategoryStatus } from "@/types/enum";
+import Chip, { ChipColor, ChipVariant } from "@/libs/Chip";
+import { formatDateTime } from "@/util/fnCommon";
 import useSWR from "swr";
-import {CATEGORY} from "@/services/api";
-import {useEffect} from "react";
-import Table, {Column} from "@/libs/Table";
+import { CATEGORY } from "@/services/api";
+import { useEffect } from "react";
+import Table, { Column } from "@/libs/Table";
 import CategoryRoundedIcon from '@mui/icons-material/CategoryRounded';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
 import ToggleOnRoundedIcon from '@mui/icons-material/ToggleOnRounded';
 import NumbersRoundedIcon from '@mui/icons-material/NumbersRounded';
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
 import InfoRow from "@/libs/InfoRow";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
 
 interface ResCategoryDTO {
   categoryId: number;
@@ -36,11 +36,11 @@ type Props = {
 }
 
 
-export default function DetailCategoryModal({isOpen, setIsOpen, categoryId}: Props) {
+export default function DetailCategoryModal({ isOpen, setIsOpen, categoryId }: Props) {
 
-  const {get} = useAxiosContext();
+  const { get } = useAxiosContext();
   const fetcher = (url: string) => get<BaseResponse<ResCategoryDTO>>(url).then(res => res.data.data);
-  const {data: category, isLoading, error} = useSWR(
+  const { data: category, isLoading, error } = useSWR(
     isOpen && categoryId ? `${CATEGORY}/${categoryId}` : null,
     fetcher,
     {
@@ -88,9 +88,9 @@ export default function DetailCategoryModal({isOpen, setIsOpen, categoryId}: Pro
   const subCategoryColumns: Column<ResCategoryDTO>[] = [
     {
       key: "categoryId",
-      label: "ID",
-      render: (sub) => (
-        <span className="text-sm text-grey-c900">{sub.categoryId}</span>
+      label: "STT",
+      render: (sub, index) => (
+        <span className="text-sm text-grey-c900">{index + 1}</span>
       )
     },
     {
@@ -121,7 +121,7 @@ export default function DetailCategoryModal({isOpen, setIsOpen, categoryId}: Pro
       showSaveButton={false}
       maxWidth="3xl"
     >
-      {isLoading && <Loading/>}
+      {isLoading && <Loading />}
       {category ? (
         <div>
           {/* Thông tin danh mục */}
@@ -132,12 +132,12 @@ export default function DetailCategoryModal({isOpen, setIsOpen, categoryId}: Pro
             </h3>
             <div className="bg-grey-c50 rounded-lg p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
               <InfoRow
-                icon={<NumbersRoundedIcon/>}
+                icon={<NumbersRoundedIcon />}
                 label="Mã danh mục"
                 value={category.categoryId.toString()}
               />
               <InfoRow
-                icon={<ToggleOnRoundedIcon/>}
+                icon={<ToggleOnRoundedIcon />}
                 label="Trạng thái"
                 value={
                   <Chip
@@ -148,17 +148,17 @@ export default function DetailCategoryModal({isOpen, setIsOpen, categoryId}: Pro
                 }
               />
               <InfoRow
-                icon={<CategoryRoundedIcon/>}
+                icon={<CategoryRoundedIcon />}
                 label="Tên danh mục"
                 value={category.categoryName}
               />
               <InfoRow
-                icon={<CategoryRoundedIcon/>}
+                icon={<CategoryRoundedIcon />}
                 label="Danh mục cha"
                 value={category.parentCategory ? category.parentCategory.categoryName : 'Không có'}
               />
               <InfoRow
-                icon={<NumbersRoundedIcon/>}
+                icon={<NumbersRoundedIcon />}
                 label="Số lượng danh mục con"
                 value={category.countChildren.toString()}
               />
@@ -174,7 +174,7 @@ export default function DetailCategoryModal({isOpen, setIsOpen, categoryId}: Pro
               </h3>
               <div className="bg-grey-c50 rounded-lg p-4">
                 <InfoRow
-                  icon={<DescriptionRoundedIcon/>}
+                  icon={<DescriptionRoundedIcon />}
                   label="Mô tả"
                   value={category.description}
                 />
@@ -191,12 +191,12 @@ export default function DetailCategoryModal({isOpen, setIsOpen, categoryId}: Pro
             <div className="bg-grey-c50 rounded-lg p-4">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <InfoRow
-                  icon={<CalendarTodayRoundedIcon/>}
+                  icon={<CalendarTodayRoundedIcon />}
                   label="Ngày tạo"
                   value={formatDateTime(category.createdAt)}
                 />
                 <InfoRow
-                  icon={<CalendarTodayRoundedIcon/>}
+                  icon={<CalendarTodayRoundedIcon />}
                   label="Ngày cập nhật"
                   value={formatDateTime(category.updatedAt)}
                 />

@@ -152,7 +152,7 @@ export default function Main({id}: Props) {
                 )}
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">{shop.shopName}</h1>
+                <h1 className="text-xl font-bold text-white">{shop.shopName}</h1>
                 <p className="text-grey-c100 text-xs mb-1">{shop.description}</p>
                 <button
                   onClick={() => {
@@ -196,7 +196,7 @@ export default function Main({id}: Props) {
               <div className="flex items-baseline gap-1">
                 <span className="text-sm text-grey-c600">Địa chỉ:</span>
                 <span
-                  className="text-base font-semibold text-primary-c900 text-wrap w-60">{getFullAddress(shop.detail, shop.ward, shop.province)}</span>
+                  className="text-base font-semibold text-primary-c900 text-wrap w-60">{shop.detail}</span>
               </div>
             </div>
           </div>

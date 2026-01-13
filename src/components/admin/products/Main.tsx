@@ -1,21 +1,21 @@
 "use client";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import useSWR from "swr";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {PRODUCT_VIEW} from "@/services/api";
-import Table, {Column} from "@/libs/Table";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { PRODUCT_VIEW } from "@/services/api";
+import Table, { Column } from "@/libs/Table";
 import Loading from "@/components/modals/Loading";
-import {ProductView} from "@/types/interface";
-import {formatDateTime, formatPrice} from "@/util/fnCommon";
-import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
-import {ProductStatus, SortDir, AlertType} from "@/types/enum";
-import {useDebounce} from "@/hooks/useDebounce";
+import { ProductView } from "@/types/interface";
+import { formatDateTime, formatPrice } from "@/util/fnCommon";
+import Chip, { ChipColor, ChipSize, ChipVariant } from "@/libs/Chip";
+import { ProductStatus, SortDir, AlertType } from "@/types/enum";
+import { useDebounce } from "@/hooks/useDebounce";
 import TextField from "@/libs/TextField";
 import DropdownSelect from "@/libs/DropdownSelect";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
-import {openAlert} from "@/redux/slice/alertSlice";
-import {useDispatch} from "react-redux";
-import {useRouter} from "next/navigation";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
+import { openAlert } from "@/redux/slice/alertSlice";
+import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Title from "@/libs/Title";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
@@ -23,8 +23,8 @@ import ChangeCircleRoundedIcon from "@mui/icons-material/ChangeCircleRounded";
 import UpdateStatusProductModal from "@/components/admin/shops/[id]/general/UpdateStatusProductModal";
 
 export default function Main() {
-  const {get} = useAxiosContext();
-  const fetcher = (url: string) => get<BaseResponse<PageResponse<ProductView>>>(url, {isToken: true}).then(res => res.data);
+  const { get } = useAxiosContext();
+  const fetcher = (url: string) => get<BaseResponse<PageResponse<ProductView>>>(url, { isToken: true }).then(res => res.data);
   const [pageNo, setPageNo] = useState(0);
   const [pageSize, setPageSize] = useState("10");
   const [sortBy, setSortBy] = useState("");
@@ -48,7 +48,7 @@ export default function Main() {
     },
   });
 
-  const {data, error, isLoading, mutate} = useSWR(url, fetcher);
+  const { data, error, isLoading, mutate } = useSWR(url, fetcher);
 
   useEffect(() => {
     if (error) {
@@ -67,11 +67,11 @@ export default function Main() {
   const totalPages = pageData?.totalPages || 0;
 
   const statusOptions: Option[] = [
-    {id: "", label: "Tất cả trạng thái"},
-    {id: ProductStatus.ACTIVE, label: "Đang bán"},
-    {id: ProductStatus.INACTIVE, label: "Ngừng bán"},
-    {id: ProductStatus.SUSPENDED, label: "Đình chỉ"},
-    {id: ProductStatus.DELETED, label: "Đã xóa"},
+    { id: "", label: "Tất cả trạng thái" },
+    { id: ProductStatus.ACTIVE, label: "Đang bán" },
+    { id: ProductStatus.INACTIVE, label: "Ngừng bán" },
+    { id: ProductStatus.SUSPENDED, label: "Đình chỉ" },
+    { id: ProductStatus.DELETED, label: "Đã xóa" },
   ];
 
   const getStatusColor = (status: ProductStatus): ChipColor => {
@@ -117,9 +117,9 @@ export default function Main() {
   const columns: Column<ProductView>[] = [
     {
       key: "productId",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (row) => <span className="text-sm text-grey-c900 font-semibold">{row.productId}</span>
+      render: (row, index) => <span className="text-sm text-grey-c900 font-semibold">{pageNo * parseInt(pageSize) + index + 1}</span>
     },
     {
       key: "name",
@@ -132,7 +132,7 @@ export default function Main() {
             {primaryImage ? (
               <div className="w-14 h-14 rounded-lg overflow-hidden border-2 border-primary-c200 bg-white flex-shrink-0">
                 <Image src={primaryImage.imageUrl} alt={row.name} width={56} height={56}
-                       className="w-full h-full object-cover"/>
+                  className="w-full h-full object-cover" />
               </div>
             ) : (
               <div
@@ -153,7 +153,7 @@ export default function Main() {
       label: "Danh mục",
       sortable: true,
       render: (row) => <Chip label={row.categoryName} color={ChipColor.PRIMARY} variant={ChipVariant.SOFT}
-                             size={ChipSize.MEDIUM}/>
+        size={ChipSize.MEDIUM} />
     },
     {
       key: "price", label: "Giá", render: (row) => {
@@ -175,7 +175,7 @@ export default function Main() {
       label: "Trạng thái",
       sortable: true,
       render: (row) => <Chip label={getStatusLabel(row.productStatus)} color={getStatusColor(row.productStatus)}
-                             variant={ChipVariant.SOFT} size={ChipSize.MEDIUM}/>
+        variant={ChipVariant.SOFT} size={ChipSize.MEDIUM} />
     },
     {
       key: "createdAt",
@@ -193,7 +193,7 @@ export default function Main() {
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
           >
-            <VisibilityRoundedIcon/>
+            <VisibilityRoundedIcon />
           </button>
 
           {/* Nếu trạng thái là SUSPENDED hoặc DELETED thì chỉ hiện nút xem */}
@@ -207,7 +207,7 @@ export default function Main() {
                 className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
                 title="Đổi trạng thái"
               >
-                <ChangeCircleRoundedIcon/>
+                <ChangeCircleRoundedIcon />
               </button>
             </>
           )}
@@ -218,20 +218,20 @@ export default function Main() {
 
   return (
     <div className="p-6 bg-white rounded-2xl shadow-lg">
-      {isLoading && <Loading/>}
+      {isLoading && <Loading />}
 
-      <Title title={"Danh sách sản phẩm"} isDivide={true}/>
+      <Title title={"Danh sách sản phẩm"} isDivide={true} />
 
       <div className="flex gap-4 mb-6 flex-wrap items-center">
         <div className="flex-1 min-w-[300px] relative">
           <TextField value={keyword} onChange={(e) => setKeyword(e)}
-                     placeholder="Tìm kiếm theo tên sản phẩm, mô tả..."/>
+            placeholder="Tìm kiếm theo tên sản phẩm, mô tả..." />
         </div>
         <div className="min-w-[200px]">
           <DropdownSelect value={selectedStatus} onChange={(v) => {
             setSelectedStatus(v);
             setPageNo(0);
-          }} options={statusOptions} placeholder="Chọn trạng thái"/>
+          }} options={statusOptions} placeholder="Chọn trạng thái" />
         </div>
       </div>
 
@@ -247,7 +247,7 @@ export default function Main() {
         onPageChange={(p) => setPageNo(p)}
         pageSize={pageSize}
         setPageSize={(s) => setPageSize(s)}
-        emptyMessage={keyword || selectedStatus ? "Không tìm thấy sản phẩm phù hợp. Thử thay đổi từ khóa hoặc bộ lọc." : "Chưa có sản phẩm nào"}/>
+        emptyMessage={keyword || selectedStatus ? "Không tìm thấy sản phẩm phù hợp. Thử thay đổi từ khóa hoặc bộ lọc." : "Chưa có sản phẩm nào"} />
       {isUpdateStatusModalOpen && selectedProduct && (
         <UpdateStatusProductModal
           isOpen={isUpdateStatusModalOpen}

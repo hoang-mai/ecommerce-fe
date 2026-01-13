@@ -15,7 +15,7 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import Divide from "@/libs/Divide";
 import {formatDateTime, formatPrice} from "@/util/fnCommon";
 import HomeIcon from "@mui/icons-material/Home";
-
+import ReviewsRoundedIcon from '@mui/icons-material/ReviewsRounded';
 interface Props {
   id: string;
 }
@@ -119,7 +119,7 @@ export default function Main({id}: Props) {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="text-right">
+                  <div className="text-right w-50">
                     <div className="text-xl font-bold text-primary-c700">{formatPrice(item.totalFinalPrice)}</div>
                     {item.totalPrice > item.totalFinalPrice && (
                       <div className="text-sm text-grey-c400 line-through">
@@ -129,10 +129,10 @@ export default function Main({id}: Props) {
                   </div>
                   {order.orderStatus === OrderStatus.COMPLETED &&
                     <button
-                      className="px-4 py-2 bg-primary-c700 text-white rounded"
+                      className="text-primary-c700 rounded cursor-pointer"
                       onClick={() => openItemModal(item)}
                     >
-                      Đánh giá
+                      <ReviewsRoundedIcon/>
                     </button>}
                 </div>
               </div>
@@ -184,6 +184,12 @@ export default function Main({id}: Props) {
             <span className={"text-grey-c700"}>Mã đơn hàng:</span>
             <span className="font-medium text-grey-c800">{order.orderId}</span>
           </div>
+          {(order.orderStatus === OrderStatus.CANCELLED || order.orderStatus === OrderStatus.RETURNED) && (
+            <div className="flex justify-between">
+              <span className={"text-grey-c700"}>Lý do hủy:</span>
+              <span className="font-medium text-grey-c800">{order.reason}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className={"text-grey-c700"}>Ngày đặt hàng:</span>
             <span className="font-medium text-grey-c800">{formatDateTime(order.createdAt)}</span>

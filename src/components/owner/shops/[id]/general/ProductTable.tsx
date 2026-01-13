@@ -1,9 +1,9 @@
 "use client";
-import {useCallback, useEffect, useState} from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import Table, {Column} from "@/libs/Table";
+import Table, { Column } from "@/libs/Table";
 import Button from "@/libs/Button";
-import {AlertType, ColorButton, ProductStatus, SortDir} from "@/types/enum";
+import { AlertType, ColorButton, ProductStatus, SortDir } from "@/types/enum";
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
@@ -11,33 +11,33 @@ import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import ChangeCircleRoundedIcon from '@mui/icons-material/ChangeCircleRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
-import {formatDateTime, formatPrice} from "@/util/fnCommon";
+import { formatDateTime, formatPrice } from "@/util/fnCommon";
 import CreateProductModal from "./CreateProductModal";
 import UpdateProductModal from "./UpdateProductModal";
 import UpdateStatusProductModal from "./UpdateStatusProductModal";
 import DeleteProductModal from "./DeleteProductModal";
 import useSWR from "swr";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {PRODUCT_VIEW} from "@/services/api";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { PRODUCT_VIEW } from "@/services/api";
 import TextField from "@/libs/TextField";
 import DropdownSelect from "@/libs/DropdownSelect";
-import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
-import {useDebounce} from "@/hooks/useDebounce";
+import Chip, { ChipColor, ChipSize, ChipVariant } from "@/libs/Chip";
+import { useDebounce } from "@/hooks/useDebounce";
 import Loading from "@/components/modals/Loading";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
-import {ProductView} from "@/types/interface";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
-import {useRouter} from "next/navigation";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
+import { ProductView } from "@/types/interface";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
+import { useRouter } from "next/navigation";
 
 interface ProductTableProps {
   shopId: string;
 }
 
-export default function ProductTable({shopId}: ProductTableProps) {
-  const {get} = useAxiosContext();
+export default function ProductTable({ shopId }: ProductTableProps) {
+  const { get } = useAxiosContext();
   const productFetcher = (url: string) =>
-    get<BaseResponse<PageResponse<ProductView>>>(url, {isToken: true}).then((res) => res.data);
+    get<BaseResponse<PageResponse<ProductView>>>(url, { isToken: true }).then((res) => res.data);
   const router = useRouter();
   const [pageNo, setPageNo] = useState(0);
   const [pageSize, setPageSize] = useState("10");
@@ -69,7 +69,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
     }
   });
 
-  const {data, error, isLoading, mutate} = useSWR(url, productFetcher);
+  const { data, error, isLoading, mutate } = useSWR(url, productFetcher);
 
   useEffect(() => {
     if (error) {
@@ -88,11 +88,11 @@ export default function ProductTable({shopId}: ProductTableProps) {
   const totalPages = pageData?.totalPages || 0;
 
   const statusOptions: Option[] = [
-    {id: "", label: "Tất cả trạng thái"},
-    {id: ProductStatus.ACTIVE, label: "Đang bán"},
-    {id: ProductStatus.INACTIVE, label: "Ngừng bán"},
-    {id: ProductStatus.SUSPENDED, label: "Đình chỉ"},
-    {id: ProductStatus.DELETED, label: "Đã xóa"},
+    { id: "", label: "Tất cả trạng thái" },
+    { id: ProductStatus.ACTIVE, label: "Đang bán" },
+    { id: ProductStatus.INACTIVE, label: "Ngừng bán" },
+    { id: ProductStatus.SUSPENDED, label: "Đình chỉ" },
+    { id: ProductStatus.DELETED, label: "Đã xóa" },
   ];
 
   const getStatusColor = (status: ProductStatus): ChipColor => {
@@ -174,11 +174,11 @@ export default function ProductTable({shopId}: ProductTableProps) {
   const columns: Column<ProductView>[] = [
     {
       key: "productId",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (row) => (
+      render: (row, index) => (
         <span className="text-sm text-grey-c900 font-semibold">
-          {row.productId}
+          {pageNo * parseInt(pageSize) + index + 1}
         </span>
       ),
     },
@@ -322,7 +322,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
           >
-            <VisibilityRoundedIcon/>
+            <VisibilityRoundedIcon />
           </button>
 
           {/* Nếu trạng thái là SUSPENDED hoặc DELETED thì chỉ hiện nút xem */}
@@ -336,7 +336,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
                 className="cursor-pointer p-2 text-yellow-c800 hover:bg-yellow-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
                 title="Chỉnh sửa"
               >
-                <EditRoundedIcon/>
+                <EditRoundedIcon />
               </button>
               <button
                 onClick={() => {
@@ -346,7 +346,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
                 className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
                 title="Đổi trạng thái"
               >
-                <ChangeCircleRoundedIcon/>
+                <ChangeCircleRoundedIcon />
               </button>
               <button
                 onClick={() => {
@@ -356,7 +356,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
                 className="cursor-pointer p-2 text-grey-c800 hover:bg-grey-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
                 title="Xóa"
               >
-                <DeleteOutlineRoundedIcon/>
+                <DeleteOutlineRoundedIcon />
               </button>
             </>
           )}
@@ -367,7 +367,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
 
   return (
     <div className="p-6">
-      {isLoading && <Loading/>}
+      {isLoading && <Loading />}
 
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
@@ -377,7 +377,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
         <Button
           onClick={handleAddProduct}
           color={ColorButton.SUCCESS}
-          startIcon={<AddRoundedIcon/>}
+          startIcon={<AddRoundedIcon />}
         >
           Thêm sản phẩm
         </Button>
@@ -402,7 +402,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
               className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-grey-c200 rounded-full transition-all"
               title="Xóa tìm kiếm"
             >
-              <ClearRoundedIcon className="text-grey-c600 text-xl"/>
+              <ClearRoundedIcon className="text-grey-c600 text-xl" />
             </button>
           )}
         </div>
@@ -424,7 +424,7 @@ export default function ProductTable({shopId}: ProductTableProps) {
       {(keyword || selectedStatus) && (
         <div
           className="mb-4 flex items-center gap-2 text-sm text-grey-c700 bg-primary-c50 px-4 py-3 rounded-lg border border-primary-c200">
-          <SearchRoundedIcon className="text-primary-c700"/>
+          <SearchRoundedIcon className="text-primary-c700" />
           <span>
             Tìm thấy <strong className="text-primary-c800">{pageData?.totalElements || 0}</strong> sản phẩm
             {keyword && <> với từ khóa &ldquo;<strong className="text-primary-c800">{keyword}</strong>&rdquo;</>}

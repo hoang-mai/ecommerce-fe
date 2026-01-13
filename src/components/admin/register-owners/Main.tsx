@@ -1,22 +1,22 @@
 "use client";
-import {useCallback, useEffect, useState} from "react";
+import { useCallback, useEffect, useState } from "react";
 import DropdownSelect from "@/libs/DropdownSelect";
 import TextField from "@/libs/TextField";
-import Table, {Column} from "@/libs/Table";
-import {AlertType, UserVerificationStatus, UserVerificationStatusLabel} from "@/types/enum";
+import Table, { Column } from "@/libs/Table";
+import { AlertType, UserVerificationStatus, UserVerificationStatusLabel } from "@/types/enum";
 import DetailRegisterOwnerModal from "./DetailRegisterOwnerModal";
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
 import Title from "@/libs/Title";
-import {formatDateTime} from "@/util/fnCommon";
+import { formatDateTime } from "@/util/fnCommon";
 import useSWR from "swr";
-import {USER_VERIFICATION,USER_VERIFICATION_APPROVE} from "@/services/api";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
-import {useDebounce} from "@/hooks/useDebounce";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { USER_VERIFICATION, USER_VERIFICATION_APPROVE } from "@/services/api";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import Chip, { ChipColor, ChipVariant } from "@/libs/Chip";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
@@ -77,7 +77,7 @@ export default function Main() {
     }
   });
 
-  const {data, error, isLoading, mutate} = useSWR(url, fetcher, {
+  const { data, error, isLoading, mutate } = useSWR(url, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   });
@@ -85,7 +85,7 @@ export default function Main() {
   const dispatch = useDispatch();
 
 
-  const {trigger: approveRequest, isMutating: isApproving} = useSWRMutation(
+  const { trigger: approveRequest, isMutating: isApproving } = useSWRMutation(
     approvingId ? `${USER_VERIFICATION_APPROVE}/${approvingId}/approve` : null,
     approveFetcher
   );
@@ -103,10 +103,10 @@ export default function Main() {
   }, [dispatch, error]);
 
   const statusOptions: Option[] = [
-    {id: "", label: "Tất cả trạng thái"},
-    {id: UserVerificationStatus.PENDING, label: UserVerificationStatusLabel[UserVerificationStatus.PENDING]},
-    {id: UserVerificationStatus.APPROVED, label: UserVerificationStatusLabel[UserVerificationStatus.APPROVED]},
-    {id: UserVerificationStatus.REJECTED, label: UserVerificationStatusLabel[UserVerificationStatus.REJECTED]},
+    { id: "", label: "Tất cả trạng thái" },
+    { id: UserVerificationStatus.PENDING, label: UserVerificationStatusLabel[UserVerificationStatus.PENDING] },
+    { id: UserVerificationStatus.APPROVED, label: UserVerificationStatusLabel[UserVerificationStatus.APPROVED] },
+    { id: UserVerificationStatus.REJECTED, label: UserVerificationStatusLabel[UserVerificationStatus.REJECTED] },
   ];
 
   const getStatusColor = (status: UserVerificationStatus) => {
@@ -147,10 +147,10 @@ export default function Main() {
 
   const handleApprove = (id: number) => {
     setApprovingId(id);
-   
+
   };
   useEffect(() => {
-    if(approvingId === null) return;
+    if (approvingId === null) return;
     approveRequest().then(response => {
       const alert: AlertState = {
         isOpen: true,
@@ -201,11 +201,11 @@ export default function Main() {
   const columns: Column<ResUserVerificationDTO>[] = [
     {
       key: "userVerificationId",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (row) => (
+      render: (row, index) => (
         <span className="text-sm text-grey-c700 font-semibold">
-          {row.userVerificationId}
+          {pageNo * parseInt(pageSize) + index + 1}
         </span>
       ),
     },
@@ -256,7 +256,7 @@ export default function Main() {
             width={80}
             height={50}
             className="rounded cursor-pointer hover:opacity-80 object-cover"
-            style={{width: '80px', height: '50px', minWidth: '80px'}}
+            style={{ width: '80px', height: '50px', minWidth: '80px' }}
             onClick={() => setSelectedImage(row.frontImageUrl)}
           />
           <Image
@@ -265,7 +265,7 @@ export default function Main() {
             width={80}
             height={50}
             className="rounded cursor-pointer hover:opacity-80 object-cover"
-            style={{width: '80px', height: '50px', minWidth: '80px'}}
+            style={{ width: '80px', height: '50px', minWidth: '80px' }}
             onClick={() => setSelectedImage(row.backImageUrl)}
           />
         </div>
@@ -322,7 +322,7 @@ export default function Main() {
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
           >
-            <VisibilityRoundedIcon/>
+            <VisibilityRoundedIcon />
           </button>
           {row.userVerificationStatus === UserVerificationStatus.PENDING && (
             <>
@@ -331,14 +331,14 @@ export default function Main() {
                 className="cursor-pointer p-2 text-success-c800 hover:bg-success-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
                 title="Duyệt"
               >
-                <CheckCircleRoundedIcon/>
+                <CheckCircleRoundedIcon />
               </button>
               <button
                 onClick={() => handleReject(row.userVerificationId, row.userName)}
                 className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
                 title="Từ chối"
               >
-                <CancelRoundedIcon/>
+                <CancelRoundedIcon />
               </button>
             </>
           )}
@@ -353,8 +353,8 @@ export default function Main() {
 
   return (
     <div>
-      {(isLoading || isApproving) && <Loading/>}
-      <Title title={"Đăng ký người bán"} isDivide={true}/>
+      {(isLoading || isApproving) && <Loading />}
+      <Title title={"Đăng ký người bán"} isDivide={true} />
 
       {/* Filters */}
       <div className="flex gap-4 mb-6 flex-wrap items-center">
@@ -375,7 +375,7 @@ export default function Main() {
               className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-grey-c200 rounded-full transition-all"
               title="Xóa tìm kiếm"
             >
-              <ClearRoundedIcon className="text-grey-c600 text-xl"/>
+              <ClearRoundedIcon className="text-grey-c600 text-xl" />
             </button>
           )}
         </div>
@@ -397,12 +397,12 @@ export default function Main() {
       {(keyword || status) && (
         <div
           className="mb-4 flex items-center gap-2 text-sm text-grey-c700 bg-primary-c50 px-4 py-3 rounded-lg border border-primary-c200">
-          <SearchRoundedIcon className="text-primary-c700"/>
+          <SearchRoundedIcon className="text-primary-c700" />
           <span>
             Tìm thấy <strong className="text-primary-c800">{pageData?.totalElements || 0}</strong> yêu cầu
             {keyword && <> với từ khóa &ldquo;<strong className="text-primary-c800">{keyword}</strong>&rdquo;</>}
             {status && <> - Trạng thái: <strong
-                className="text-primary-c800">{statusOptions.find(o => o.id === status)?.label}</strong></>}
+              className="text-primary-c800">{statusOptions.find(o => o.id === status)?.label}</strong></>}
           </span>
           <button
             onClick={handleClearSearch}
@@ -462,7 +462,7 @@ export default function Main() {
           userName={selectedRejectName}
           userVerificationId={selectedRejectId}
           reload={mutate}
-          onParentClose={() => {}}
+          onParentClose={() => { }}
         />
       )}
     </div>

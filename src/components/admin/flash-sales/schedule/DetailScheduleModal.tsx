@@ -1,19 +1,19 @@
 "use client";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import Modal from "@/libs/Modal";
-import {FlashSale, FlashSaleSchedule} from "@/types/interface";
+import { FlashSale, FlashSaleSchedule } from "@/types/interface";
 import useSWR from "swr";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {FLASH_SALE_CAMPAIGN} from "@/services/api";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
-import {AlertType} from "@/types/enum";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { FLASH_SALE_CAMPAIGN } from "@/services/api";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
+import { AlertType } from "@/types/enum";
 import Loading from "@/components/modals/Loading";
-import Table, {Column} from "@/libs/Table";
-import {formatDateTime} from "@/util/fnCommon";
+import Table, { Column } from "@/libs/Table";
+import { formatDateTime } from "@/util/fnCommon";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 
 interface DetailScheduleModalProps {
   isOpen: boolean;
@@ -26,7 +26,7 @@ export default function DetailScheduleModal({
   onClose,
   schedule,
 }: DetailScheduleModalProps) {
-  const {get} = useAxiosContext();
+  const { get } = useAxiosContext();
   const dispatch = useDispatch();
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(0);
@@ -87,11 +87,11 @@ export default function DetailScheduleModal({
   const flashSaleColumns: Column<FlashSale>[] = [
     {
       key: "flashSaleCampaignId",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (row) => (
+      render: (row, index) => (
         <span className="text-grey-c800">
-          {row.flashSaleCampaignId}
+          {currentPage * parseInt(pageSize) + index + 1}
         </span>
       ),
     },
@@ -155,7 +155,7 @@ export default function DetailScheduleModal({
           className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
           title="Xem chi tiết"
         >
-          <VisibilityRoundedIcon/>
+          <VisibilityRoundedIcon />
         </button>
       ),
     },
@@ -169,7 +169,7 @@ export default function DetailScheduleModal({
       maxWidth="6xl"
       showSaveButton={false}
     >
-      {flashSaleLoading && <Loading/>}
+      {flashSaleLoading && <Loading />}
 
       <div className="flex flex-col gap-6">
         {/* Schedule Information */}

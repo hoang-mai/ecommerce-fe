@@ -385,13 +385,13 @@ export default function Main() {
                 </div>
               </div>
             ))}
-            {topSellingShops && topSellingShops.data && topSellingShops.data.length === 0 && (
-              <div className={"flex flex-col items-center justify-center flex-1"}>
-                <Empty/>
-                <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
-              </div>
-            )}
           </div>
+          {topSellingShops && topSellingShops.data && topSellingShops.data.length === 0 && (
+            <div className={"flex flex-col items-center justify-center flex-1"}>
+              <Empty/>
+              <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -451,13 +451,13 @@ export default function Main() {
                 </div>
               </div>
             ))}
-            {topSellingProducts && topSellingProducts.data && topSellingProducts.data.length === 0 && (
-              <div className={"flex flex-col items-center justify-center flex-1"}>
-                <Empty/>
-                <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
-              </div>
-            )}
           </div>
+          {topSellingProducts && topSellingProducts.data && topSellingProducts.data.length === 0 && (
+            <div className={"flex flex-col items-center justify-center flex-1"}>
+              <Empty/>
+              <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
+            </div>
+          )}
         </div>
       </div>
     </div>

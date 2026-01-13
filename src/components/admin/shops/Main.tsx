@@ -1,29 +1,29 @@
 "use client";
-import React, {useCallback, useEffect, useState} from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import useSWR from "swr";
 import DropdownSelect from "@/libs/DropdownSelect";
 import TextField from "@/libs/TextField";
-import Table, {Column} from "@/libs/Table";
-import Chip, {ChipColor, ChipSize, ChipVariant} from "@/libs/Chip";
-import {AlertType, ShopStatus, SortDir} from "@/types/enum";
+import Table, { Column } from "@/libs/Table";
+import Chip, { ChipColor, ChipSize, ChipVariant } from "@/libs/Chip";
+import { AlertType, ShopStatus, SortDir } from "@/types/enum";
 import ChangeCircleRoundedIcon from '@mui/icons-material/ChangeCircleRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import Title from "@/libs/Title";
-import {formatDateTime} from "@/util/fnCommon";
+import { formatDateTime } from "@/util/fnCommon";
 import UpdateStatusShopModal from "./UpdateStatusShopModal";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import { SHOP_VIEW} from "@/services/api";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
-import {useDebounce} from "@/hooks/useDebounce";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { SHOP_VIEW } from "@/services/api";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
+import { useDebounce } from "@/hooks/useDebounce";
 import Loading from "@/components/modals/Loading";
-import {useAddressMapping} from "@/hooks/useAddressMapping";
+import { useAddressMapping } from "@/hooks/useAddressMapping";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import { useBuildUrl } from "@/hooks/useBuildUrl";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 
 interface Shop {
   shopId: number;
@@ -45,7 +45,7 @@ interface Shop {
 export default function Main() {
   const { get } = useAxiosContext();
   const fetcher = (url: string) =>
-    get<BaseResponse<PageResponse<Shop>>>(url,{isToken: true}).then(res => res.data);
+    get<BaseResponse<PageResponse<Shop>>>(url, { isToken: true }).then(res => res.data);
 
   const [status, setStatus] = useState<string>("");
   const [keyword, setKeyword] = useState("");
@@ -57,7 +57,7 @@ export default function Main() {
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
   const debouncedKeyword = useDebounce(keyword, 500);
   const dispatch = useDispatch();
-  const {getProvinceName, getWardName} = useAddressMapping();
+  const { getProvinceName, getWardName } = useAddressMapping();
   const router = useRouter();
   const url = useBuildUrl({
     baseUrl: `${SHOP_VIEW}/search`,
@@ -71,7 +71,7 @@ export default function Main() {
     }
   });
 
-  const {data, error, isLoading, mutate} = useSWR(url, fetcher);
+  const { data, error, isLoading, mutate } = useSWR(url, fetcher);
 
   useEffect(() => {
     if (error) {
@@ -86,10 +86,10 @@ export default function Main() {
   }, [dispatch, error]);
 
   const statusOptions: Option[] = [
-    {id: "", label: "Tất cả trạng thái"},
-    {id: ShopStatus.ACTIVE, label: "Đang hoạt động"},
-    {id: ShopStatus.INACTIVE, label: "Ngừng hoạt động"},
-    {id: ShopStatus.SUSPENDED, label: "Đình chỉ"},
+    { id: "", label: "Tất cả trạng thái" },
+    { id: ShopStatus.ACTIVE, label: "Đang hoạt động" },
+    { id: ShopStatus.INACTIVE, label: "Ngừng hoạt động" },
+    { id: ShopStatus.SUSPENDED, label: "Đình chỉ" },
   ];
 
   const getStatusColor = (status: ShopStatus): ChipColor => {
@@ -173,11 +173,11 @@ export default function Main() {
   const columns: Column<Shop>[] = [
     {
       key: "shopId",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (row) => (
+      render: (row, index) => (
         <span className="text-sm text-grey-c900 font-semibold">
-          {row.shopId}
+          {currentPage * parseInt(pageSize) + index + 1}
         </span>
       ),
     },
@@ -199,7 +199,7 @@ export default function Main() {
             </div>
           ) : (
             <div className="w-10 h-10 rounded-full border-2 border-primary-c200 bg-primary-c50 flex-shrink-0 flex items-center justify-center">
-              <StorefrontIcon className="text-primary-c700" style={{fontSize: 24}}/>
+              <StorefrontIcon className="text-primary-c700" style={{ fontSize: 24 }} />
             </div>
           )}
           <div className="max-w-[200px]">
@@ -283,14 +283,14 @@ export default function Main() {
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
           >
-            <VisibilityRoundedIcon/>
+            <VisibilityRoundedIcon />
           </button>
           <button
             onClick={() => handleUpdateStatus(row)}
             className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Đổi trạng thái"
           >
-            <ChangeCircleRoundedIcon/>
+            <ChangeCircleRoundedIcon />
           </button>
         </div>
       ),
@@ -303,8 +303,8 @@ export default function Main() {
 
   return (
     <div>
-      {isLoading && <Loading/>}
-      <Title title="Quản lý cửa hàng" isDivide={true}/>
+      {isLoading && <Loading />}
+      <Title title="Quản lý cửa hàng" isDivide={true} />
 
       {/* Filters */}
       <div className="flex gap-4 mb-6 flex-wrap items-center">
@@ -325,7 +325,7 @@ export default function Main() {
               className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-grey-c200 rounded-full transition-all"
               title="Xóa tìm kiếm"
             >
-              <ClearRoundedIcon className="text-grey-c600 text-xl"/>
+              <ClearRoundedIcon className="text-grey-c600 text-xl" />
             </button>
           )}
         </div>
@@ -348,12 +348,12 @@ export default function Main() {
       {(keyword || status) && (
         <div
           className="mb-4 flex items-center gap-2 text-sm text-grey-c700 bg-primary-c50 px-4 py-3 rounded-lg border border-primary-c200">
-          <SearchRoundedIcon className="text-primary-c700"/>
+          <SearchRoundedIcon className="text-primary-c700" />
           <span>
             Tìm thấy <strong className="text-primary-c800">{pageData?.totalElements || 0}</strong> cửa hàng
             {keyword && <> với từ khóa &ldquo;<strong className="text-primary-c800">{keyword}</strong>&rdquo;</>}
             {status && <> - Trạng thái: <strong
-                className="text-primary-c800">{statusOptions.find(o => o.id === status)?.label}</strong></>}
+              className="text-primary-c800">{statusOptions.find(o => o.id === status)?.label}</strong></>}
           </span>
           <button
             onClick={handleClearSearch}

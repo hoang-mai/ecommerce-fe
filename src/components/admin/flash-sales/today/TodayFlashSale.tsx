@@ -1,22 +1,22 @@
 "use client";
 import React from "react";
 import useSWR from "swr";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {AlertType} from "@/types/enum";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { AlertType } from "@/types/enum";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
-import Table, {Column} from "@/libs/Table";
-import {useEffect, useState} from "react";
-import {FlashSale} from "@/types/interface";
-import {FLASH_SALE_CAMPAIGN} from "@/services/api";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
-import {formatDateTime} from "@/util/fnCommon";
+import Table, { Column } from "@/libs/Table";
+import { useEffect, useState } from "react";
+import { FlashSale } from "@/types/interface";
+import { FLASH_SALE_CAMPAIGN } from "@/services/api";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
+import { formatDateTime } from "@/util/fnCommon";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import { useRouter } from "next/navigation";
-const dateNow= new Date().toISOString();
+const dateNow = new Date().toISOString();
 export default function TodayFlashSale() {
-  const {get} = useAxiosContext();
+  const { get } = useAxiosContext();
   const dispatch = useDispatch();
 
   const [currentPage, setCurrentPage] = useState(0);
@@ -26,7 +26,7 @@ export default function TodayFlashSale() {
   const router = useRouter();
   const url = useBuildUrl({
     baseUrl: `${FLASH_SALE_CAMPAIGN}/by-date`,
-    queryParams:{
+    queryParams: {
       pageNo: currentPage,
       pageSize: pageSize,
       sortBy: sortBy,
@@ -76,11 +76,11 @@ export default function TodayFlashSale() {
   const flashSaleColumns: Column<FlashSale>[] = [
     {
       key: "flashSaleCampaignId",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (row) => (
+      render: (row, index) => (
         <span className="text-grey-c800">
-          {row.flashSaleCampaignId}
+          {currentPage * parseInt(pageSize) + index + 1}
         </span>
       ),
     },
@@ -144,7 +144,7 @@ export default function TodayFlashSale() {
           className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
           title="Xem chi tiết"
         >
-          <VisibilityRoundedIcon/>
+          <VisibilityRoundedIcon />
         </button>
       ),
     },
@@ -152,7 +152,7 @@ export default function TodayFlashSale() {
 
   return (
     <div className="mt-4">
-      {todayLoading && <Loading/>}
+      {todayLoading && <Loading />}
       <Table
         columns={flashSaleColumns}
         data={todayData?.data || []}

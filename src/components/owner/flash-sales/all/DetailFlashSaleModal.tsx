@@ -1,17 +1,17 @@
 "use client";
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "@/libs/Modal";
-import Table, {Column} from "@/libs/Table";
+import Table, { Column } from "@/libs/Table";
 import useSWR from "swr";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
-import {FLASH_SALE_PRODUCT_VIEW} from "@/services/api";
-import {FlashSale, FlashSaleProductView} from "@/types/interface";
-import {AlertType} from "@/types/enum";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
+import { FLASH_SALE_PRODUCT_VIEW } from "@/services/api";
+import { FlashSale, FlashSaleProductView } from "@/types/interface";
+import { AlertType } from "@/types/enum";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
-import {formatPrice} from "@/util/fnCommon";
+import { formatPrice } from "@/util/fnCommon";
 import Image from "next/image";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -26,11 +26,11 @@ interface DetailFlashSaleModalProps {
 }
 
 export default function DetailFlashSaleModal({
-                                               isOpen,
-                                               onClose,
-                                               flashSale,
-                                             }: DetailFlashSaleModalProps) {
-  const {get} = useAxiosContext();
+  isOpen,
+  onClose,
+  flashSale,
+}: DetailFlashSaleModalProps) {
+  const { get } = useAxiosContext();
   const dispatch = useDispatch();
 
   const [currentPage, setCurrentPage] = useState(0);
@@ -54,7 +54,7 @@ export default function DetailFlashSaleModal({
   });
 
   const fetchFlashSaleProducts = (url: string) =>
-    get<BaseResponse<PageResponse<FlashSaleProductView>>>(url,{isToken:true}).then(res => res.data.data);
+    get<BaseResponse<PageResponse<FlashSaleProductView>>>(url, { isToken: true }).then(res => res.data.data);
 
   const {
     data: productsData,
@@ -113,11 +113,11 @@ export default function DetailFlashSaleModal({
   const flashSaleProductColumns: Column<FlashSaleProductView>[] = [
     {
       key: "_id",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (row) => (
+      render: (row, index) => (
         <span className="text-grey-c800">
-          {row.flashSaleProductId}
+          {currentPage * parseInt(pageSize) + index + 1}
         </span>
       ),
     },
@@ -223,21 +223,21 @@ export default function DetailFlashSaleModal({
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
           >
-            <VisibilityRoundedIcon/>
+            <VisibilityRoundedIcon />
           </button>
           <button
             onClick={() => handleUpdate(row)}
             className="cursor-pointer p-2 text-yellow-c800 hover:bg-yellow-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Chỉnh sửa"
           >
-            <EditRoundedIcon/>
+            <EditRoundedIcon />
           </button>
           <button
             onClick={() => handleDelete(row)}
             className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Xóa"
           >
-            <DeleteOutlineRoundedIcon/>
+            <DeleteOutlineRoundedIcon />
           </button>
         </div>
       )
@@ -253,7 +253,7 @@ export default function DetailFlashSaleModal({
       showSaveButton={false}
       showCancelButton={false}
     >
-      {productsLoading && <Loading/>}
+      {productsLoading && <Loading />}
       <div className="min-h-96">
         <Table
           columns={flashSaleProductColumns}

@@ -1,25 +1,25 @@
 "use client";
 import React from "react";
 import useSWR from "swr";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {AlertType} from "@/types/enum";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { AlertType } from "@/types/enum";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
-import Table, {Column} from "@/libs/Table";
-import {addDays} from "date-fns";
-import {useEffect, useState} from "react";
-import {FlashSale} from "@/types/interface";
-import {FLASH_SALE_CAMPAIGN} from "@/services/api";
-import {formatDateTime} from "@/util/fnCommon";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
+import Table, { Column } from "@/libs/Table";
+import { addDays } from "date-fns";
+import { useEffect, useState } from "react";
+import { FlashSale } from "@/types/interface";
+import { FLASH_SALE_CAMPAIGN } from "@/services/api";
+import { formatDateTime } from "@/util/fnCommon";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
 import ControlPointRoundedIcon from '@mui/icons-material/ControlPointRounded';
 import RegisterFlashSaleModal from "@/components/owner/flash-sales/tomorrow/RegisterFlashSaleModal";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import { useRouter } from "next/navigation";
-const dateNow= addDays(new Date(), 1).toISOString();
+const dateNow = addDays(new Date(), 1).toISOString();
 export default function TomorrowFlashSale() {
-  const {get} = useAxiosContext();
+  const { get } = useAxiosContext();
   const dispatch = useDispatch();
   const [selectedFlashSale, setSelectedFlashSale] = useState<FlashSale>();
   const [isRegisterOpen, setIsRegisterOpen] = useState<boolean>(false);
@@ -29,7 +29,7 @@ export default function TomorrowFlashSale() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const router = useRouter();
   const fetchTomorrowFlashSales = (url: string) =>
-    get<BaseResponse<PageResponse<FlashSale>>>(url, {isToken: true}).then(res => res.data.data);
+    get<BaseResponse<PageResponse<FlashSale>>>(url, { isToken: true }).then(res => res.data.data);
   const url = useBuildUrl({
     baseUrl: `${FLASH_SALE_CAMPAIGN}/by-date`,
     queryParams: {
@@ -47,7 +47,7 @@ export default function TomorrowFlashSale() {
   } = useSWR(
     url,
     fetchTomorrowFlashSales,
-    {refreshInterval: 0, revalidateOnFocus: false}
+    { refreshInterval: 0, revalidateOnFocus: false }
   );
 
   useEffect(() => {
@@ -85,11 +85,11 @@ export default function TomorrowFlashSale() {
   const flashSaleColumns: Column<FlashSale>[] = [
     {
       key: "flashSaleCampaignId",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (row) => (
+      render: (row, index) => (
         <span className="text-grey-c800">
-          {row.flashSaleCampaignId}
+          {currentPage * parseInt(pageSize) + index + 1}
         </span>
       ),
     },
@@ -118,7 +118,7 @@ export default function TomorrowFlashSale() {
       sortable: true,
       render: (row) => (
         <span className="text-grey-c800">
-         {formatDateTime(row.startTime)}
+          {formatDateTime(row.startTime)}
         </span>
       ),
     },
@@ -145,7 +145,7 @@ export default function TomorrowFlashSale() {
             className="cursor-pointer p-2 text-success-c800 hover:bg-success-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Đăng ký"
           >
-            <ControlPointRoundedIcon/>
+            <ControlPointRoundedIcon />
           </button>
           <button
             onClick={() => {
@@ -154,7 +154,7 @@ export default function TomorrowFlashSale() {
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
           >
-            <VisibilityRoundedIcon/>
+            <VisibilityRoundedIcon />
           </button>
         </div>
       ),
@@ -163,7 +163,7 @@ export default function TomorrowFlashSale() {
 
   return (
     <div className="mt-4 ">
-      {tomorrowLoading && <Loading/>}
+      {tomorrowLoading && <Loading />}
       <Table
         columns={flashSaleColumns}
         data={tomorrowData?.data || []}

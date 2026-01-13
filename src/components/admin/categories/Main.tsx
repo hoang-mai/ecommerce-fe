@@ -1,8 +1,8 @@
 "use client";
-import React, {useState, useCallback, useEffect} from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Button from "@/libs/Button";
-import Table, {Column} from "@/libs/Table";
-import {AlertType, CategoryStatus, ColorButton} from "@/types/enum";
+import Table, { Column } from "@/libs/Table";
+import { AlertType, CategoryStatus, ColorButton } from "@/types/enum";
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
@@ -17,15 +17,15 @@ import DetailCategoryModal from "@/components/admin/categories/DetailCategoryMod
 import UpdateCategoryModal from "@/components/admin/categories/UpdateCategoryModal";
 import UpdateStatusCategoryModal from "@/components/admin/categories/UpdateStatusCategoryModal";
 import useSWR from "swr";
-import {CATEGORY} from "@/services/api";
-import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
-import {useDebounce} from "@/hooks/useDebounce";
-import {formatDateTime} from "@/util/fnCommon";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { CATEGORY } from "@/services/api";
+import Chip, { ChipColor, ChipVariant } from "@/libs/Chip";
+import { useDebounce } from "@/hooks/useDebounce";
+import { formatDateTime } from "@/util/fnCommon";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
 
 
 export interface ResCategorySearchDTO {
@@ -39,7 +39,7 @@ export interface ResCategorySearchDTO {
 }
 
 export default function Main() {
-  const {get} = useAxiosContext();
+  const { get } = useAxiosContext();
   const [isOpen, setIsOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
@@ -66,7 +66,7 @@ export default function Main() {
     }
   });
 
-  const {data, mutate, isLoading, error} = useSWR(
+  const { data, mutate, isLoading, error } = useSWR(
     url,
     (u: string) => get<BaseResponse<PageResponse<ResCategorySearchDTO>>>(u).then(res => res.data),
     {
@@ -76,8 +76,8 @@ export default function Main() {
   );
   const dispatch = useDispatch();
   useEffect(() => {
-    if(error){
-      const alert : AlertState = {
+    if (error) {
+      const alert: AlertState = {
         isOpen: true,
         message: error.message || "Đã có lỗi xảy ra",
         type: AlertType.ERROR,
@@ -85,11 +85,11 @@ export default function Main() {
       }
       dispatch(openAlert(alert));
     }
-  },[dispatch, error]);
+  }, [dispatch, error]);
   const statusOptions: Option[] = [
-    {id: "", label: "Tất cả trạng thái"},
-    {id: CategoryStatus.ACTIVE, label: "Hoạt động"},
-    {id: CategoryStatus.INACTIVE, label: "Ngừng hoạt động"},
+    { id: "", label: "Tất cả trạng thái" },
+    { id: CategoryStatus.ACTIVE, label: "Hoạt động" },
+    { id: CategoryStatus.INACTIVE, label: "Ngừng hoạt động" },
   ];
 
   const getStatusLabel = (status: CategoryStatus) => {
@@ -180,11 +180,11 @@ export default function Main() {
   const columns: Column<ResCategorySearchDTO>[] = [
     {
       key: "categoryId",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (category) => (
+      render: (category, index) => (
         <span className="text-sm text-grey-c900">
-          {category.categoryId}
+          {currentPage * parseInt(pageSize) + index + 1}
         </span>
       )
     },
@@ -249,21 +249,7 @@ export default function Main() {
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
           >
-            <VisibilityRoundedIcon/>
-          </button>
-          <button
-            onClick={() => handleEditCategory(category.categoryId)}
-            className="cursor-pointer p-2 text-yellow-c800 hover:bg-yellow-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-            title="Chỉnh sửa"
-          >
-            <EditRoundedIcon/>
-          </button>
-          <button
-            onClick={() => handleUpdateStatus(category)}
-            className="cursor-pointer p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
-            title="Đổi trạng thái"
-          >
-            <ChangeCircleRoundedIcon/>
+            <VisibilityRoundedIcon />
           </button>
         </div>
       )
@@ -276,8 +262,8 @@ export default function Main() {
 
   return (
     <div>
-      {isLoading && <Loading/>}
-      <Title title="Quản lý danh mục" isDivide={true}/>
+      {isLoading && <Loading />}
+      <Title title="Quản lý danh mục" isDivide={true} />
 
       <div className="flex gap-4 mb-6 flex-wrap items-center">
         <div className="flex-1 min-w-[300px] relative">
@@ -297,7 +283,7 @@ export default function Main() {
               className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-grey-c200 rounded-full transition-all"
               title="Xóa tìm kiếm"
             >
-              <ClearRoundedIcon className="text-grey-c600 text-xl"/>
+              <ClearRoundedIcon className="text-grey-c600 text-xl" />
             </button>
           )}
         </div>
@@ -317,7 +303,7 @@ export default function Main() {
         <Button
           onClick={handleAddCategory}
           color={ColorButton.SUCCESS}
-          startIcon={<AddRoundedIcon/>}
+          startIcon={<AddRoundedIcon />}
         >
           Thêm danh mục
         </Button>
@@ -325,7 +311,7 @@ export default function Main() {
 
       {(keyword || status) && (
         <div className="mb-4 flex items-center gap-2 text-sm text-grey-c700 bg-primary-c50 px-4 py-3 rounded-lg border border-primary-c200">
-          <SearchRoundedIcon className="text-primary-c700"/>
+          <SearchRoundedIcon className="text-primary-c700" />
           <span>
             Tìm thấy <strong className="text-primary-c800">{pageData?.totalElements || 0}</strong> danh mục
             {keyword && <> với từ khóa &ldquo;<strong className="text-primary-c800">{keyword}</strong>&rdquo;</>}
@@ -359,7 +345,7 @@ export default function Main() {
         setPageSize={handlePageSizeChange}
       />
 
-      {isOpen && <CreateCategoryModal isOpen={isOpen} setIsOpen={setIsOpen} reload={mutate}/>}
+      {isOpen && <CreateCategoryModal isOpen={isOpen} setIsOpen={setIsOpen} reload={mutate} />}
       {isDetailOpen && selectedCategoryId !== null && (
         <DetailCategoryModal
           isOpen={isDetailOpen}

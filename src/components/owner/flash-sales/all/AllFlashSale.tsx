@@ -1,21 +1,21 @@
 "use client";
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import useSWR from "swr";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {AlertType} from "@/types/enum";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { AlertType } from "@/types/enum";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
-import Table, {Column} from "@/libs/Table";
-import {FlashSale} from "@/types/interface";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
-import {FLASH_SALE_CAMPAIGN} from "@/services/api";
-import {formatDateTime} from "@/util/fnCommon";
+import Table, { Column } from "@/libs/Table";
+import { FlashSale } from "@/types/interface";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
+import { FLASH_SALE_CAMPAIGN } from "@/services/api";
+import { formatDateTime } from "@/util/fnCommon";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import { useRouter } from "next/navigation";
 
 export default function AllFlashSale() {
-  const {get} = useAxiosContext();
+  const { get } = useAxiosContext();
   const dispatch = useDispatch();
 
   const [currentPage, setCurrentPage] = useState(0);
@@ -35,7 +35,7 @@ export default function AllFlashSale() {
   })
 
   const fetchAllFlashSales = (url: string) =>
-    get<BaseResponse<PageResponse<FlashSale>>>(url,{isToken:true}).then(res => res.data.data);
+    get<BaseResponse<PageResponse<FlashSale>>>(url, { isToken: true }).then(res => res.data.data);
 
   const {
     data: allData,
@@ -79,11 +79,11 @@ export default function AllFlashSale() {
   const flashSaleColumns: Column<FlashSale>[] = [
     {
       key: "flashSaleCampaignId",
-      label: "ID",
+      label: "STT",
       sortable: true,
-      render: (row) => (
+      render: (row, index) => (
         <span className="text-grey-c800">
-          {row.flashSaleCampaignId}
+          {currentPage * parseInt(pageSize) + index + 1}
         </span>
       ),
     },
@@ -138,7 +138,7 @@ export default function AllFlashSale() {
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
           >
-            <VisibilityRoundedIcon/>
+            <VisibilityRoundedIcon />
           </button>
         </div>
       ),
@@ -147,7 +147,7 @@ export default function AllFlashSale() {
 
   return (
     <div className="mt-4 ">
-      {allLoading && <Loading/>}
+      {allLoading && <Loading />}
       <Table
         columns={flashSaleColumns}
         data={allData?.data || []}

@@ -1,22 +1,22 @@
 import Modal from "@/libs/Modal";
-import Table, {Column} from "@/libs/Table";
-import {useCallback, useEffect, useState} from "react";
+import Table, { Column } from "@/libs/Table";
+import { useCallback, useEffect, useState } from "react";
 import useSWR from "swr";
-import {USER_VERIFICATION} from "@/services/api";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {AlertType, UserVerificationStatus, UserVerificationStatusLabel} from "@/types/enum";
-import {formatDateTime} from "@/util/fnCommon";
+import { USER_VERIFICATION } from "@/services/api";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { AlertType, UserVerificationStatus, UserVerificationStatusLabel } from "@/types/enum";
+import { formatDateTime } from "@/util/fnCommon";
 import DropdownSelect from "@/libs/DropdownSelect";
-import Chip, {ChipColor, ChipVariant} from "@/libs/Chip";
+import Chip, { ChipColor, ChipVariant } from "@/libs/Chip";
 import Image from "next/image";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
 import TextField from "@/libs/TextField";
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
-import {useDebounce} from "@/hooks/useDebounce";
+import { useDebounce } from "@/hooks/useDebounce";
 import ImagePreview from "@/libs/ImagePreview";
 import DetailRegisterOwnerModal from "./DetailRegisterOwnerModal";
 import { useBuildUrl } from "@/hooks/useBuildUrl";
@@ -44,13 +44,13 @@ type Props = {
 };
 
 const statusOptions: Option[] = [
-  {id: "", label: "Tất cả trạng thái"},
-  {id: UserVerificationStatus.PENDING, label: UserVerificationStatusLabel[UserVerificationStatus.PENDING]},
-  {id: UserVerificationStatus.APPROVED, label: UserVerificationStatusLabel[UserVerificationStatus.APPROVED]},
-  {id: UserVerificationStatus.REJECTED, label: UserVerificationStatusLabel[UserVerificationStatus.REJECTED]},
+  { id: "", label: "Tất cả trạng thái" },
+  { id: UserVerificationStatus.PENDING, label: UserVerificationStatusLabel[UserVerificationStatus.PENDING] },
+  { id: UserVerificationStatus.APPROVED, label: UserVerificationStatusLabel[UserVerificationStatus.APPROVED] },
+  { id: UserVerificationStatus.REJECTED, label: UserVerificationStatusLabel[UserVerificationStatus.REJECTED] },
 ];
 
-export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
+export default function HistoryRegisterOwnerModal({ isOpen, setIsOpen }: Props) {
   const { get } = useAxiosContext();
   const fetcher = (url: string) => get<BaseResponse<PageResponse<ResUserVerificationDTO>>>(url).then(res => res.data);
 
@@ -77,7 +77,7 @@ export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
     }
   });
 
-  const {data, error, isLoading} = useSWR(url, fetcher, {
+  const { data, error, isLoading } = useSWR(url, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   });
@@ -85,8 +85,8 @@ export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if(error){
-      const alert : AlertState = {
+    if (error) {
+      const alert: AlertState = {
         isOpen: true,
         message: error.message || "Đã có lỗi xảy ra",
         type: AlertType.ERROR,
@@ -94,7 +94,7 @@ export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
       }
       dispatch(openAlert(alert));
     }
-  },[dispatch, error]);
+  }, [dispatch, error]);
 
   const getStatusColor = (status: UserVerificationStatus) => {
     switch (status) {
@@ -154,12 +154,12 @@ export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
   const columns: Column<ResUserVerificationDTO>[] = [
     {
       key: "userVerificationId",
-      label: "ID",
+      label: "STT",
       sortable: true,
       className: "w-16",
-      render: (row) => (
+      render: (row, index) => (
         <span className="text-sm text-grey-c900">
-          {row.userVerificationId}
+          {pageNo * parseInt(pageSize) + index + 1}
         </span>
       )
     },
@@ -185,7 +185,7 @@ export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
             width={80}
             height={50}
             className="rounded cursor-pointer hover:opacity-80 object-cover"
-            style={{width: '80px', height: '50px', minWidth: '80px'}}
+            style={{ width: '80px', height: '50px', minWidth: '80px' }}
             onClick={() => setSelectedImage(row.frontImageUrl)}
           />
           <Image
@@ -194,7 +194,7 @@ export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
             width={80}
             height={50}
             className="rounded cursor-pointer hover:opacity-80 object-cover"
-            style={{width: '80px', height: '50px', minWidth: '80px'}}
+            style={{ width: '80px', height: '50px', minWidth: '80px' }}
             onClick={() => setSelectedImage(row.backImageUrl)}
           />
         </div>
@@ -263,7 +263,7 @@ export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
             className="cursor-pointer p-2 text-primary-c800 hover:bg-primary-c200 rounded-lg transition-colors hover:scale-110 hover:shadow-md"
             title="Xem chi tiết"
           >
-            <VisibilityRoundedIcon/>
+            <VisibilityRoundedIcon />
           </button>
         </div>
       ),
@@ -284,7 +284,7 @@ export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
         maxWidth="6xl"
         showSaveButton={false}
       >
-        {isLoading && <Loading/>}
+        {isLoading && <Loading />}
         <div className="flex flex-col gap-4">
           {/* Filters */}
           <div className="flex gap-4 flex-wrap items-center">
@@ -305,7 +305,7 @@ export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
                   className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-grey-c200 rounded-full transition-all"
                   title="Xóa tìm kiếm"
                 >
-                  <ClearRoundedIcon className="text-grey-c600 text-xl"/>
+                  <ClearRoundedIcon className="text-grey-c600 text-xl" />
                 </button>
               )}
             </div>
@@ -326,7 +326,7 @@ export default function HistoryRegisterOwnerModal({isOpen, setIsOpen}: Props) {
           {/* Search Summary */}
           {(keyword || status) && (
             <div className="flex items-center gap-2 text-sm text-grey-c700 bg-primary-c50 px-4 py-3 rounded-lg border border-primary-c200">
-              <SearchRoundedIcon className="text-primary-c700"/>
+              <SearchRoundedIcon className="text-primary-c700" />
               <span>
                 Tìm thấy <strong className="text-primary-c800">{pageData?.totalElements || 0}</strong> bản ghi
                 {keyword && <> với từ khóa &ldquo;<strong className="text-primary-c800">{keyword}</strong>&rdquo;</>}

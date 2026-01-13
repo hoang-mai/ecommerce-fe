@@ -55,7 +55,7 @@ export default function Main() {
   const {get, post} = useAxiosContext();
   const dispatch = useDispatch();
   const {mutate} = useCartData();
-  const {getFullAddress} = useAddressMapping();
+  const {getProvinceName, getWardName} = useAddressMapping();
 
   const fetcher = (url: string) => get<BaseResponse<CartViewDTO>>(url).then(res => res.data);
   const fetcherAddress = (url: string) => get<BaseResponse<ResInfoAddressDTO>>(url).then(res => res.data);
@@ -325,7 +325,10 @@ export default function Main() {
                         </div>
                         <div className="flex items-start gap-2 text-grey-c700">
                           <LocationOnRoundedIcon className="text-grey-c500 mt-0.5" style={{fontSize: 18}}/>
-                          <span>{getFullAddress(address.detail, address.ward, address.province)}</span>
+                          <div>
+                            <div>{address.detail}</div>
+                            <div>{`${getWardName(address.ward)}, ${getProvinceName(address.province)}`}</div>
+                          </div>
                         </div>
                       </div>
                       <Button
@@ -355,7 +358,8 @@ export default function Main() {
                 return (
                   <div key={item.cartItemId} className="bg-white rounded-xl shadow-sm overflow-hidden">
                     {/* Shop Header */}
-                    <div className="bg-gradient-to-r from-primary-c50 to-primary-c100 px-5 py-4 border-b border-primary-c200">
+                    <div
+                      className="bg-gradient-to-r from-primary-c50 to-primary-c100 px-5 py-4 border-b border-primary-c200">
                       <div className="flex items-center gap-2">
                         <StorefrontIcon className="text-primary-c700"/>
                         <h3 className="font-semibold text-lg text-primary-c900">{item.shopView.shopName}</h3>
@@ -400,7 +404,8 @@ export default function Main() {
                           >
                             <div className="flex gap-4">
                               {/* Product Image */}
-                              <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden border border-grey-c200">
+                              <div
+                                className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden border border-grey-c200">
                                 <Image
                                   src={productView.productImages[0]?.imageUrl}
                                   alt={productView.name}
@@ -437,7 +442,8 @@ export default function Main() {
                                         className="inline-flex items-center gap-1 px-2 py-0.5 bg-grey-c100 rounded text-xs"
                                       >
                                         <span className="text-grey-c600">{attr.productAttributeName}:</span>
-                                        <span className="font-medium text-grey-c800">{valueObj.productAttributeValue}</span>
+                                        <span
+                                          className="font-medium text-grey-c800">{valueObj.productAttributeValue}</span>
                                       </span>
                                     ) : null;
                                   })}
@@ -451,19 +457,19 @@ export default function Main() {
                                       {formatPrice(discountedPrice)}
                                     </span>
                                     {(hasFlashSale || hasVariantSale) && (
-                                       <>
+                                      <>
                                          <span className="text-sm text-grey-c400 line-through">
                                            {formatPrice(price)}
                                          </span>
-                                         {isFlashSaleApplied &&
-                                           <Chip
-                                             iconPosition={"end"}
-                                             icon={<FlashOnRoundedIcon className=" animate-pulse !text-sm"/>}
-                                             label={`-${activeDiscountPercent}%`}
-                                             color={ChipColor.ERROR}
-                                           />}
-                                       </>
-                                     )}
+                                        {isFlashSaleApplied &&
+                                          <Chip
+                                            iconPosition={"end"}
+                                            icon={<FlashOnRoundedIcon className=" animate-pulse !text-sm"/>}
+                                            label={`-${activeDiscountPercent}%`}
+                                            color={ChipColor.ERROR}
+                                          />}
+                                      </>
+                                    )}
                                     <span className="text-grey-c600">x {pci.quantity}</span>
                                   </div>
                                   <div className="text-right">

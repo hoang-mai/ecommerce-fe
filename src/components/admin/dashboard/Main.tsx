@@ -175,7 +175,7 @@ export default function Main() {
       {/* Revenue Chart */}
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className={"flex items-center justify-between mb-4"}>
-          <h2 className="text-xl font-bold text-primary-c600 mb-4">Người dùng mới Theo Tháng</h2>
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Người dùng mới theo tháng</h2>
           <MonthRangePicker
             value={selectUserViewDate}
             onChange={setSelectUserViewDate}
@@ -294,7 +294,7 @@ export default function Main() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-120">
         {/* Revenue */}
         <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col">
-          <h2 className="text-xl font-bold text-primary-c600 mb-4">Top 5 Cửa Hàng Doanh Thu</h2>
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Top 5 cửa hàng doanh thu</h2>
           <div className="space-y-3">
             {topRevenueShops && topRevenueShops.data && topRevenueShops.data.map((shop, index) => (
               <div
@@ -326,7 +326,7 @@ export default function Main() {
 
         {/* Top Products Sold */}
         <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col">
-          <h2 className="text-xl font-bold text-primary-c600 mb-4">Top 5 Cửa Hàng Bán Chạy</h2>
+          <h2 className="text-xl font-bold text-primary-c600 mb-4">Top 5 cửa hàng bán chạy</h2>
           <div className="space-y-3">
             {topSellingShops && topSellingShops.data && topSellingShops.data.map((shop, index) => (
               <div
