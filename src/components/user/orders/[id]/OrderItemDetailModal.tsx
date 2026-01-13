@@ -1,8 +1,6 @@
 import Modal from "@/libs/Modal";
-import {formatDateTime, formatPrice} from "@/util/fnCommon";
-import Divide from "@/libs/Divide";
+import {formatDateTime} from "@/util/fnCommon";
 import React, {useEffect, useState} from "react";
-import InfoRow from "@/libs/InfoRow";
 import {OrderItem, OrderView} from "@/components/user/orders/Main";
 import Image from "next/image";
 import TextField from "@/libs/TextField";

@@ -292,6 +292,7 @@ export default function CreateShopModal({
                   enableSearch={true}
                   searchPlaceholder="Tìm tỉnh/thành phố..."
                   disabled={isMutating}
+                  align={"top"}
                 />
               )}
             />
@@ -310,6 +311,7 @@ export default function CreateShopModal({
                   required
                   enableSearch={true}
                   searchPlaceholder="Tìm phường/xã..."
+                  align={"top"}
                 />
               )}
             />

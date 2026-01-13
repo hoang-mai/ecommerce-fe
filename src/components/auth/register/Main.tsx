@@ -269,12 +269,12 @@ export default function Main() {
                                   onChange={(value) => {
                                     field.onChange(value);
                                     setSelectedProvince(value);
-                                    // Reset ward value when province changes
                                     setValue('ward', '');
                                   }}
                                   options={provinceOptions}
                                   enableSearch={true}
                                   searchPlaceholder="Tìm tỉnh/thành phố..."
+                                  align={"top"}
                   />
                 }/>
 
@@ -290,6 +290,7 @@ export default function Main() {
                                   options={wardOptions}
                                   enableSearch={true}
                                   searchPlaceholder="Tìm phường/xã..."
+                                  align={"top"}
                   />
                 }/>
               </div>

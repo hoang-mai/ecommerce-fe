@@ -26,7 +26,6 @@ import Loading from "@/components/modals/Loading";
 import useSWRMutation from "swr/mutation";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CancelOrderModal from "@/components/user/orders/CancelOrderModal";
-import Image from "next/image";
 
 interface Props {
   id: string;

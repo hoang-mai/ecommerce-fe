@@ -7,7 +7,6 @@ import {useDispatch} from "react-redux";
 import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
 import Table, {Column} from "@/libs/Table";
-import {addDays, format} from "date-fns";
 import {useEffect, useState} from "react";
 import {FlashSale} from "@/types/interface";
 import {FLASH_SALE_CAMPAIGN} from "@/services/api";

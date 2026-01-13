@@ -247,9 +247,9 @@ export default function Main({id}: Props) {
       ]
       : [])
   ];
-  return <div>
+  return <div className={"overflow-y-auto"} >
     {(isLoading || productsLoading) && <Loading/>}
-    <Title title={`Thống Kê ${data?.flashSaleCampaignName}`} isDivide={true}/>
+    <Title title={`Thống Kê ${data?.flashSaleCampaignName || ''}`} isDivide={true}/>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card
         isStats

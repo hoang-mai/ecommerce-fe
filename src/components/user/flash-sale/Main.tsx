@@ -10,7 +10,6 @@ import {openAlert} from "@/redux/slice/alertSlice";
 import {useDispatch} from "react-redux";
 import {format} from "date-fns";
 import Loading from "@/components/modals/Loading";
-import ScrollTab, {TabItem} from "@/libs/ScrollTab";
 import ProductSaleCard from "@/components/user/ProductSaleCard";
 import FlashSaleCountdown from "@/libs/FlashSaleCountdown";
 import FlashOnRoundedIcon from "@mui/icons-material/FlashOnRounded";
@@ -71,7 +70,7 @@ export default function Main() {
     };
   }, [now, startTime, endTime]);
 
-  const tabItems: TabItem[] = flashSales.map((fs, index) => ({
+  const tabItems = flashSales.map((fs, index) => ({
     key: index,
     label: `${format(new Date(fs.startTime), "HH:mm")}-${format(new Date(fs.endTime), "HH:mm")}`,
   }));

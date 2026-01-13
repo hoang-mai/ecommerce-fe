@@ -259,6 +259,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
         onClose={onClose}
         saveButtonText="Thêm sản phẩm"
         isLoading={isMutating}
+        maxWidth={"3xl"}
       >
         {isMutating && <Loading/>}
         {/* Basic Information */}

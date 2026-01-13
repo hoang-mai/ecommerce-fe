@@ -3,8 +3,6 @@ import Image from "next/image";
 import React, {useEffect, useMemo, useState} from "react";
 import {formatPrice} from "@/util/fnCommon";
 import Button from "@/libs/Button";
-import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
-import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
 import {useAxiosContext} from '@/components/provider/AxiosProvider';
 import {CART, CART_VIEW} from "@/services/api";
 import useSWR from "swr";

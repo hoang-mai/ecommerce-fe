@@ -59,7 +59,6 @@ export default function Main() {
   const dispatch = useDispatch();
   const {getProvinceName, getWardName} = useAddressMapping();
   const router = useRouter();
-  // Build URL với query params
   const url = useBuildUrl({
     baseUrl: `${SHOP_VIEW}/search`,
     queryParams: {
@@ -72,10 +71,7 @@ export default function Main() {
     }
   });
 
-  const {data, error, isLoading, mutate} = useSWR(url, fetcher, {
-    refreshInterval: 0,
-    revalidateOnFocus: false,
-  });
+  const {data, error, isLoading, mutate} = useSWR(url, fetcher);
 
   useEffect(() => {
     if (error) {

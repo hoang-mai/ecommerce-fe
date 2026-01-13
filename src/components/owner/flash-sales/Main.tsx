@@ -20,7 +20,7 @@ export default function Main() {
   ];
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-y-auto">
       <Title title={"Quản lý Flash Sale"} isDivide={true}/>
 
       {/* Tabs */}

@@ -6,14 +6,11 @@ import Inventory2Icon from '@mui/icons-material/Inventory2';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import {ProductView, ShopView} from "@/types/interface";
-import {AlertType, ColorButton, ShopStatus} from "@/types/enum";
+import {AlertType, ShopStatus} from "@/types/enum";
 import ProductCard from "@/components/user/ProductCard";
-import Title from "@/libs/Title"
-import {formatDate, formatNumber, getTimeAgo} from "@/util/fnCommon";
+import {formatNumber, getTimeAgo} from "@/util/fnCommon";
 import Image from "next/image";
-import Button from "@/libs/Button";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
-import Divide from "@/libs/Divide";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {PRODUCT_VIEW, SHOP_VIEW} from "@/services/api";
 import useSWR from "swr";
@@ -28,7 +25,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {useDebounce} from "@/hooks/useDebounce";
 import {openChat} from "@/redux/slice/chatSlice";
 import StoreRoundedIcon from "@mui/icons-material/Storefront";
-import { useAddressMapping } from "@/hooks/useAddressMapping";
+import {useAddressMapping} from "@/hooks/useAddressMapping";
 
 const sampleShop: ShopView = {
   shopId: "",

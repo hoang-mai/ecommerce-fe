@@ -63,10 +63,7 @@ export default function Main() {
       sortDir: sortBy ? sortDir : undefined,
     }
   });
-  const {data, error, isLoading, mutate} = useSWR(url, fetcher, {
-    refreshInterval: 0,
-    revalidateOnFocus: false,
-  });
+  const {data, error, isLoading, mutate} = useSWR(url, fetcher);
 
   useEffect(() => {
     if (error) {

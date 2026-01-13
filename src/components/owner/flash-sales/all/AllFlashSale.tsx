@@ -12,7 +12,6 @@ import {useBuildUrl} from "@/hooks/useBuildUrl";
 import {FLASH_SALE_CAMPAIGN} from "@/services/api";
 import {formatDateTime} from "@/util/fnCommon";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
-import DetailFlashSaleModal from "@/components/owner/flash-sales/all/DetailFlashSaleModal";
 import { useRouter } from "next/navigation";
 
 export default function AllFlashSale() {
@@ -147,7 +146,7 @@ export default function AllFlashSale() {
   ];
 
   return (
-    <div className="mt-4">
+    <div className="mt-4 ">
       {allLoading && <Loading/>}
       <Table
         columns={flashSaleColumns}

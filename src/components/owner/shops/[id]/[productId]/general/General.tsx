@@ -23,7 +23,6 @@ type Props = {
 
 export default function General({product}: Props) {
   const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-  // Use the product's default variant if available, otherwise fall back to the first variant
   const defaultVariant = product.productVariants.find(v => v.isDefault) || product.productVariants[0] || null;
 
 
@@ -83,7 +82,6 @@ export default function General({product}: Props) {
     }
   };
 
-  // prepare columns for variants table
   const variantColumns = [
     {
       key: "productVariantId",
@@ -98,7 +96,6 @@ export default function General({product}: Props) {
       label: "Giá",
       sortable: false,
       render: (row: ProductVariant) => (
-        // If salePrice exists and is less than original price, show salePrice prominently and original price struck-through
         row.salePrice != null && row.salePrice < row.price ? (
           <div>
             <div className="text-sm font-semibold text-primary-c800">{formatPrice(row.salePrice)}</div>
@@ -177,7 +174,7 @@ export default function General({product}: Props) {
           <div className="bg-grey-c50 rounded-lg p-4 space-y-0">
             <InfoRow icon={<LabelRoundedIcon/>} label="Tên sản phẩm" value={product.name}/>
             <InfoRow icon={<CategoryRoundedIcon/>} label="Danh mục" value={product.categoryName}/>
-            <InfoRow icon={<DescriptionRoundedIcon/>} label="Mô tả" value={product.description || "Không có mô tả"}/>
+            <InfoRow icon={<DescriptionRoundedIcon/>} label="Mô tả" value={product.description || "Không có mô tả"} maxLines={3}/>
             <InfoRow icon={<ToggleOnRoundedIcon/>} label="Trạng thái" value={
               <Chip
                 label={getStatusLabel(product.productStatus)}
@@ -252,7 +249,7 @@ export default function General({product}: Props) {
         <div className="w-1 h-6 bg-primary-c700 rounded"></div>
         Hình ảnh sản phẩm
       </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="flex flex-wrap gap-4">
           {product.productImages.map((image,index) => (
             <button
               key={index}

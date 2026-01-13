@@ -31,7 +31,7 @@ export default function General({shop, id}: Props) {
           <InfoRow
             icon={<LocationOnRoundedIcon/>}
             label="Địa chỉ"
-            value={`${shop.detail}, ${getWardName(shop.ward)}, ${getProvinceName(shop.province)}`}
+            value={`${shop.detail}\n${getWardName(shop.ward)}, ${getProvinceName(shop.province)}`}
           />
           <InfoRow
             icon={<PhoneRoundedIcon/>}

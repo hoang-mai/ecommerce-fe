@@ -14,8 +14,6 @@ import Button from "@/libs/Button";
 import {ProductVariant, ProductView, CartViewDTO, FlashSaleProductView} from "@/types/interface";
 import ImagePreview from "@/libs/ImagePreview";
 import {formatNumber, formatPrice} from "@/util/fnCommon";
-import KeyboardArrowLeftRoundedIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
-import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
 import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRounded";
 import ShoppingBagRoundedIcon from "@mui/icons-material/ShoppingBagRounded";
 import {useRouter} from "next/navigation";

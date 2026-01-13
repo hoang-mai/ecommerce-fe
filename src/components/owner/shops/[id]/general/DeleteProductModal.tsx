@@ -7,7 +7,6 @@ import {openAlert} from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
 import {useAxiosContext} from "@/components/provider/AxiosProvider";
 import {ProductView, ReqUpdateProductStatusDTO} from "@/types/interface";
-import Image from "next/image";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 
 type Props = {

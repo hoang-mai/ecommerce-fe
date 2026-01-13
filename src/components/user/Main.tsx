@@ -15,27 +15,29 @@ import {useBuildUrl} from "@/hooks/useBuildUrl";
 import CategoryRoundedIcon from '@mui/icons-material/CategoryRounded';
 import PhoneAndroidRoundedIcon from '@mui/icons-material/PhoneAndroidRounded';
 import LaptopRoundedIcon from '@mui/icons-material/LaptopRounded';
-import CheckroomRoundedIcon from '@mui/icons-material/CheckroomRounded';
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
-import SportsEsportsRoundedIcon from '@mui/icons-material/SportsEsportsRounded';
+import ShoppingBagRoundedIcon from '@mui/icons-material/ShoppingBagRounded';
 import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
 import SportsSoccerRoundedIcon from '@mui/icons-material/SportsSoccerRounded';
-import RestaurantRoundedIcon from '@mui/icons-material/RestaurantRounded';
-import LocalFloristRoundedIcon from '@mui/icons-material/LocalFloristRounded';
+import ManRoundedIcon from '@mui/icons-material/ManRounded';
+import WomanRoundedIcon from '@mui/icons-material/WomanRounded';
 import ChildCareRoundedIcon from '@mui/icons-material/ChildCareRounded';
 import PetsRoundedIcon from '@mui/icons-material/PetsRounded';
-import DirectionsCarRoundedIcon from '@mui/icons-material/DirectionsCarRounded';
 import WatchRoundedIcon from '@mui/icons-material/WatchRounded';
-import HeadphonesRoundedIcon from '@mui/icons-material/HeadphonesRounded';
+import HikingRoundedIcon from '@mui/icons-material/HikingRounded';
 import DiamondRoundedIcon from '@mui/icons-material/DiamondRounded';
 import FaceRetouchingNaturalRoundedIcon from '@mui/icons-material/FaceRetouchingNaturalRounded';
-import FitnessCenterRoundedIcon from '@mui/icons-material/FitnessCenterRounded';
-import BuildRoundedIcon from '@mui/icons-material/BuildRounded';
+import PregnantWomanRoundedIcon from '@mui/icons-material/PregnantWomanRounded';
 import LocalGroceryStoreRoundedIcon from '@mui/icons-material/LocalGroceryStoreRounded';
 import FlashOnRoundedIcon from '@mui/icons-material/FlashOnRounded';
 import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRounded';
+import DevicesRoundedIcon from '@mui/icons-material/DevicesRounded';
+import CleaningServicesRoundedIcon from '@mui/icons-material/CleaningServicesRounded';
+import ToysRoundedIcon from '@mui/icons-material/ToysRounded';
+import KitchenRoundedIcon from '@mui/icons-material/KitchenRounded';
 import FlashSaleCountdown from "@/libs/FlashSaleCountdown";
 import ProductSaleCard from "@/components/user/ProductSaleCard";
+import Divide from "@/libs/Divide";
 
 
 interface ProductViewHomePageDTO {
@@ -121,65 +123,68 @@ export default function Main() {
 
   const getCategoryIcon = (categoryName: string) => {
     const name = categoryName.toLowerCase();
-    const iconClass = "text-primary-c700 text-3xl";
+    const iconClass = "text-primary-c700 !text-3xl";
 
-    if (name.includes('điện thoại') || name.includes('phone') || name.includes('di động')) {
-      return <PhoneAndroidRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('laptop') || name.includes('máy tính') || name.includes('computer')) {
-      return <LaptopRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('thời trang') || name.includes('quần áo') || name.includes('fashion') || name.includes('clothing')) {
-      return <CheckroomRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('nhà cửa') || name.includes('nội thất') || name.includes('home') || name.includes('furniture')) {
-      return <HomeRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('game') || name.includes('gaming') || name.includes('trò chơi')) {
-      return <SportsEsportsRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('sách') || name.includes('book') || name.includes('văn phòng phẩm')) {
-      return <MenuBookRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('thể thao') || name.includes('sport')) {
-      return <SportsSoccerRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('thực phẩm') || name.includes('đồ ăn') || name.includes('food') || name.includes('ẩm thực')) {
-      return <RestaurantRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('làm đẹp') || name.includes('mỹ phẩm') || name.includes('beauty') || name.includes('cosmetic')) {
-      return <FaceRetouchingNaturalRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('hoa') || name.includes('cây') || name.includes('flower') || name.includes('plant')) {
-      return <LocalFloristRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('trẻ em') || name.includes('baby') || name.includes('kid') || name.includes('đồ chơi')) {
+    if (name.includes('thời trang nam'))
+      return <ManRoundedIcon className={iconClass} />;
+
+    if (name.includes('thời trang nữ'))
+      return <WomanRoundedIcon className={iconClass} />;
+
+    if (name.includes('trẻ em'))
       return <ChildCareRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('thú cưng') || name.includes('pet')) {
+
+    if (name.includes('giày dép nữ'))
+      return <ShoppingBagRoundedIcon className={iconClass} />;
+
+    if (name.includes('giày dép nam'))
+      return <HikingRoundedIcon className={iconClass} />;
+
+    if (name.includes('mẹ') || name.includes('bé'))
+      return <PregnantWomanRoundedIcon className={iconClass} />;
+
+    if (name.includes('sắc đẹp'))
+      return <FaceRetouchingNaturalRoundedIcon className={iconClass} />;
+
+    if (name.includes('nhà sách') || name.includes('sách'))
+      return <MenuBookRoundedIcon className={iconClass} />;
+
+    if (name.includes('đồ chơi'))
+      return <ToysRoundedIcon className={iconClass} />;
+
+    if (name.includes('thể thao') || name.includes('du lịch'))
+      return <SportsSoccerRoundedIcon className={iconClass} />;
+
+    if (name.includes('thú cưng'))
       return <PetsRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('xe') || name.includes('ô tô') || name.includes('car') || name.includes('vehicle')) {
-      return <DirectionsCarRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('đồng hồ') || name.includes('watch')) {
-      return <WatchRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('tai nghe') || name.includes('headphone') || name.includes('âm thanh') || name.includes('audio')) {
-      return <HeadphonesRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('trang sức') || name.includes('jewelry') || name.includes('phụ kiện')) {
+
+    if (name.includes('giặt giũ'))
+      return <CleaningServicesRoundedIcon className={iconClass} />;
+
+    if (name.includes('trang sức') )
       return <DiamondRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('gym') || name.includes('fitness') || name.includes('tập luyện')) {
-      return <FitnessCenterRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('dụng cụ') || name.includes('tool') || name.includes('thiết bị')) {
-      return <BuildRoundedIcon className={iconClass} />;
-    }
-    if (name.includes('siêu thị') || name.includes('grocery') || name.includes('tạp hóa')) {
+
+    if (name.includes('gia dụng'))
+      return <KitchenRoundedIcon className={iconClass} />;
+
+    if (name.includes('điện thoại'))
+      return <PhoneAndroidRoundedIcon className={iconClass} />;
+
+    if (name.includes('thiết bị điện tử'))
+      return <DevicesRoundedIcon className={iconClass} />;
+
+    if (name.includes('máy tính') || name.includes('laptop'))
+      return <LaptopRoundedIcon className={iconClass} />;
+
+    if (name.includes('đồng hồ'))
+      return <WatchRoundedIcon className={iconClass} />;
+
+    if (name.includes('nhà cửa') || name.includes('đời sống'))
+      return <HomeRoundedIcon className={iconClass} />;
+
+    if (name.includes('bách hóa'))
       return <LocalGroceryStoreRoundedIcon className={iconClass} />;
-    }
+
     return <CategoryRoundedIcon className={iconClass} />;
   };
 
@@ -233,15 +238,16 @@ export default function Main() {
       )}
       {/* Categories section */}
       <div className={"bg-white p-4 rounded-lg shadow-sm"}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-grey-c900">Danh mục</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-2xl font-semibold text-grey-c900">Danh mục</h2>
         </div>
+        <Divide/>
         <div className="overflow-x-auto">
           <div className="flex flex-col gap-4 min-w-max">
             {/* Row 1 */}
             <div className="flex gap-6 justify-around">
               {row1.map((cat) => (
-                <div key={cat.categoryId} className="flex flex-col items-center text-center cursor-pointer hover:opacity-80 transition-opacity"
+                <div key={cat.categoryId} className="flex flex-col items-center text-center cursor-pointer hover:opacity-80 transition-opacity w-25"
                 onClick={()=> router.push(`/search?categoryId=${cat.categoryId}`)}
                 >
                   <div className="w-16 h-16 rounded-full bg-primary-c50 flex items-center justify-center mb-2">
@@ -255,7 +261,7 @@ export default function Main() {
             {row2.length > 0 && (
               <div className="flex gap-6 justify-around">
                 {row2.map((cat) => (
-                  <div key={cat.categoryId} className="flex flex-col items-center text-center cursor-pointer hover:opacity-80 transition-opacity"
+                  <div key={cat.categoryId} className="flex flex-col items-center text-center cursor-pointer hover:opacity-80 transition-opacity w-25"
                        onClick={()=> router.push(`/search?categoryId=${cat.categoryId}`)}
                   >
                     <div className="w-16 h-16 rounded-full bg-primary-c50 flex items-center justify-center mb-2">
