@@ -136,6 +136,14 @@ export default function Main() {
       )
     },
     {
+      key: 'orderCode',
+      label: 'Mã đơn hàng',
+      sortable: true,
+      render: (row) => (
+        <div className="text-sm font-semibold text-grey-c900">{row.orderCode}</div>
+      )
+    },
+    {
       key: 'shopName',
       label: 'Shop',
       sortable: true,

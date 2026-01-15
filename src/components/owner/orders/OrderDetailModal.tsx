@@ -32,7 +32,7 @@ export default function OrderDetailModal({isOpen, setIsOpen, order}: Props) {
         <div className={"space-x-1"}>
           <span>Mã đơn hàng: </span>
           <span className="font-medium text-grey-c800">
-            {order.orderId}
+            {order.orderCode}
           </span>
         </div>
 

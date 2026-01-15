@@ -1,35 +1,35 @@
-import React, {useEffect, useState} from "react";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
+import React, { useEffect, useState } from "react";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
 import useSWR from "swr";
-import {ORDER_VIEW} from "@/services/api";
-import {AlertType, OrderStatus} from "@/types/enum";
-import {openAlert} from "@/redux/slice/alertSlice";
-import {useDispatch} from "react-redux";
+import { ORDER_VIEW } from "@/services/api";
+import { AlertType, OrderStatus } from "@/types/enum";
+import { openAlert } from "@/redux/slice/alertSlice";
+import { useDispatch } from "react-redux";
 import OrderItemDetailModal from "@/components/user/orders/[id]/OrderItemDetailModal";
 import Loading from "@/components/modals/Loading";
 import Image from "next/image";
 import OrderTimeLine from "@/components/user/orders/[id]/OrderTimeline";
 import Title from "@/libs/Title";
-import {OrderItem, OrderView} from "../Main";
+import { OrderItem, OrderView } from "../Main";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import Divide from "@/libs/Divide";
-import {formatDateTime, formatPrice} from "@/util/fnCommon";
+import { formatDateTime, formatPrice } from "@/util/fnCommon";
 import HomeIcon from "@mui/icons-material/Home";
 import ReviewsRoundedIcon from '@mui/icons-material/ReviewsRounded';
 interface Props {
   id: string;
 }
 
-export default function Main({id}: Props) {
-  const {get} = useAxiosContext();
+export default function Main({ id }: Props) {
+  const { get } = useAxiosContext();
   const dispatch = useDispatch();
   const fetcher = (url: string) =>
     get<BaseResponse<OrderView>>(url).then(res => res.data.data);
 
-  const {data, error, isLoading} = useSWR(`${ORDER_VIEW}/${id}`, fetcher, {
-      refreshInterval: 0,
-      revalidateOnFocus: false,
-    }
+  const { data, error, isLoading } = useSWR(`${ORDER_VIEW}/${id}`, fetcher, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  }
   );
   useEffect(() => {
     if (error) {
@@ -71,27 +71,27 @@ export default function Main({id}: Props) {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-4">
-      {isLoading && <Loading/>}
-      <Title title={"Chi tiết đơn hàng"}/>
-      <OrderTimeLine currentStatus={order.orderStatus}/>
+      {isLoading && <Loading />}
+      <Title title={"Chi tiết đơn hàng"} />
+      <OrderTimeLine currentStatus={order.orderStatus} />
 
       <div className={" border p-4 rounded-lg border-grey-c100 bg-white"}>
         <div className={"flex flex-row gap-2 items-start"}>{order.shopLogoUrl ? (
-            <Image
-              src={order.shopLogoUrl}
-              alt={order.shopName}
-              width={48}
-              height={48}
-              className={"w-12 h-12 object-cover rounded-full mb-2 border border-grey-c300"}/>)
+          <Image
+            src={order.shopLogoUrl}
+            alt={order.shopName}
+            width={48}
+            height={48}
+            className={"w-12 h-12 object-cover rounded-full mb-2 border border-grey-c300"} />)
           : (
             <div
               className="w-12 h-12 rounded-full border-2 border-primary-c200 bg-primary-c50 flex-shrink-0 flex items-center justify-center">
-              <StorefrontIcon className="text-primary-c700" style={{fontSize: 24}}/>
+              <StorefrontIcon className="text-primary-c700" style={{ fontSize: 24 }} />
             </div>
           )}
           <span className={"text-lg font-semibold"}>{order.shopName}</span>
         </div>
-        <Divide/>
+        <Divide />
         <div className="space-y-4">
           {order.orderItems && order.orderItems.length > 0 ? (
             order.orderItems.map((item) => (
@@ -102,7 +102,7 @@ export default function Main({id}: Props) {
                     alt={item.productName}
                     width={80}
                     height={80}
-                    className="w-20 h-20 object-cover rounded"/>
+                    className="w-20 h-20 object-cover rounded" />
                   <div>
                     <div className="font-medium text-grey-c800">{item.productName}</div>
                     {item.productAttributes && item.productAttributes.length > 0 && (
@@ -132,7 +132,7 @@ export default function Main({id}: Props) {
                       className="text-primary-c700 rounded cursor-pointer"
                       onClick={() => openItemModal(item)}
                     >
-                      <ReviewsRoundedIcon/>
+                      <ReviewsRoundedIcon />
                     </button>}
                 </div>
               </div>
@@ -146,7 +146,7 @@ export default function Main({id}: Props) {
       <div className={"border-2 border-primary-c100 rounded-lg bg-white"}>
         <h3
           className="text-lg font-semibold text-primary-c800 flex items-center p-2 gap-2 bg-gradient-to-b from-primary-c100 to-white rounded-t-lg">
-          <HomeIcon/>
+          <HomeIcon />
           Thông tin khách hàng
         </h3>
 
@@ -171,7 +171,7 @@ export default function Main({id}: Props) {
             <span className={"text-grey-c700"}>Giảm giá</span>
             <span>- {formatPrice(totalDiscount)}</span>
           </div>
-          <Divide/>
+          <Divide />
           <div className="flex justify-between font-bold text-primary-c900 text-lg">
             <span>Tổng cộng</span>
             <span>{formatPrice(total)}</span>
@@ -182,7 +182,7 @@ export default function Main({id}: Props) {
         <div className="mt-2 space-y-2">
           <div className="flex justify-between">
             <span className={"text-grey-c700"}>Mã đơn hàng:</span>
-            <span className="font-medium text-grey-c800">{order.orderId}</span>
+            <span className="font-medium text-grey-c800">{order.orderCode}</span>
           </div>
           {(order.orderStatus === OrderStatus.CANCELLED || order.orderStatus === OrderStatus.RETURNED) && (
             <div className="flex justify-between">
@@ -205,7 +205,7 @@ export default function Main({id}: Props) {
           }}
           selectedOrderItem={selectedOrderItem}
           orderStatus={order.orderStatus}
-          selectedOrder={order}/>
+          selectedOrder={order} />
       )}
 
     </div>

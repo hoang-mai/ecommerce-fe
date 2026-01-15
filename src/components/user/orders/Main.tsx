@@ -45,6 +45,7 @@ export interface OrderItem {
 
 export interface OrderView {
   orderId: string;
+  orderCode: string;
   userId: string;
   shopId: string;
   ownerId: string;

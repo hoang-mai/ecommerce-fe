@@ -205,7 +205,7 @@ export default function Main() {
                     return newState;
                   })}
           >
-            Đăng ký làm người bán
+            Đăng ký làm chủ cửa hàng
           </Button>
           <Button type={"button"}
                   color={ColorButton.PRIMARY}
