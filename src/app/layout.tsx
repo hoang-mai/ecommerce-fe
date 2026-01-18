@@ -23,9 +23,9 @@ export default function RootLayout({
     <body className="font-sans max-w-[2560px] mx-auto bg-grey-c50">
 
     <ReduxProvider>
-      <Alert/>
       <AxiosProvider>
         <WebSocketProvider>
+          <Alert/>
           <WebPushProvider/>
           {children}
         </WebSocketProvider>

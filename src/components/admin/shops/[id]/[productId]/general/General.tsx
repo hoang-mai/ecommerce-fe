@@ -33,7 +33,7 @@ export default function General({ product }: Props) {
       case ProductStatus.INACTIVE:
         return "Ngừng bán";
       case ProductStatus.SUSPENDED:
-        return "Đình chỉ";
+        return "Cấm bán";
       case ProductStatus.DELETED:
         return "Đã xóa";
       default:

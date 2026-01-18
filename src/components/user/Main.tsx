@@ -99,7 +99,7 @@ export default function Main() {
     baseUrl: `${FLASH_SALE_PRODUCT_VIEW}/current`,
     queryParams:{
       pageNo: 0,
-      pageSize: 5,
+      pageSize: 6,
     }
   });
   const {data: flashSaleProductData, error: flashSaleProductError, isLoading: isLoadingFlashSaleProduct} = useSWR(urlFlashSaleProduct, fetcherFlashSaleProduct,{
@@ -228,7 +228,7 @@ export default function Main() {
                 <ArrowForwardIosRoundedIcon className="!text-sm" />
               </button>
             </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-white/30 scrollbar-track-transparent">
+            <div className="flex gap-6 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-white/30 scrollbar-track-transparent">
               {flashSaleProductData.data.data.map((product) =>
                 <ProductSaleCard product={product} key={product.flashSaleProductId} />
               )}

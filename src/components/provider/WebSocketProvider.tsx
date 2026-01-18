@@ -1,21 +1,24 @@
 'use client';
 
-import {ReactNode, useEffect, useState} from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import webSocketService from '@/services/webSocket';
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
-import {receiveMessage} from "@/redux/slice/chatSlice";
-import {useRouter} from "next/navigation";
-import {MessageDTO} from "@/types/interface";
-import {NotificationType, AlertType} from "@/types/enum";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
+import { receiveMessage } from "@/redux/slice/chatSlice";
+import { setIsCreatingOrder } from "@/redux/slice/checkoutSlice";
+import { useRouter } from "next/navigation";
+import { MessageDTO } from "@/types/interface";
+import { NotificationType, AlertType } from "@/types/enum";
+import Modal from '@/libs/Modal';
 
 
 interface WebSocketProviderProps {
   children: ReactNode;
 }
 
-export default function WebSocketProvider({children}: WebSocketProviderProps) {
+export default function WebSocketProvider({ children }: WebSocketProviderProps) {
   const [notification, setNotification] = useState<NotificationState>();
+  const [isOpen, setIsOpen] = useState(false);
   const dispatch = useDispatch();
   const router = useRouter();
   useEffect(() => {
@@ -50,7 +53,7 @@ export default function WebSocketProvider({children}: WebSocketProviderProps) {
             setNotification(data);
           });
 
-          webSocketService.subscribe('/user/queue/messages', (data: MessageDTO)=>{
+          webSocketService.subscribe('/user/queue/messages', (data: MessageDTO) => {
             console.log('New personal message:', data);
             dispatch(receiveMessage(data));
           })
@@ -101,7 +104,15 @@ export default function WebSocketProvider({children}: WebSocketProviderProps) {
   }, [dispatch]);
   useEffect(() => {
     if (notification) {
-      if(notification.notificationType === NotificationType.PAYMENT){
+      if(notification.notificationType === NotificationType.PARTIALLY_OUT_OF_STOCK){
+        dispatch(setIsCreatingOrder(false));
+        setIsOpen(true);
+        return;
+      }
+      if (notification.notificationType === NotificationType.ALL_OUT_OF_STOCK) {
+        dispatch(setIsCreatingOrder(false));
+      }
+      if (notification.notificationType === NotificationType.PAYMENT) {
         window.location.replace(notification.message);
         return;
       }
@@ -114,5 +125,19 @@ export default function WebSocketProvider({children}: WebSocketProviderProps) {
       dispatch(openAlert(alert));
     }
   }, [dispatch, notification, router]);
-  return <>{children}</>;
+  return <>
+  <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title='Có sản phẩm hết hàng' saveButtonText='Tiếp tục mua hàng' cancelButtonText='Trở lại'
+    onSave={() => {
+      dispatch(setIsCreatingOrder(true));
+      if(notification){
+        window.location.replace(notification.message);
+      }
+      setIsOpen(false);
+    }}
+    >
+    Có sản phẩm hết hàng, bạn có muốn tiếp tục mua hàng không?
+    
+  </Modal>
+  {children}
+  </>;
 }

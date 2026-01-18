@@ -1,22 +1,22 @@
 "use client";
-import React, {useEffect, useMemo, useState} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
-import {CART, CART_VIEW, PRODUCT_VIEW} from "@/services/api";
-import {useAxiosContext} from '@/components/provider/AxiosProvider';
+import { CART, CART_VIEW, PRODUCT_VIEW } from "@/services/api";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import Loading from "@/components/modals/Loading";
-import {ReqAddToCartDTO} from "@/components/user/ProductCard";
+import { ReqAddToCartDTO } from "@/components/user/ProductCard";
 import useSWRMutation from "swr/mutation";
-import {useCartData} from "@/components/provider/CartProvider";
-import {useDispatch} from "react-redux";
-import {openAlert} from "@/redux/slice/alertSlice";
-import {AlertType, ColorButton, ProductStatus, ShopStatus} from "@/types/enum";
+import { useCartData } from "@/components/provider/CartProvider";
+import { useDispatch } from "react-redux";
+import { openAlert } from "@/redux/slice/alertSlice";
+import { AlertType, ColorButton, ProductStatus, ShopStatus } from "@/types/enum";
 import Button from "@/libs/Button";
-import {ProductVariant, ProductView, CartViewDTO, FlashSaleProductView} from "@/types/interface";
+import { ProductVariant, ProductView, CartViewDTO, FlashSaleProductView } from "@/types/interface";
 import ImagePreview from "@/libs/ImagePreview";
-import {formatNumber, formatPrice} from "@/util/fnCommon";
+import { formatNumber, formatPrice } from "@/util/fnCommon";
 import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRounded";
 import ShoppingBagRoundedIcon from "@mui/icons-material/ShoppingBagRounded";
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 import Carousel from "@/libs/Carousel";
 import CountdownTimer from "@/libs/CountDownTime";
 import Review from "@/components/user/products/[id]/Review";
@@ -58,14 +58,14 @@ type Props = {
   id: string
 }
 
-export default function Main({id}: Props) {
-  const {get, post} = useAxiosContext();
+export default function Main({ id }: Props) {
+  const { get, post } = useAxiosContext();
   const fetcher = (url: string) => get<BaseResponse<ProductView>>(url).then(res => res.data);
-  const addToCartFetcher = (url: string, {arg}: {
+  const addToCartFetcher = (url: string, { arg }: {
     arg: ReqAddToCartDTO
   }) => post<BaseResponse<never>>(url, arg).then(res => res.data);
 
-  const {data, isLoading, error} = useSWR(`${PRODUCT_VIEW}/${id}`, fetcher, {
+  const { data, isLoading, error } = useSWR(`${PRODUCT_VIEW}/${id}`, fetcher, {
     revalidateOnFocus: false,
     refreshInterval: 0
   });
@@ -77,10 +77,10 @@ export default function Main({id}: Props) {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(defaultVariant || null);
   const [quantity, setQuantity] = useState(1);
   const [currentTime] = useState(() => Date.now());
-  const {mutate} = useCartData();
+  const { mutate } = useCartData();
   const dispatch = useDispatch();
   const router = useRouter();
-  const {trigger, isMutating} = useSWRMutation(CART, addToCartFetcher);
+  const { trigger, isMutating } = useSWRMutation(CART, addToCartFetcher);
 
   useEffect(() => {
     if (error) {
@@ -104,8 +104,8 @@ export default function Main({id}: Props) {
   const handleQuantityChange = (delta: number) => {
     const newQuantity = quantity + delta;
     const maxQuantity = activeFlashSale
-      ? Math.min(selectedVariant?.stockQuantity || 99, activeFlashSale.maxQuantityPerUser, activeFlashSale.totalQuantity - activeFlashSale.soldQuantity)
-      : (selectedVariant?.stockQuantity || 99);
+      ? Math.min(selectedVariant?.stockQuantity ?? 99, activeFlashSale.maxQuantityPerUser, activeFlashSale.totalQuantity - activeFlashSale.soldQuantity)
+      : (selectedVariant?.stockQuantity ?? 99);
     if (selectedVariant && newQuantity > 0 && newQuantity <= maxQuantity) {
       setQuantity(newQuantity);
     }
@@ -255,15 +255,15 @@ export default function Main({id}: Props) {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      {(isLoading || isMutating) && <Loading/>}
+      {(isLoading || isMutating) && <Loading />}
       <div className="flex flex-col gap-10">
         <div className={"flex flex-row gap-10 flex-nowrap bg-white p-4"}>
           <div className={"flex-1"}>
             <div className={"aspect-square rounded-lg overflow-hidden mb-3"}>
               {product.productImages.length > 0 ? (
                 <Carousel title={"Hình ảnh sản phẩm"} images={product.productImages.map(value => {
-                  return {imageId: value.productImageId, imageUrl: value.imageUrl}
-                })}/>
+                  return { imageId: value.productImageId, imageUrl: value.imageUrl }
+                })} />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400">
                   No Image
@@ -281,7 +281,7 @@ export default function Main({id}: Props) {
               {Number(product.rating) > 0 ? (
                 <>
                   <div className="flex items-center">
-                    <Star rating={Number(product.rating / product.numberOfRatings)}/>
+                    <Star rating={Number(product.rating / product.numberOfRatings)} />
                   </div>
                   <span
                     className="text-sm text-gray-600 font-medium">{Number(product.rating / product.numberOfRatings).toFixed(1)}</span>
@@ -298,7 +298,7 @@ export default function Main({id}: Props) {
                   <div className={"flex items-center gap-3 bg-gradient-to-b from-primary-c200 to-white"}>
                     <h2 className="text-xl font-bold text-primary-c500 relative">
                       <span>F</span><FlashOnRoundedIcon
-                      className="text-primary-c500 animate-pulse absolute top-1.5 left-1.5"/><span className={"ml-3"}>ASH SALE</span>
+                        className="text-primary-c500 animate-pulse absolute top-1.5 left-1.5" /><span className={"ml-3"}>ASH SALE</span>
                     </h2>
                   </div>
                   <div className={"flex items-center gap-3"}>
@@ -323,11 +323,11 @@ export default function Main({id}: Props) {
                     <div className="flex-1 max-w-[120px] h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-primary-c400 to-primary-c600 rounded-full"
-                        style={{width: `${Math.min(100, (activeFlashSale.soldQuantity / activeFlashSale.totalQuantity) * 100)}%`}}
+                        style={{ width: `${Math.min(100, (activeFlashSale.soldQuantity / activeFlashSale.totalQuantity) * 100)}%` }}
                       />
                     </div>
                   </div>
-                  <CountdownTimer endDate={activeFlashSale.endTime}/>
+                  <CountdownTimer endDate={activeFlashSale.endTime} />
                 </div>
               ) : variantSaleActive && selectedVariant ? (
                 <div className={"flex flex-col gap-1"}>
@@ -363,11 +363,10 @@ export default function Main({id}: Props) {
                       onClick={() =>
                         handleAttributeSelect(attribute.productAttributeId, value.productAttributeValueId)
                       }
-                      className={`px-4 py-2 border-2 rounded-lg transition cursor-pointer font-semibold ${
-                        selectedAttributes[attribute.productAttributeId] === value.productAttributeValueId
-                          ? 'border-primary-c600 bg-primary-c100 text-primary-c800'
-                          : 'border-grey-c300 hover:border-grey-c400'
-                      }`}
+                      className={`px-4 py-2 border-2 rounded-lg transition cursor-pointer font-semibold ${selectedAttributes[attribute.productAttributeId] === value.productAttributeValueId
+                        ? 'border-primary-c600 bg-primary-c100 text-primary-c800'
+                        : 'border-grey-c300 hover:border-grey-c400'
+                        }`}
                     >
                       {value.productAttributeValue}
                     </button>
@@ -384,7 +383,7 @@ export default function Main({id}: Props) {
                 </p>
                 <p className="text-sm text-grey-c600">
                   Đã bán: <span
-                  className="font-semibold">{formatNumber(selectedVariant.sold || 0)}</span>
+                    className="font-semibold">{formatNumber(selectedVariant.sold || 0)}</span>
                 </p>
               </div>
             )}
@@ -398,7 +397,7 @@ export default function Main({id}: Props) {
                   disabled={quantity <= 1}
                   className="w-8 h-8 flex items-center justify-center rounded-md border border-grey-c300 bg-white text-grey-c700 hover:border-primary-c600 hover:text-primary-c600 hover:bg-primary-c50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-grey-c300 disabled:hover:bg-white disabled:hover:text-grey-c700 transition-all duration-200"
                 >
-                  <RemoveRoundedIcon className="text-[18px]"/>
+                  <RemoveRoundedIcon className="text-[18px]" />
                 </button>
 
                 <span className="min-w-[40px] text-center font-semibold text-base text-grey-c900">
@@ -407,32 +406,37 @@ export default function Main({id}: Props) {
 
                 <button
                   onClick={() => handleQuantityChange(1)}
-                  disabled={!selectedVariant || quantity >= (selectedVariant.stockQuantity || 99)}
+                  disabled={!selectedVariant || quantity >= (Math.min(selectedVariant.stockQuantity ?? 99))}
                   className="w-8 h-8 flex items-center justify-center rounded-md border border-grey-c300 bg-white text-grey-c700 hover:border-primary-c600 hover:text-primary-c600 hover:bg-primary-c50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-grey-c300 disabled:hover:bg-white disabled:hover:text-grey-c700 transition-all duration-200"
                 >
-                  <AddRoundedIcon className="text-[18px]"/>
+                  <AddRoundedIcon className="text-[18px]" />
                 </button>
               </div>
 
-              {selectedVariant?.stockQuantity && selectedVariant.stockQuantity < 10 && selectedVariant.stockQuantity > 0 && (
+              {selectedVariant?.stockQuantity != null && selectedVariant.stockQuantity < 10 && selectedVariant.stockQuantity > 0 && (
                 <span className="text-xs text-support-c700 font-medium">
                   Chỉ còn {selectedVariant.stockQuantity} sản phẩm
+                </span>
+              )}
+              {selectedVariant?.stockQuantity === 0 && (
+                <span className="text-xs text-support-c700 font-medium">
+                  Hết hàng
                 </span>
               )}
             </div>
             <div className="mb-4 flex flex-row gap-3">
               <Button type="button"
-                      color={ColorButton.PRIMARY}
-                      onClick={handleBuyNow}
-                      disabled={isMutating}
-                      startIcon={<ShoppingBagRoundedIcon/>}>
+                color={ColorButton.PRIMARY}
+                onClick={handleBuyNow}
+                disabled={isMutating || (selectedVariant?.stockQuantity ?? 99) <= 0}
+                startIcon={<ShoppingBagRoundedIcon />}>
                 Mua ngay
               </Button>
               <Button type="button"
-                      color={ColorButton.PRIMARY}
-                      onClick={handleAddToCart}
-                      disabled={isMutating}
-                      startIcon={<AddShoppingCartRoundedIcon/>}>
+                color={ColorButton.PRIMARY}
+                onClick={handleAddToCart}
+                disabled={isMutating || (selectedVariant?.stockQuantity ?? 99) <= 0}
+                startIcon={<AddShoppingCartRoundedIcon />}>
                 Thêm vào giỏ
               </Button>
 
@@ -462,9 +466,9 @@ export default function Main({id}: Props) {
         onClose={() => setSelectedImage(null)}
         alt="Product Image"
       />
-      {product.shopId && <Shop id={product.shopId}/>}
+      {product.shopId && <Shop id={product.shopId} />}
 
-      <Review id={id} product={product}/>
+      <Review id={id} product={product} />
     </div>
   )
 }

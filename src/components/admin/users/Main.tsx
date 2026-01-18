@@ -102,7 +102,7 @@ export default function Main() {
       case AccountStatus.ACTIVE:
         return "Hoạt động";
       case AccountStatus.SUSPENDED:
-        return "Đình chỉ";
+        return "Cấm hoạt động";
       default:
         return "Chưa xác định";
     }
@@ -111,7 +111,7 @@ export default function Main() {
   const statusOptions = [
     { id: AccountStatus.ACTIVE, label: "Hoạt động" },
     { id: AccountStatus.INACTIVE, label: "Vô hiệu hóa" },
-    { id: AccountStatus.SUSPENDED, label: "Đình chỉ" },
+    { id: AccountStatus.SUSPENDED, label: "Cấm hoạt động" },
   ];
 
   const getLabelRole = (role: Role) => {

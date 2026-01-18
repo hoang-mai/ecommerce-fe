@@ -70,7 +70,7 @@ export default function Main() {
     { id: "", label: "Tất cả trạng thái" },
     { id: ProductStatus.ACTIVE, label: "Đang bán" },
     { id: ProductStatus.INACTIVE, label: "Ngừng bán" },
-    { id: ProductStatus.SUSPENDED, label: "Đình chỉ" },
+    { id: ProductStatus.SUSPENDED, label: "Cấm bán" },
     { id: ProductStatus.DELETED, label: "Đã xóa" },
   ];
 
@@ -96,7 +96,7 @@ export default function Main() {
       case ProductStatus.INACTIVE:
         return "Ngừng bán";
       case ProductStatus.SUSPENDED:
-        return "Đình chỉ";
+        return "Cấm bán";
       case ProductStatus.DELETED:
         return "Đã xóa";
       default:

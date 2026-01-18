@@ -1,38 +1,38 @@
 "use client";
 import useSWR from "swr";
-import {ADDRESS, CART_VIEW, ORDER_FLASH_SALE} from "@/services/api";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {useDispatch} from "react-redux";
-import React, {useCallback, useEffect, useMemo, useState} from "react";
-import {AlertType, ColorButton} from "@/types/enum";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { ADDRESS, CART_VIEW, ORDER } from "@/services/api";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { useDispatch, useSelector } from "react-redux";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { AlertType, ColorButton } from "@/types/enum";
+import { openAlert } from "@/redux/slice/alertSlice";
+import { RootState } from "@/redux/store";
+import { setIsCreatingOrder } from "@/redux/slice/checkoutSlice";
 import Image from "next/image";
-import Chip, {ChipColor} from "@/libs/Chip";
-import {formatPrice} from "@/util/fnCommon";
+import Chip, { ChipColor } from "@/libs/Chip";
+import { formatPrice } from "@/util/fnCommon";
 import CountdownTimer from "@/libs/CountDownTime";
-import {ResInfoAddressDTO} from "@/components/user/profile/AddressModal";
-import {useAddressMapping} from "@/hooks/useAddressMapping";
+import { ResInfoAddressDTO } from "@/components/user/profile/AddressModal";
+import { useAddressMapping } from "@/hooks/useAddressMapping";
 import AddressModal from "@/components/user/profile/AddressModal";
 import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import Button from "@/libs/Button";
 import useSWRMutation from "swr/mutation";
-import {CartViewDTO, FlashSaleProductView} from "@/types/interface";
+import { CartViewDTO, FlashSaleProductView } from "@/types/interface";
 import Empty from "@/libs/Empty";
-import {useCartData} from "@/components/provider/CartProvider";
+import { useCartData } from "@/components/provider/CartProvider";
 import Loading from "@/components/modals/Loading";
 import StorefrontIcon from "@mui/icons-material/Storefront";
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 import TextField from "@/libs/TextField";
 import FlashOnRoundedIcon from "@mui/icons-material/FlashOnRounded";
 
 interface ResCreateProductOrderItemDTO {
   productId: number;
-  discount: number;
   productVariantId: number;
   quantity: number;
-  price: number;
-  isFlashSale: boolean;
+  flashSaleProductId?: number;
 }
 
 interface ResCreateOrderItemDTO {
@@ -48,21 +48,21 @@ interface ResCreateOrderDTO {
   items: ResCreateOrderItemDTO[];
 }
 
-const cartDefault: CartViewDTO = {cartId: "", cartItems: []};
+const cartDefault: CartViewDTO = { cartId: "", cartItems: [] };
 
 export default function Main() {
   const router = useRouter();
-  const {get, post} = useAxiosContext();
+  const { get, post } = useAxiosContext();
   const dispatch = useDispatch();
-  const {mutate} = useCartData();
-  const {getProvinceName, getWardName} = useAddressMapping();
+  const { mutate } = useCartData();
+  const { getProvinceName, getWardName } = useAddressMapping();
 
   const fetcher = (url: string) => get<BaseResponse<CartViewDTO>>(url).then(res => res.data);
   const fetcherAddress = (url: string) => get<BaseResponse<ResInfoAddressDTO>>(url).then(res => res.data);
-  const fetcherCreateOrder = (url: string, {arg}: { arg: ResCreateOrderDTO }) =>
+  const fetcherCreateOrder = (url: string, { arg }: { arg: ResCreateOrderDTO }) =>
     post<BaseResponse<never>>(url, arg).then(res => res.data);
 
-  const {data, isLoading, error} = useSWR(CART_VIEW, fetcher, {
+  const { data, isLoading, error } = useSWR(CART_VIEW, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   });
@@ -77,12 +77,12 @@ export default function Main() {
     revalidateOnFocus: false,
   });
 
-  const {trigger} = useSWRMutation(ORDER_FLASH_SALE, fetcherCreateOrder);
+  const { trigger } = useSWRMutation(ORDER, fetcherCreateOrder);
 
   // States
   const [isOpenAddressModal, setIsOpenAddressModal] = useState(false);
   const [currentTime] = useState(() => Date.now());
-  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const isCreatingOrder = useSelector((state: RootState) => state.checkout.isCreatingOrder);
   const [selectedCartItems, setSelectedCartItems] = useState<Set<string>>(new Set());
   const [shopNotes, setShopNotes] = useState<Record<string, string>>({});
 
@@ -215,7 +215,7 @@ export default function Main() {
       return;
     }
 
-    setIsCreatingOrder(true);
+    dispatch(setIsCreatingOrder(true));
 
     const orderItems: ResCreateOrderItemDTO[] = filteredCartData.cartItems.map(item => {
       const productOrderItems: ResCreateProductOrderItemDTO[] = item.productCartItems
@@ -227,18 +227,13 @@ export default function Main() {
           const hasValidFlashSale = isFlashSaleValid(flashSaleList);
           const flashSale = flashSaleList?.[0];
 
-          let activeDiscount = 0;
-          if (hasValidFlashSale && flashSale) {
-            activeDiscount = flashSale.discountPercentage;
-          }
-
           return {
             productId: Number(pci.productView.productId),
             productVariantId: Number(pci.productVariantId),
             quantity: pci.quantity,
-            price: variant.salePrice || variant.price || 0,
-            discount: activeDiscount,
-            isFlashSale: hasValidFlashSale,
+            ...(hasValidFlashSale && flashSale
+              ? { flashSaleProductId: Number(flashSale.flashSaleProductId) }
+              : {}),
           };
         })
         .filter((x): x is ResCreateProductOrderItemDTO => x !== null);
@@ -271,14 +266,14 @@ export default function Main() {
           title: "Thất bại",
         };
         dispatch(openAlert(alert));
-        setIsCreatingOrder(false);
+        dispatch(setIsCreatingOrder(false));
       })
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-grey-c50 to-grey-c100">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {(isLoading || isLoadingAddress || isCreatingOrder) && <Loading/>}
+        {(isLoading || isLoadingAddress || isCreatingOrder) && <Loading />}
 
         {/* Page Header */}
         <div className="mb-6">
@@ -287,9 +282,9 @@ export default function Main() {
         </div>
 
         {!isLoading && filteredCartData.cartItems.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center justify-center">
-            <Empty/>
-            <p className="text-grey-c500 text-lg mt-4 mb-6">Không có sản phẩm nào được chọn để thanh toán</p>
+          <div className="bg-white rounded-xl shadow-sm p-12 text-center justify-center flex flex-col items-center">
+            <Empty />
+            <p className="text-grey-c500 text-lg mb-6">Không có sản phẩm nào được chọn để thanh toán</p>
             <Button
               onClick={() => router.push("/cart")}
               className="bg-primary-c600 hover:bg-primary-c700 text-white"
@@ -305,7 +300,7 @@ export default function Main() {
               <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div className="bg-gradient-to-r from-primary-c600 to-primary-c700 px-5 py-4">
                   <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                    <LocationOnRoundedIcon/>
+                    <LocationOnRoundedIcon />
                     Địa chỉ nhận hàng
                   </h2>
                 </div>
@@ -316,15 +311,15 @@ export default function Main() {
                         <div className="flex items-center gap-3">
                           <span className="font-semibold text-lg text-grey-c900">{address.receiverName}</span>
                           {address.isDefault && (
-                            <Chip label="Mặc định" color={ChipColor.PRIMARY}/>
+                            <Chip label="Mặc định" color={ChipColor.PRIMARY} />
                           )}
                         </div>
                         <div className="flex items-center gap-2 text-grey-c700">
-                          <PhoneRoundedIcon className="text-grey-c500" style={{fontSize: 18}}/>
+                          <PhoneRoundedIcon className="text-grey-c500" style={{ fontSize: 18 }} />
                           <span>{address.phoneNumber}</span>
                         </div>
                         <div className="flex items-start gap-2 text-grey-c700">
-                          <LocationOnRoundedIcon className="text-grey-c500 mt-0.5" style={{fontSize: 18}}/>
+                          <LocationOnRoundedIcon className="text-grey-c500 mt-0.5" style={{ fontSize: 18 }} />
                           <div>
                             <div>{address.detail}</div>
                             <div>{`${getWardName(address.ward)}, ${getProvinceName(address.province)}`}</div>
@@ -361,9 +356,9 @@ export default function Main() {
                     <div
                       className="bg-gradient-to-r from-primary-c50 to-primary-c100 px-5 py-4 border-b border-primary-c200">
                       <div className="flex items-center gap-2">
-                        <StorefrontIcon className="text-primary-c700"/>
+                        <StorefrontIcon className="text-primary-c700" />
                         <h3 className="font-semibold text-lg text-primary-c900">{item.shopView.shopName}</h3>
-                        <Chip label={`${item.productCartItems.length} sản phẩm`} color={ChipColor.PRIMARY}/>
+                        <Chip label={`${item.productCartItems.length} sản phẩm`} color={ChipColor.PRIMARY} />
                       </div>
                     </div>
 
@@ -415,7 +410,7 @@ export default function Main() {
                                 />
                                 {isOutOfStock && (
                                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                    <Chip label="Hết hàng" color={ChipColor.ERROR}/>
+                                    <Chip label="Hết hàng" color={ChipColor.ERROR} />
                                   </div>
                                 )}
                               </div>
@@ -458,13 +453,13 @@ export default function Main() {
                                     </span>
                                     {(hasFlashSale || hasVariantSale) && (
                                       <>
-                                         <span className="text-sm text-grey-c400 line-through">
-                                           {formatPrice(price)}
-                                         </span>
+                                        <span className="text-sm text-grey-c400 line-through">
+                                          {formatPrice(price)}
+                                        </span>
                                         {isFlashSaleApplied &&
                                           <Chip
                                             iconPosition={"end"}
-                                            icon={<FlashOnRoundedIcon className=" animate-pulse !text-sm"/>}
+                                            icon={<FlashOnRoundedIcon className=" animate-pulse !text-sm" />}
                                             label={`-${activeDiscountPercent}%`}
                                             color={ChipColor.ERROR}
                                           />}
@@ -484,7 +479,7 @@ export default function Main() {
                                 {hasFlashSale && activeEndDate && (
                                   <div className="flex items-center gap-2 mt-2 text-xs text-grey-c600">
                                     <span>{isFlashSaleApplied ? "Flash Sale kết thúc:" : "Giảm giá kết thúc:"}</span>
-                                    <CountdownTimer endDate={activeEndDate}/>
+                                    <CountdownTimer endDate={activeEndDate} />
                                   </div>
                                 )}
                               </div>

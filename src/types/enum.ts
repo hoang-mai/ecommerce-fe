@@ -16,6 +16,8 @@ export enum AlertType {
   SUCCESS = 'SUCCESS',
   INFO = 'INFO',
   WARNING = 'WARNING',
+  PARTIALLY_OUT_OF_STOCK = 'PARTIALLY_OUT_OF_STOCK',
+  ALL_OUT_OF_STOCK= 'ALL_OUT_OF_STOCK',
 }
 
 export enum NotificationType{
@@ -24,6 +26,8 @@ export enum NotificationType{
   INFO = 'INFO',
   WARNING = 'WARNING',
   PAYMENT = 'PAYMENT',
+  PARTIALLY_OUT_OF_STOCK = 'PARTIALLY_OUT_OF_STOCK',
+  ALL_OUT_OF_STOCK= 'ALL_OUT_OF_STOCK',
 }
 
 export enum Gender {

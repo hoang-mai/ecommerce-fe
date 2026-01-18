@@ -65,11 +65,11 @@ export default function UpdateStatusShopModal({
       case ShopStatus.ACTIVE:
         return ChipColor.SUCCESS;
       case ShopStatus.INACTIVE:
-        return ChipColor.SECONDARY;
+        return ChipColor.WARNING;
       case ShopStatus.SUSPENDED:
         return ChipColor.ERROR;
       default:
-        return ChipColor.SECONDARY;
+        return ChipColor.WARNING;
     }
   };
 

@@ -1,24 +1,24 @@
 'use client';
 import Image from "next/image";
-import React, {useEffect, useMemo, useState} from "react";
-import {formatPrice} from "@/util/fnCommon";
+import React, { useEffect, useMemo, useState } from "react";
+import { formatPrice } from "@/util/fnCommon";
 import Button from "@/libs/Button";
-import {useAxiosContext} from '@/components/provider/AxiosProvider';
-import {CART, CART_VIEW} from "@/services/api";
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
+import { CART, CART_VIEW } from "@/services/api";
 import useSWR from "swr";
-import {useDispatch} from "react-redux";
-import {AlertType} from "@/types/enum";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { useDispatch } from "react-redux";
+import { AlertType } from "@/types/enum";
+import { openAlert } from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
-import Chip, {ChipColor} from "@/libs/Chip";
+import Chip, { ChipColor } from "@/libs/Chip";
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import useSWRMutation from "swr/mutation";
 import CountdownTimer from "@/libs/CountDownTime";
-import {useCartData} from "@/components/provider/CartProvider";
-import {useRouter} from "next/navigation";
-import {CartViewDTO, FlashSaleProductView} from "@/types/interface";
+import { useCartData } from "@/components/provider/CartProvider";
+import { useRouter } from "next/navigation";
+import { CartViewDTO, FlashSaleProductView } from "@/types/interface";
 import Empty from "@/libs/Empty";
-import {useDebounce} from "@/hooks/useDebounce";
+import { useDebounce } from "@/hooks/useDebounce";
 import CheckBox from "@/libs/CheckBox";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import FlashOnRoundedIcon from "@mui/icons-material/FlashOnRounded";
@@ -27,25 +27,25 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 
 export default function Main() {
   const router = useRouter();
-  const {get, del, patch} = useAxiosContext();
+  const { get, del, patch } = useAxiosContext();
   const fetcher = (url: string) => get<BaseResponse<CartViewDTO>>(url).then(res => res.data);
-  const fetcherDeleteProductCartItem = (url: string, {arg}: { arg: { productCartItemId: string } }) =>
+  const fetcherDeleteProductCartItem = (url: string, { arg }: { arg: { productCartItemId: string } }) =>
     del<BaseResponse<never>>(`${url}/${arg.productCartItemId}`).then(res => res.data);
   const fetcherDeleteAll = (url: string) =>
     del<BaseResponse<never>>(url).then(res => res.data);
-  const fetcherUpdateProductCartItemQuantity = (url: string, {arg}: {
+  const fetcherUpdateProductCartItemQuantity = (url: string, { arg }: {
     arg: { productCartItemId: string, quantity: number }
   }) =>
-    patch<BaseResponse<never>>(`${url}/${arg.productCartItemId}`, {quantity: arg.quantity}).then(res => res.data);
+    patch<BaseResponse<never>>(`${url}/${arg.productCartItemId}`, { quantity: arg.quantity }).then(res => res.data);
 
-  const {data, isLoading, error, mutate: mutateCartView} = useSWR(CART_VIEW, fetcher, {
+  const { data, isLoading, error, mutate: mutateCartView } = useSWR(CART_VIEW, fetcher, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   });
-  const {mutate} = useCartData();
-  const {trigger} = useSWRMutation(CART, fetcherDeleteProductCartItem);
-  const {trigger: triggerDeleteAll} = useSWRMutation(CART, fetcherDeleteAll)
-  const {trigger: triggerUpdateProductCartItemQuantity} = useSWRMutation(CART, fetcherUpdateProductCartItemQuantity);
+  const { mutate } = useCartData();
+  const { trigger } = useSWRMutation(CART, fetcherDeleteProductCartItem);
+  const { trigger: triggerDeleteAll } = useSWRMutation(CART, fetcherDeleteAll)
+  const { trigger: triggerUpdateProductCartItemQuantity } = useSWRMutation(CART, fetcherUpdateProductCartItemQuantity);
   const dispatch = useDispatch();
   useEffect(() => {
     if (error) {
@@ -74,7 +74,7 @@ export default function Main() {
       }, 0);
     } else {
       setTimeout(() => {
-        setCartData({cartId: "", cartItems: []});
+        setCartData({ cartId: "", cartItems: [] });
       }, 0);
     }
   }, [data]);
@@ -83,7 +83,7 @@ export default function Main() {
     if (Object.keys(debouncedPendingUpdates).length === 0) return;
 
     Object.entries(debouncedPendingUpdates).forEach(([productCartItemId, quantity]) => {
-      triggerUpdateProductCartItemQuantity({productCartItemId, quantity})
+      triggerUpdateProductCartItemQuantity({ productCartItemId, quantity })
         .catch((err: ErrorResponse) => {
           const alert: AlertState = {
             isOpen: true,
@@ -116,11 +116,11 @@ export default function Main() {
 
             updatedQuantity = newQty;
 
-            return {...pci, quantity: newQty};
+            return { ...pci, quantity: newQty };
           })
         };
       });
-      return {...prev, cartItems: newCartItems};
+      return { ...prev, cartItems: newCartItems };
     });
 
     // Cập nhật pendingUpdates sau khi setCartData hoàn thành
@@ -131,7 +131,7 @@ export default function Main() {
   };
 
   const handleDelete = (productCartItemId: string) => {
-    trigger({productCartItemId}).then(() => {
+    trigger({ productCartItemId }).then(() => {
       mutate();
       mutateCartView();
     }).catch((err: ErrorResponse) => {
@@ -277,11 +277,11 @@ export default function Main() {
           <h1 className="text-3xl font-bold text-primary-c900 mb-2">Giỏ hàng của bạn</h1>
         </div>
 
-        {isLoading && <Loading/>}
+        {isLoading && <Loading />}
 
         {!isLoading && cartData.cartItems.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm p-12 text-center flex flex-col items-center">
-            <Empty/>
+            <Empty />
             <p className="text-grey-c500 text-lg mt-4 mb-6">Giỏ hàng của bạn đang trống</p>
             <Button
               onClick={() => router.push("/")}
@@ -302,7 +302,7 @@ export default function Main() {
                     className="bg-gradient-to-r from-primary-c50 to-primary-c100 px-5 py-4 border-b border-primary-c200">
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold text-lg text-primary-c900 flex items-center gap-2">
-                        <StorefrontIcon/>
+                        <StorefrontIcon />
                         <span>{item.shopView.shopName}</span>
                       </h3>
                       <div className="flex items-center gap-2">
@@ -359,7 +359,7 @@ export default function Main() {
                               <CheckBox
                                 checked={selectedItems.has(pci.productCartItemId)}
                                 onChange={() => handleToggleItem(pci.productCartItemId)}
-                                disabled={isOutOfStock}
+                                disabled={isOutOfStock || pci.quantity > (variant?.stockQuantity || 0)}
                               />
                             </div>
 
@@ -376,7 +376,7 @@ export default function Main() {
                               {isOutOfStock && (
                                 <div
                                   className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                                  <Chip label="Hết hàng" color={ChipColor.ERROR}/>
+                                  <Chip label="Hết hàng" color={ChipColor.ERROR} />
                                 </div>
                               )}
                             </div>
@@ -426,7 +426,7 @@ export default function Main() {
                                         {isFlashSaleApplied &&
                                           <Chip
                                             iconPosition={"end"}
-                                            icon={<FlashOnRoundedIcon className=" animate-pulse !text-sm"/>}
+                                            icon={<FlashOnRoundedIcon className=" animate-pulse !text-sm" />}
                                             label={`-${activeDiscountPercent}%`}
                                             color={ChipColor.ERROR}
                                           />}
@@ -438,7 +438,7 @@ export default function Main() {
                                   {hasFlashSale && activeEndDate && (
                                     <div className="flex items-center gap-2 mb-3 text-xs text-grey-c600">
                                       <span>{isFlashSaleApplied ? "Flash Sale kết thúc:" : "Giảm giá kết thúc:"}</span>
-                                      <CountdownTimer endDate={activeEndDate}/>
+                                      <CountdownTimer endDate={activeEndDate} />
                                     </div>
                                   )}
 
@@ -451,7 +451,7 @@ export default function Main() {
                                         disabled={pci.quantity <= 1 || isOutOfStock}
                                         className="w-8 h-8 flex items-center justify-center rounded-md border border-grey-c300 bg-white text-grey-c700 hover:border-primary-c600 hover:text-primary-c600 hover:bg-primary-c50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-grey-c300 disabled:hover:bg-white disabled:hover:text-grey-c700 transition-all duration-200"
                                       >
-                                        <RemoveRoundedIcon className="text-[18px]"/>
+                                        <RemoveRoundedIcon className="text-[18px]" />
                                       </button>
 
                                       <span className="min-w-[40px] text-center font-semibold text-base text-grey-c900">
@@ -463,7 +463,7 @@ export default function Main() {
                                         disabled={pci.quantity >= (variant?.stockQuantity || 99) || isOutOfStock}
                                         className="w-8 h-8 flex items-center justify-center rounded-md border border-grey-c300 bg-white text-grey-c700 hover:border-primary-c600 hover:text-primary-c600 hover:bg-primary-c50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-grey-c300 disabled:hover:bg-white disabled:hover:text-grey-c700 transition-all duration-200"
                                       >
-                                        <AddRoundedIcon className="text-[18px]"/>
+                                        <AddRoundedIcon className="text-[18px]" />
                                       </button>
                                     </div>
 
@@ -482,7 +482,7 @@ export default function Main() {
                                     className="p-2 rounded-lg text-support-c700 hover:bg-support-c200 hover:text-support-c900 transition-colors cursor-pointer"
                                     title="Xóa sản phẩm"
                                   >
-                                    <DeleteOutlineRoundedIcon/>
+                                    <DeleteOutlineRoundedIcon />
                                   </button>
                                   <div className="text-right">
                                     <div className="text-xs text-grey-c600 mb-1">Thành tiền</div>
@@ -512,7 +512,7 @@ export default function Main() {
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-support-c700 hover:bg-support-c50 hover:text-support-c900 transition-all duration-200 text-sm"
                     title="Xóa tất cả sản phẩm"
                   >
-                    <DeleteOutlineRoundedIcon fontSize="small"/>
+                    <DeleteOutlineRoundedIcon fontSize="small" />
                     <span className="font-medium">Xóa tất cả</span>
                   </button>
                 </div>

@@ -32,4 +32,3 @@ export const FLASH_SALE_CAMPAIGN= "/api/v1/flash-sale-campaign";
 export const FLASH_SALE_PRODUCT= "/api/v1/flash-sale-product";
 export const FLASH_SALE_PRODUCT_VIEW= "/api/v1/flash-sale-product-view";
 export const USER_PURCHASE_LIMIT= "/api/v1/user-purchase-limit";
-export const ORDER_FLASH_SALE= "/api/v1/order-flash-sale";

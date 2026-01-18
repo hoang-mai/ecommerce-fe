@@ -81,11 +81,11 @@ export default function Main({id}: Props) {
       case ShopStatus.ACTIVE:
         return ChipColor.SUCCESS;
       case ShopStatus.INACTIVE:
-        return ChipColor.SECONDARY;
+        return ChipColor.WARNING;
       case ShopStatus.SUSPENDED:
         return ChipColor.ERROR;
       default:
-        return ChipColor.SECONDARY;
+        return ChipColor.WARNING;
     }
   };
   const getStatusLabel = (status: ShopStatus) => {
@@ -95,7 +95,7 @@ export default function Main({id}: Props) {
       case ShopStatus.INACTIVE:
         return "Ngừng hoạt động";
       case ShopStatus.SUSPENDED:
-        return "Đình chỉ";
+        return "Cấm hoạt động";
       default:
         return status;
     }

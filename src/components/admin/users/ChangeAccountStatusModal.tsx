@@ -65,7 +65,7 @@ export default function ChangeAccountStatusModal({
       case AccountStatus.ACTIVE:
         return "Hoạt động";
       case AccountStatus.SUSPENDED:
-        return "Đình chỉ";
+        return "Cấm hoạt động";
       default:
         return "Chưa xác định";
     }

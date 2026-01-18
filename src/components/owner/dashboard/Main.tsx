@@ -1,20 +1,20 @@
 'use client';
 
-import {useState} from 'react';
-import {ResponsiveLine} from '@nivo/line';
-import {ResponsiveBar} from '@nivo/bar';
+import { useState } from 'react';
+import { ResponsiveLine } from '@nivo/line';
+import { ResponsiveBar } from '@nivo/bar';
 import useSWR from 'swr';
-import {useAxiosContext} from '@/components/provider/AxiosProvider';
-import {ORDER_VIEW, PRODUCT_VIEW, SHOP_VIEW} from '@/services/api';
+import { useAxiosContext } from '@/components/provider/AxiosProvider';
+import { ORDER_VIEW, PRODUCT_VIEW, SHOP_VIEW } from '@/services/api';
 import Loading from '@/components/modals/Loading';
 import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import AttachMoneyRoundedIcon from '@mui/icons-material/AttachMoneyRounded';
 import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
-import {subMonths} from 'date-fns';
+import { subMonths } from 'date-fns';
 import Card from '@/libs/Card';
 import Title from '@/libs/Title';
-import {formatNumber, formatPrice} from "@/util/fnCommon";
+import { formatNumber, formatPrice } from "@/util/fnCommon";
 import MonthRangePicker from "@/libs/MonthRangePicker";
 import {
   DateRange,
@@ -23,7 +23,7 @@ import {
   ProductViewStatisticDTO,
   ShopViewStatisticDTO
 } from "@/types/interface";
-import {useBuildUrl} from "@/hooks/useBuildUrl";
+import { useBuildUrl } from "@/hooks/useBuildUrl";
 import Empty from "@/libs/Empty";
 
 interface OwnerViewStatisticDTO {
@@ -35,7 +35,7 @@ interface OwnerViewStatisticDTO {
 
 
 export default function Main() {
-  const {get} = useAxiosContext();
+  const { get } = useAxiosContext();
 
   const [selectRangeDate, setSelectRangeDate] = useState<DateRange | null>({
     start: subMonths(new Date(), 12),
@@ -57,7 +57,7 @@ export default function Main() {
     }
   })
   const fetcherRevenue = (url: string) => get<BaseResponse<OrderViewStatisticRevenueDTO[]>>(url).then((res) => res.data);
-  const {data: revenue, isLoading: isLoadingRevenue} = useSWR(urlRevenue, fetcherRevenue, {
+  const { data: revenue, isLoading: isLoadingRevenue } = useSWR(urlRevenue, fetcherRevenue, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   })
@@ -72,7 +72,7 @@ export default function Main() {
     }
   })
   const fetcherNewOrder = (url: string) => get<BaseResponse<OrderViewStatisticDTO[]>>(url).then((res) => res.data);
-  const {data: newOrderData, isLoading: isLoadingNewOrder} = useSWR(urlNewOrder, fetcherNewOrder, {
+  const { data: newOrderData, isLoading: isLoadingNewOrder } = useSWR(urlNewOrder, fetcherNewOrder, {
     refreshInterval: 0,
     revalidateOnFocus: false,
   })
@@ -84,7 +84,7 @@ export default function Main() {
       type: "revenue"
     }
   })
-  const fetcherTopRevenueShop = (url: string) => get<BaseResponse<ShopViewStatisticDTO[]>>(url, {isToken: true}).then((res) => res.data);
+  const fetcherTopRevenueShop = (url: string) => get<BaseResponse<ShopViewStatisticDTO[]>>(url, { isToken: true }).then((res) => res.data);
   const {
     data: topRevenueShops,
     isLoading: isLoadingTopRevenueShops
@@ -100,7 +100,7 @@ export default function Main() {
       type: "sold"
     }
   })
-  const fetcherTopSellingShop = (url: string) => get<BaseResponse<ShopViewStatisticDTO[]>>(url, {isToken: true}).then((res) => res.data);
+  const fetcherTopSellingShop = (url: string) => get<BaseResponse<ShopViewStatisticDTO[]>>(url, { isToken: true }).then((res) => res.data);
   const {
     data: topSellingShops,
     isLoading: isLoadingTopSellingShops
@@ -116,7 +116,7 @@ export default function Main() {
       type: "revenue"
     }
   })
-  const fetcherTopRevenueProduct = (url: string) => get<BaseResponse<ProductViewStatisticDTO[]>>(url, {isToken: true}).then((res) => res.data);
+  const fetcherTopRevenueProduct = (url: string) => get<BaseResponse<ProductViewStatisticDTO[]>>(url, { isToken: true }).then((res) => res.data);
   const {
     data: topRevenueProducts,
     isLoading: isLoadingTopRevenueProducts
@@ -132,7 +132,7 @@ export default function Main() {
       type: "sold"
     }
   })
-  const fetcherTopProduct = (url: string) => get<BaseResponse<ProductViewStatisticDTO[]>>(url, {isToken: true}).then((res) => res.data);
+  const fetcherTopProduct = (url: string) => get<BaseResponse<ProductViewStatisticDTO[]>>(url, { isToken: true }).then((res) => res.data);
   const {
     data: topSellingProducts,
     isLoading: isLoadingTopSellingProducts
@@ -141,7 +141,7 @@ export default function Main() {
     revalidateOnFocus: false,
   })
 
-  const fetcherOwnerStatistic = (url: string) => get<BaseResponse<OwnerViewStatisticDTO>>(url, {isToken: true}).then((res) => res.data);
+  const fetcherOwnerStatistic = (url: string) => get<BaseResponse<OwnerViewStatisticDTO>>(url, { isToken: true }).then((res) => res.data);
   const {
     data: ownerStatsData,
     isLoading: isLoadingOwnerStats
@@ -155,18 +155,18 @@ export default function Main() {
     <div className="space-y-6 overflow-y-auto">
       {/* Header */}
       {isLoadingNewOrder && isLoadingTopSellingProducts && isLoadingRevenue && isLoadingTopRevenueProducts && isLoadingTopSellingShops && isLoadingOwnerStats && isLoadingTopRevenueShops &&
-        <Loading/>}
+        <Loading />}
       <div>
-        <Title title={"Bảng Điều Khiển Chủ Cửa Hàng"} isDivide={true}/>
+        <Title title={"Bảng Điều Khiển Chủ Cửa Hàng"} isDivide={true} />
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
         <Card
           isStats
           title="Tổng Doanh Thu"
           value={formatPrice(ownerStatsData?.data?.totalRevenue || 0)}
-          icon={<AttachMoneyRoundedIcon className="text-4xl"/>}
+          icon={<AttachMoneyRoundedIcon className="text-4xl" />}
           iconBg="bg-primary-c200"
           iconColor="text-primary-c700"
           baseClasses={"bg-gradient-to-br from-primary-c50 to-white rounded-2xl shadow-sm border border-primary-c100"}
@@ -175,7 +175,7 @@ export default function Main() {
           isStats
           title="Tổng Đơn Hàng"
           value={formatNumber(ownerStatsData?.data?.totalOrders || 0)}
-          icon={<ShoppingCartRoundedIcon className="text-4xl"/>}
+          icon={<ShoppingCartRoundedIcon className="text-4xl" />}
           iconBg="bg-success-c100"
           iconColor="text-success-c600"
           baseClasses={"bg-gradient-to-br from-success-c50 to-white rounded-2xl shadow-sm border border-success-c100"}
@@ -184,7 +184,7 @@ export default function Main() {
           isStats
           title="Tổng Sản Phẩm"
           value={formatNumber(ownerStatsData?.data?.totalProducts || 0)}
-          icon={<TrendingUpRoundedIcon className="text-4xl"/>}
+          icon={<TrendingUpRoundedIcon className="text-4xl" />}
           iconBg="bg-purple-100"
           iconColor="text-purple-600"
           baseClasses={"bg-gradient-to-br from-purple-50 to-white rounded-2xl shadow-sm border border-purple-100"}
@@ -193,140 +193,141 @@ export default function Main() {
           isStats
           title="Tổng Sản Phẩm Đã Bán"
           value={formatNumber(ownerStatsData?.data?.totalSold || 0)}
-          icon={<StorefrontRoundedIcon className="text-4xl"/>}
+          icon={<StorefrontRoundedIcon className="text-4xl" />}
           iconBg="bg-orange-100"
           iconColor="text-orange-600"
           baseClasses={"bg-gradient-to-br from-orange-50 to-white rounded-2xl shadow-sm border border-orange-100"}
         />
       </div>
 
-      {/* Revenue Chart */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className={"flex items-center justify-between mb-4"}>
-          <h2 className="text-xl font-bold text-primary-c600 mb-4">Doanh Thu Theo Tháng</h2>
-          <MonthRangePicker
-            value={selectRangeRevenueDate}
-            onChange={setSelectRangeRevenueDate}
-            maxRange={12}/>
-        </div>
-        {revenue && revenue.data && revenue.data.length > 0 ?
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full">{/* Revenue Chart */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className={"flex items-center justify-between mb-4"}>
+            <h2 className="text-xl font-bold text-primary-c600 mb-4">Doanh Thu Theo Tháng</h2>
+            <MonthRangePicker
+              value={selectRangeRevenueDate}
+              onChange={setSelectRangeRevenueDate}
+              maxRange={12} />
+          </div>
+          {revenue && revenue.data && revenue.data.length > 0 ?
 
-          <div style={{height: '400px'}}>
-            <ResponsiveLine
-              data={[
-                {
-                  id: 'Doanh thu',
-                  data: revenue.data.map((item) => ({
-                    x: item.localDate,
-                    y: item.totalRevenue,
-                  })),
-                },
-              ]}
-              margin={{top: 50, right: 40, bottom: 50, left: 100}}
-              yScale={{type: 'linear', min: 0, max: 'auto', stacked: true, reverse: false}}
-              curve="monotoneX"
-              axisLeft={{
-                tickSize: 1,
-                tickPadding: 10,
-                legend: 'Doanh thu (VNĐ)',
-                legendOffset: -70,
-                legendPosition: 'middle',
-                format: (value) => formatNumber(value)
-              }}
+            <div style={{ height: '400px' }}>
+              <ResponsiveLine
+                data={[
+                  {
+                    id: 'Doanh thu',
+                    data: revenue.data.map((item) => ({
+                      x: item.localDate,
+                      y: item.totalRevenue,
+                    })),
+                  },
+                ]}
+                margin={{ top: 50, right: 40, bottom: 50, left: 100 }}
+                yScale={{ type: 'linear', min: 0, max: 'auto', stacked: true, reverse: false }}
+                curve="monotoneX"
+                axisLeft={{
+                  tickSize: 1,
+                  tickPadding: 10,
+                  legend: 'Doanh thu (VNĐ)',
+                  legendOffset: -70,
+                  legendPosition: 'middle',
+                  format: (value) => formatNumber(value)
+                }}
 
-              colors={"#2D7D9F"}
-              pointSize={10}
-              pointColor="#ffffff"
-              pointBorderWidth={2}
-              pointBorderColor={{from: 'seriesColor', modifiers: []}}
-              pointLabelYOffset={-12}
-              enableArea={true}
-              enableTouchCrosshair={true}
-              useMesh={true}
-              tooltip={({point}) => (
-                <div className="border border-grey-c200 rounded-xl shadow-lg overflow-hidden">
-                  <div className="bg-primary-c600 text-white px-4 py-2">
-                    <div className="text-sm font-semibold">{point.data.xFormatted}</div>
-                  </div>
+                colors={"#2D7D9F"}
+                pointSize={10}
+                pointColor="#ffffff"
+                pointBorderWidth={2}
+                pointBorderColor={{ from: 'seriesColor', modifiers: [] }}
+                pointLabelYOffset={-12}
+                enableArea={true}
+                enableTouchCrosshair={true}
+                useMesh={true}
+                tooltip={({ point }) => (
+                  <div className="border border-grey-c200 rounded-xl shadow-lg overflow-hidden">
+                    <div className="bg-primary-c600 text-white px-4 py-2">
+                      <div className="text-sm font-semibold">{point.data.xFormatted}</div>
+                    </div>
 
-                  <div className="bg-white px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-primary-c600"></div>
-                      <div className="text-grey-c800 font-medium whitespace-nowrap">
-                        Doanh thu: <span
-                        className="text-primary-c700 font-bold">{formatPrice(Number(point.data.y))}</span>
+                    <div className="bg-white px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary-c600"></div>
+                        <div className="text-grey-c800 font-medium whitespace-nowrap">
+                          Doanh thu: <span
+                            className="text-primary-c700 font-bold">{formatPrice(Number(point.data.y))}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-              )}
-            />
-          </div> :
-          <div className={"flex items-center justify-center h-100 flex-col"}>
-            <Empty/>
-            <div className={"text-grey-c600"}>Không có dữ liệu doanh thu</div>
-          </div>
-        }
-      </div>
-
-      {/* Orders Chart */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className={"flex items-center justify-between mb-4"}>
-          <h2 className="text-xl font-bold text-primary-c600 mb-4">Đơn Hàng Mới Theo Tháng</h2>
-          <MonthRangePicker
-            value={selectRangeDate}
-            onChange={setSelectRangeDate}
-            maxRange={12}/>
+                )}
+              />
+            </div> :
+            <div className={"flex items-center justify-center h-100 flex-col"}>
+              <Empty />
+              <div className={"text-grey-c600"}>Không có dữ liệu doanh thu</div>
+            </div>
+          }
         </div>
-        {newOrderData && newOrderData.data && newOrderData.data.length > 0 ?
-          <div style={{height: '400px'}}>
-            <ResponsiveBar
-              data={newOrderData.data}
-              keys={["newOrders"]}
-              indexBy="localDate"
-              margin={{top: 20, right: 20, bottom: 70, left: 60}}
-              padding={0.5}
-              valueScale={{type: 'linear'}}
-              colors={['#2D7D9F']}
-              axisTop={null}
-              axisRight={null}
-              borderRadius={5}
-              axisLeft={{
-                tickSize: 5,
-                tickPadding: 5,
-                tickRotation: 0,
-                legend: 'Đơn hàng',
-                legendPosition: 'middle',
-                legendOffset: -50,
-              }}
-              enableLabel={false}
-              tooltip={({indexValue, value}) => (
-                <div className="border border-grey-c200 rounded-xl shadow-lg overflow-hidden">
-                  {/* header */}
-                  <div className="bg-primary-c600 text-white px-4 py-2">
-                    <div className="text-sm font-semibold">{indexValue}</div>
-                  </div>
 
-                  {/* body */}
-                  <div className="bg-white px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-primary-c600"></div>
-                      <div className="text-grey-c800 font-medium whitespace-nowrap">
-                        Đơn hàng: <span className="text-primary-c700 font-bold">{value}</span>
+        {/* Orders Chart */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className={"flex items-center justify-between mb-4"}>
+            <h2 className="text-xl font-bold text-primary-c600 mb-4">Đơn Hàng Mới Theo Tháng</h2>
+            <MonthRangePicker
+              value={selectRangeDate}
+              onChange={setSelectRangeDate}
+              maxRange={12} />
+          </div>
+          {newOrderData && newOrderData.data && newOrderData.data.length > 0 ?
+            <div style={{ height: '400px' }}>
+              <ResponsiveBar
+                data={newOrderData.data}
+                keys={["newOrders"]}
+                indexBy="localDate"
+                margin={{ top: 20, right: 20, bottom: 70, left: 60 }}
+                padding={0.5}
+                valueScale={{ type: 'linear' }}
+                colors={['#2D7D9F']}
+                axisTop={null}
+                axisRight={null}
+                borderRadius={5}
+                axisLeft={{
+                  tickSize: 5,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                  legend: 'Đơn hàng',
+                  legendPosition: 'middle',
+                  legendOffset: -50,
+                }}
+                enableLabel={false}
+                tooltip={({ indexValue, value }) => (
+                  <div className="border border-grey-c200 rounded-xl shadow-lg overflow-hidden">
+                    {/* header */}
+                    <div className="bg-primary-c600 text-white px-4 py-2">
+                      <div className="text-sm font-semibold">{indexValue}</div>
+                    </div>
+
+                    {/* body */}
+                    <div className="bg-white px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-primary-c600"></div>
+                        <div className="text-grey-c800 font-medium whitespace-nowrap">
+                          Đơn hàng: <span className="text-primary-c700 font-bold">{value}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-            />
-          </div>
-          :
-          <div className={"flex items-center justify-center h-100 flex-col"}>
-            <Empty/>
-            <div className={"text-grey-c600"}>Không có dữ liệu đơn hàng</div>
-          </div>
-        }
+                )}
+              />
+            </div>
+            :
+            <div className={"flex items-center justify-center h-100 flex-col"}>
+              <Empty />
+              <div className={"text-grey-c600"}>Không có dữ liệu đơn hàng</div>
+            </div>
+          }
+        </div>
       </div>
 
       {/* Top Shop */}
@@ -357,7 +358,7 @@ export default function Main() {
           </div>
           {topRevenueShops && topRevenueShops.data && topRevenueShops.data.length === 0 && (
             <div className={"flex flex-col items-center justify-center flex-1"}>
-              <Empty/>
+              <Empty />
               <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
             </div>
           )}
@@ -388,7 +389,7 @@ export default function Main() {
           </div>
           {topSellingShops && topSellingShops.data && topSellingShops.data.length === 0 && (
             <div className={"flex flex-col items-center justify-center flex-1"}>
-              <Empty/>
+              <Empty />
               <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
             </div>
           )}
@@ -423,7 +424,7 @@ export default function Main() {
           </div>
           {topRevenueProducts && topRevenueProducts.data && topRevenueProducts.data.length === 0 && (
             <div className={"flex flex-col items-center justify-center flex-1"}>
-              <Empty/>
+              <Empty />
               <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
             </div>
           )}
@@ -454,7 +455,7 @@ export default function Main() {
           </div>
           {topSellingProducts && topSellingProducts.data && topSellingProducts.data.length === 0 && (
             <div className={"flex flex-col items-center justify-center flex-1"}>
-              <Empty/>
+              <Empty />
               <div className="text-center text-grey-c500">Chưa có dữ liệu sản phẩm</div>
             </div>
           )}

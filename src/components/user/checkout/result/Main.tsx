@@ -152,7 +152,7 @@ function MainContent() {
           </h2>
 
           <div className="space-y-3">
-            <InfoRow label="Mã đơn hàng" value={params.vnp_TxnRef} />
+            <InfoRow label="Mã thanh toán" value={params.vnp_TxnRef} />
             <InfoRow label="Mã giao dịch VNPAY" value={params.vnp_TransactionNo} />
 
             {params.vnp_BankTranNo && (

@@ -81,7 +81,7 @@ export default function Main() {
     { id: "", label: "Tất cả trạng thái" },
     { id: ShopStatus.ACTIVE, label: "Đang hoạt động" },
     { id: ShopStatus.INACTIVE, label: "Ngừng hoạt động" },
-    { id: ShopStatus.SUSPENDED, label: "Đình chỉ" },
+    { id: ShopStatus.SUSPENDED, label: "Cấm hoạt động" },
   ];
 
   const getStatusColor = (status: ShopStatus): ChipColor => {
@@ -89,11 +89,11 @@ export default function Main() {
       case ShopStatus.ACTIVE:
         return ChipColor.SUCCESS;
       case ShopStatus.INACTIVE:
-        return ChipColor.SECONDARY;
+        return ChipColor.WARNING;
       case ShopStatus.SUSPENDED:
         return ChipColor.ERROR;
       default:
-        return ChipColor.SECONDARY;
+        return ChipColor.WARNING;
     }
   };
 
@@ -104,7 +104,7 @@ export default function Main() {
       case ShopStatus.INACTIVE:
         return "Ngừng hoạt động";
       case ShopStatus.SUSPENDED:
-        return "Đình chỉ";
+        return "Cấm hoạt động";
       default:
         return status;
     }

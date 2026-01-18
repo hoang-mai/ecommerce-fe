@@ -281,7 +281,7 @@ export default function Main({ id }: Props) {
       <Card
         isStats
         title="Tỷ Lệ Bán Hàng"
-        value={`${formatNumber(data?.soldRate || 0)}%`}
+        value={`${Number(data?.soldRate || 0).toFixed(2)}%`}
         icon={<PercentRoundedIcon className="text-4xl" />}
         iconBg="bg-orange-100"
         iconColor="text-orange-600"

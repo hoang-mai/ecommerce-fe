@@ -1,39 +1,45 @@
 "use client";
-import {useSelector, useDispatch} from "react-redux";
-import {RootState} from "@/redux/store";
-import {closeAlert} from "@/redux/slice/alertSlice";
-import {useEffect, useState} from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/redux/store";
+import { closeAlert } from "@/redux/slice/alertSlice";
+import { useEffect, useState } from "react";
 import ErrorIcon from "@mui/icons-material/Error";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningIcon from "@mui/icons-material/Warning";
 import InfoIcon from "@mui/icons-material/Info";
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import {AlertType} from "@/types/enum";
+import { AlertType } from "@/types/enum";
 
 const alertConfig = {
   [AlertType.ERROR]: {
     bgColor: "bg-support-c200",
     borderColor: "border-support-c900",
     textColor: "text-support-c900",
-    icon: <ErrorIcon className="text-support-c900"/>,
+    icon: <ErrorIcon className="text-support-c900" />,
+  },
+  [AlertType.ALL_OUT_OF_STOCK]: {
+    bgColor: "bg-support-c200",
+    borderColor: "border-support-c900",
+    textColor: "text-support-c900",
+    icon: <ErrorIcon className="text-support-c900" />,
   },
   [AlertType.SUCCESS]: {
     bgColor: "bg-success-c100",
     borderColor: "border-success-c700",
     textColor: "text-success-c700",
-    icon: <CheckCircleIcon className="text-success-c700"/>,
+    icon: <CheckCircleIcon className="text-success-c700" />,
   },
   [AlertType.WARNING]: {
     bgColor: "bg-yellow-c100",
     borderColor: "border-yellow-c700",
     textColor: "text-yellow-c900",
-    icon: <WarningIcon className="text-yellow-c700"/>,
+    icon: <WarningIcon className="text-yellow-c700" />,
   },
   [AlertType.INFO]: {
     bgColor: "bg-primary-c100",
     borderColor: "border-primary-c700",
     textColor: "text-primary-c900",
-    icon: <InfoIcon className="text-primary-c700"/>,
+    icon: <InfoIcon className="text-primary-c700" />,
   },
 } as const;
 
@@ -88,7 +94,7 @@ export default function Alert() {
             className={`${config.textColor} cursor-pointer hover:opacity-70 transition-opacity flex-shrink-0 text-xl leading-none`}
             aria-label="Close alert"
           >
-            <CloseRoundedIcon/>
+            <CloseRoundedIcon />
           </button>
         </div>
       </div>
