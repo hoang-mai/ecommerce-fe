@@ -9,7 +9,7 @@ import WebPushProvider from "@/components/provider/WebPushProvider";
 
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://evoway.vercel.app"),
+  metadataBase: "https://evoway.vercel.app",
   title: "EvoWay | Mua hàng nhanh chóng, thanh toán tiện lợi",
   description: "EvoWay - Nền tảng mua sắm và thanh toán trực tuyến hàng đầu, mang đến trải nghiệm mua sắm nhanh chóng và tiện lợi cho người dùng.",
   openGraph: {
