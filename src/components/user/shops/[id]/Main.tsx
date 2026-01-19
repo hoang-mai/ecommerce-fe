@@ -25,7 +25,6 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {useDebounce} from "@/hooks/useDebounce";
 import {openChat} from "@/redux/slice/chatSlice";
 import StoreRoundedIcon from "@mui/icons-material/Storefront";
-import {useAddressMapping} from "@/hooks/useAddressMapping";
 
 const sampleShop: ShopView = {
   shopId: "",
@@ -95,7 +94,6 @@ export default function Main({id}: Props) {
   });
   const totalPages = data?.data?.totalPages || 0;
   const dispatch = useDispatch();
-  const {getFullAddress} = useAddressMapping();
   useEffect(() => {
     if (error) {
       const alert: AlertState = {
@@ -191,14 +189,6 @@ export default function Main({id}: Props) {
                   className="text-base font-semibold text-primary-c900">{formatNumber(shop.totalSold || 0)}</span>
               </div>
             </div>
-            <div className={"flex flex-row gap-1  "}>
-              <LocationOnIcon className="!w-5 !h-5 text-grey-c800"/>
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm text-grey-c600">Địa chỉ:</span>
-                <span
-                  className="text-base font-semibold text-primary-c900 text-wrap w-60">{shop.detail}</span>
-              </div>
-            </div>
           </div>
           <div className={"flex flex-col gap-4 justify-center"}>
             <div className={"flex flex-row gap-1 items-center "}>
@@ -212,14 +202,6 @@ export default function Main({id}: Props) {
                 ) : (
                   <span className="text-base font-semibold text-primary-c900">Chưa có đánh giá</span>
                 )}
-              </div>
-            </div>
-            <div className={"flex flex-row gap-1 items-center"}>
-              <PhoneIcon className="!w-5 !h-5 text-grey-c800"/>
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm text-grey-c600">Số điện thoại:</span>
-                <span
-                  className="text-base font-semibold text-primary-c900">{shop.phoneNumber}</span>
               </div>
             </div>
             <div className={"flex flex-row gap-1 items-center"}>

@@ -35,6 +35,11 @@ import DevicesRoundedIcon from '@mui/icons-material/DevicesRounded';
 import CleaningServicesRoundedIcon from '@mui/icons-material/CleaningServicesRounded';
 import ToysRoundedIcon from '@mui/icons-material/ToysRounded';
 import KitchenRoundedIcon from '@mui/icons-material/KitchenRounded';
+import CameraAltRoundedIcon from '@mui/icons-material/CameraAltRounded';
+import FitnessCenterRoundedIcon from '@mui/icons-material/FitnessCenterRounded';
+import BackpackRoundedIcon from '@mui/icons-material/BackpackRounded';
+import MopedRoundedIcon from '@mui/icons-material/MopedRounded';
+import HandymanRoundedIcon from '@mui/icons-material/HandymanRounded';
 import FlashSaleCountdown from "@/libs/FlashSaleCountdown";
 import ProductSaleCard from "@/components/user/ProductSaleCard";
 import Divide from "@/libs/Divide";
@@ -134,7 +139,7 @@ export default function Main() {
     if (name.includes('trẻ em'))
       return <ChildCareRoundedIcon className={iconClass} />;
 
-    if (name.includes('giày dép nữ'))
+    if (name.includes('túi ví nữ'))
       return <ShoppingBagRoundedIcon className={iconClass} />;
 
     if (name.includes('giày dép nam'))
@@ -184,6 +189,16 @@ export default function Main() {
 
     if (name.includes('bách hóa'))
       return <LocalGroceryStoreRoundedIcon className={iconClass} />;
+    if (name.includes('máy ảnh'))
+      return <CameraAltRoundedIcon className={iconClass} />;
+    if (name.includes('sức khỏe'))
+      return <FitnessCenterRoundedIcon className={iconClass} />;
+    if (name.includes('balo'))
+      return <BackpackRoundedIcon className={iconClass} />;
+    if (name.includes('xe máy') || name.includes('xe điện'))
+      return <MopedRoundedIcon className={iconClass} />;
+    if (name.includes('dụng cụ'))
+      return <HandymanRoundedIcon className={iconClass} />;
 
     return <CategoryRoundedIcon className={iconClass} />;
   };

@@ -4,14 +4,11 @@ import Button from "@/libs/Button";
 import Table, { Column } from "@/libs/Table";
 import { AlertType, CategoryStatus, ColorButton } from "@/types/enum";
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
-import ChangeCircleRoundedIcon from '@mui/icons-material/ChangeCircleRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
 import Title from "@/libs/Title";
 import TextField from "@/libs/TextField";
-import DropdownSelect from "@/libs/DropdownSelect";
 import CreateCategoryModal from "@/components/admin/categories/CreateCategoryModal";
 import DetailCategoryModal from "@/components/admin/categories/DetailCategoryModal";
 import UpdateCategoryModal from "@/components/admin/categories/UpdateCategoryModal";
@@ -45,7 +42,7 @@ export default function Main() {
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
   const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<ResCategorySearchDTO | null>(null);
+  const [selectedCategory] = useState<ResCategorySearchDTO | null>(null);
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(0);
@@ -145,17 +142,6 @@ export default function Main() {
     setSelectedCategoryId(id);
     setIsDetailOpen(true);
   };
-
-  const handleEditCategory = (id: number) => {
-    setSelectedCategoryId(id);
-    setIsUpdateOpen(true);
-  };
-
-  const handleUpdateStatus = (category: ResCategorySearchDTO) => {
-    setSelectedCategory(category);
-    setIsUpdateStatusOpen(true);
-  };
-
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -286,18 +272,6 @@ export default function Main() {
               <ClearRoundedIcon className="text-grey-c600 text-xl" />
             </button>
           )}
-        </div>
-
-        <div className="min-w-[200px]">
-          <DropdownSelect
-            value={status}
-            onChange={(value) => {
-              setStatus(value);
-              setCurrentPage(0);
-            }}
-            options={statusOptions}
-            placeholder="Chọn trạng thái"
-          />
         </div>
 
         <Button
