@@ -167,17 +167,17 @@ export default function UpdateProductModal({ isOpen, onClose, reload, productDat
       })),
     },
   });
-  const { fields: attributeFields, prepend: prependAttribute, remove: removeAttribute } = useFieldArray({
+  const { fields: attributeFields, append: appendAttribute, remove: removeAttribute } = useFieldArray({
     control,
     name: "productAttributes",
   });
 
-  const { fields: variantFields, prepend: prependVariant, remove: removeVariant } = useFieldArray({
+  const { fields: variantFields, append: appendVariant, remove: removeVariant } = useFieldArray({
     control,
     name: "productVariants",
   });
 
-  const { fields: detailFields, prepend: prependDetail, remove: removeDetail } = useFieldArray({
+  const { fields: detailFields, append: appendDetail, remove: removeDetail } = useFieldArray({
     control,
     name: "productDetails",
   });
@@ -483,7 +483,7 @@ export default function UpdateProductModal({ isOpen, onClose, reload, productDat
               type="button"
               color={ColorButton.PRIMARY}
               startIcon={<AddRoundedIcon />}
-              onClick={() => prependDetail({ key: "", value: "" })}
+              onClick={() => appendDetail({ key: "", value: "" })}
             >
               Thêm thông tin
             </Button>
@@ -493,7 +493,7 @@ export default function UpdateProductModal({ isOpen, onClose, reload, productDat
             <p className="text-sm text-grey-c600 text-center py-4">Chưa có thông tin chi tiết nào.</p>
           ) : (
             <div className="space-y-3">
-              {detailFields.map((field, index) => (
+              {detailFields.map((field, index) => ({ field, index })).reverse().map(({ field, index }) => (
                 <div key={field.id} className="grid grid-cols-2 gap-3 items-center">
                   <Controller
                     name={`productDetails.${index}.key` as const}
@@ -572,7 +572,7 @@ export default function UpdateProductModal({ isOpen, onClose, reload, productDat
               type="button"
               color={ColorButton.PRIMARY}
               startIcon={<AddRoundedIcon />}
-              onClick={() => prependAttribute({ productAttributeName: "", productAttributeValues: [] })}
+              onClick={() => appendAttribute({ productAttributeName: "", productAttributeValues: [] })}
             >
               Thêm thuộc tính
             </Button>
@@ -584,7 +584,7 @@ export default function UpdateProductModal({ isOpen, onClose, reload, productDat
             </p>
           ) : (
             <div className="space-y-4">
-              {attributeFields.map((field, index) => {
+              {attributeFields.map((field, index) => ({ field, index })).reverse().map(({ field, index }) => {
                 const currentAttribute = productAttributes?.[index];
                 const isExistingAttribute = !!currentAttribute?.productAttributeId;
 
@@ -664,8 +664,8 @@ export default function UpdateProductModal({ isOpen, onClose, reload, productDat
                             <div
                               key={valueIndex}
                               className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${isExistingValue
-                                  ? 'bg-grey-c200 text-grey-c700'
-                                  : 'bg-primary-c100 text-primary-c800'
+                                ? 'bg-grey-c200 text-grey-c700'
+                                : 'bg-primary-c100 text-primary-c800'
                                 }`}
                             >
                               {value?.productAttributeValue || ''}
@@ -710,14 +710,14 @@ export default function UpdateProductModal({ isOpen, onClose, reload, productDat
               type="button"
               color={ColorButton.PRIMARY}
               startIcon={<AddRoundedIcon />}
-              onClick={() => prependVariant({ price: 0, stockQuantity: 0, attributeValues: {}, salePrice: undefined })}
+              onClick={() => appendVariant({ price: 0, stockQuantity: 0, attributeValues: {}, salePrice: undefined })}
             >
               Thêm biến thể
             </Button>
           </div>
 
           <div className="space-y-4">
-            {variantFields.map((field, index) => {
+            {variantFields.map((field, index) => ({ field, index })).reverse().map(({ field, index }) => {
               const currentVariant = productVariants?.[index];
               const isExistingVariant = !!currentVariant?.productVariantId;
 

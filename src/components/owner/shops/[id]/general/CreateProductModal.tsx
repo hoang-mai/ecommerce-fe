@@ -142,17 +142,17 @@ export default function CreateProductModal({ isOpen, onClose, reload, shopId }: 
     },
   });
 
-  const { fields: attributeFields, prepend: prependAttribute, remove: removeAttribute } = useFieldArray({
+  const { fields: attributeFields, append: appendAttribute, remove: removeAttribute } = useFieldArray({
     control,
     name: "productAttributes",
   });
 
-  const { fields: variantFields, prepend: prependVariant, remove: removeVariant } = useFieldArray({
+  const { fields: variantFields, append: appendVariant, remove: removeVariant } = useFieldArray({
     control,
     name: "productVariants",
   });
 
-  const { fields: detailFields, prepend: prependDetail, remove: removeDetail } = useFieldArray({
+  const { fields: detailFields, append: appendDetail, remove: removeDetail } = useFieldArray({
     control,
     name: "productDetails",
   });
@@ -331,7 +331,7 @@ export default function CreateProductModal({ isOpen, onClose, reload, shopId }: 
               type="button"
               color={ColorButton.PRIMARY}
               startIcon={<AddRoundedIcon />}
-              onClick={() => prependDetail({ key: "", value: "" })}
+              onClick={() => appendDetail({ key: "", value: "" })}
             >
               Thêm thông tin
             </Button>
@@ -341,7 +341,7 @@ export default function CreateProductModal({ isOpen, onClose, reload, shopId }: 
             <p className="text-sm text-grey-c600 text-center py-4">Chưa có thông tin chi tiết nào.</p>
           ) : (
             <div className="space-y-3">
-              {detailFields.map((field, index) => (
+              {detailFields.map((field, index) => ({ field, index })).reverse().map(({ field, index }) => (
                 <div key={field.id} className="grid grid-cols-2 gap-3 items-center">
                   <Controller
                     name={`productDetails.${index}.key` as const}
@@ -418,7 +418,7 @@ export default function CreateProductModal({ isOpen, onClose, reload, shopId }: 
               type="button"
               color={ColorButton.PRIMARY}
               startIcon={<AddRoundedIcon />}
-              onClick={() => prependAttribute({ attributeName: "", attributeValues: [] })}
+              onClick={() => appendAttribute({ attributeName: "", attributeValues: [] })}
             >
               Thêm thuộc tính
             </Button>
@@ -430,7 +430,7 @@ export default function CreateProductModal({ isOpen, onClose, reload, shopId }: 
             </p>
           ) : (
             <div className="space-y-4">
-              {attributeFields.map((field, index) => (
+              {attributeFields.map((field, index) => ({ field, index })).reverse().map(({ field, index }) => (
                 <div key={field.id} className="bg-white rounded-lg p-4 space-y-3 border border-grey-c200">
                   <div className="flex items-center justify-between">
                     <h5 className="font-medium text-primary-c900">Thuộc tính {index + 1}</h5>
@@ -527,14 +527,14 @@ export default function CreateProductModal({ isOpen, onClose, reload, shopId }: 
               type="button"
               color={ColorButton.PRIMARY}
               startIcon={<AddRoundedIcon />}
-              onClick={() => prependVariant({ price: 0, stockQuantity: 0, attributeValues: {} })}
+              onClick={() => appendVariant({ price: 0, stockQuantity: 0, attributeValues: {} })}
             >
               Thêm biến thể
             </Button>
           </div>
 
           <div className="space-y-4">
-            {variantFields.map((field, index) => (
+            {variantFields.map((field, index) => ({ field, index })).reverse().map(({ field, index }) => (
               <div key={field.id} className="bg-white rounded-lg p-4 space-y-3 border border-grey-c200">
                 <div className="flex items-center justify-between">
                   <h5 className="font-medium text-primary-c900">Biến thể {index + 1}</h5>
