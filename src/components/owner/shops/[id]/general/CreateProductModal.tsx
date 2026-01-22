@@ -1,22 +1,22 @@
 "use client";
-import {useCallback, useEffect, useState} from "react";
+import { useCallback, useEffect, useState } from "react";
 import Modal from "@/libs/Modal";
 import TextField from "@/libs/TextField";
 import InputImage from "@/libs/InputImage";
 import TextSearch from "@/libs/TextSearch";
 import Button from "@/libs/Button";
-import {z} from "zod";
-import {Controller, useFieldArray, useForm, useWatch} from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import useSWRMutation from "swr/mutation";
-import { CATEGORY, PRODUCT} from "@/services/api";
-import {useDispatch} from "react-redux";
-import {AlertType, ColorButton} from "@/types/enum";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { CATEGORY, PRODUCT } from "@/services/api";
+import { useDispatch } from "react-redux";
+import { AlertType, ColorButton } from "@/types/enum";
+import { openAlert } from "@/redux/slice/alertSlice";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import useSWR from "swr";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
 import DropdownSelect from "@/libs/DropdownSelect";
 import Loading from "@/components/modals/Loading";
 import CheckBox from "@/libs/CheckBox";
@@ -29,7 +29,7 @@ const productAttributeSchema = z.object({
 const productVariantSchema = z.object({
   price: z.number().positive("Giá phải lớn hơn 0"),
   stockQuantity: z.number().int().min(0, "Số lượng phải lớn hơn hoặc bằng 0"),
-  isDefault : z.boolean().optional(),
+  isDefault: z.boolean().optional(),
   attributeValues: z.record(z.string(), z.string()).optional(),
 });
 
@@ -60,7 +60,7 @@ interface CreateProductModalProps {
   shopId: string;
 }
 
-export default function CreateProductModal({isOpen, onClose, reload, shopId}: CreateProductModalProps) {
+export default function CreateProductModal({ isOpen, onClose, reload, shopId }: CreateProductModalProps) {
   const dispatch = useDispatch();
   const { post, get } = useAxiosContext();
   const [tempAttributeValue, setTempAttributeValue] = useState<{ [key: number]: string }>({});
@@ -68,9 +68,9 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
   const [pageNo, setPageNo] = useState(0);
   const [allCategories, setAllCategories] = useState<{ categoryId: number; categoryName: string }[]>([]);
   const [hasMore, setHasMore] = useState(false);
-  const [variantAttributeValues, setVariantAttributeValues] = useState<{[variantIndex: number]: {[attrName: string]: string}}>({});
+  const [variantAttributeValues, setVariantAttributeValues] = useState<{ [variantIndex: number]: { [attrName: string]: string } }>({});
 
-  const fetcher = (url: string, {arg}: { arg: FormData }) =>
+  const fetcher = (url: string, { arg }: { arg: FormData }) =>
     post<BaseResponse<never>>(url, arg, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -81,14 +81,14 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
     get<BaseResponse<PageResponse<{ categoryId: number; categoryName: string }>>>(url)
       .then(res => res.data.data);
 
-  const {isLoading: isLoadingCategories} = useSWR(
+  const { isLoading: isLoadingCategories } = useSWR(
     isOpen ? `${CATEGORY}/search?keyword=${searchKeyword}&pageNo=${pageNo}&pageSize=10` : null,
     categoryFetcher,
     {
       refreshInterval: 0,
       revalidateOnFocus: false,
       onSuccess: (data) => {
-        if(!data) return;
+        if (!data) return;
         if (pageNo === 0) {
           setAllCategories(data.data);
         } else {
@@ -117,13 +117,13 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
     label: cat.categoryName,
   }));
 
-  const {trigger, isMutating} = useSWRMutation(`${PRODUCT}`, fetcher);
+  const { trigger, isMutating } = useSWRMutation(`${PRODUCT}`, fetcher);
 
   const {
     control,
     handleSubmit,
     setValue,
-    formState: {errors},
+    formState: { errors },
   } = useForm<CreateProductFormData>({
     resolver: zodResolver(createProductSchema),
     defaultValues: {
@@ -142,17 +142,17 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
     },
   });
 
-  const {fields: attributeFields, append: appendAttribute, remove: removeAttribute} = useFieldArray({
+  const { fields: attributeFields, prepend: prependAttribute, remove: removeAttribute } = useFieldArray({
     control,
     name: "productAttributes",
   });
 
-  const {fields: variantFields, append: appendVariant, remove: removeVariant} = useFieldArray({
+  const { fields: variantFields, prepend: prependVariant, remove: removeVariant } = useFieldArray({
     control,
     name: "productVariants",
   });
 
-  const { fields: detailFields, append: appendDetail, remove: removeDetail } = useFieldArray({
+  const { fields: detailFields, prepend: prependDetail, remove: removeDetail } = useFieldArray({
     control,
     name: "productDetails",
   });
@@ -170,7 +170,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
 
     const currentValues = attributes?.[attrIndex]?.attributeValues || [];
     setValue(`productAttributes.${attrIndex}.attributeValues`, [...currentValues, currentValue.trim()]);
-    setTempAttributeValue(prev => ({...prev, [attrIndex]: ""}));
+    setTempAttributeValue(prev => ({ ...prev, [attrIndex]: "" }));
   };
 
   const handleRemoveAttributeValue = (attrIndex: number, valueIndex: number) => {
@@ -192,7 +192,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
         : undefined;
 
     const cleanedVariants = data.productVariants.map((variant, index) => {
-      const cleanedAttributeValues: {[key: string]: string} = {};
+      const cleanedAttributeValues: { [key: string]: string } = {};
 
       const localAttrValues = variantAttributeValues[index] || {};
 
@@ -221,7 +221,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
       productDetails: productDetailsRecord,
     };
 
-    formData.append('data', new Blob([JSON.stringify(productData)], {type: 'application/json'}));
+    formData.append('data', new Blob([JSON.stringify(productData)], { type: 'application/json' }));
 
     // Append image files
     data.imageUrls.forEach((file) => {
@@ -261,14 +261,14 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
         isLoading={isMutating}
         maxWidth={"3xl"}
       >
-        {isMutating && <Loading/>}
+        {isMutating && <Loading />}
         {/* Basic Information */}
         <h4 className="font-bold text-primary-c900 mb-4">1. Thông tin cơ bản</h4>
         <div className={"flex flex-col gap-4 mb-4"}>
           <Controller
             name="name"
             control={control}
-            render={({field}) => (
+            render={({ field }) => (
               <TextField
                 value={field.value}
                 onChange={field.onChange}
@@ -283,7 +283,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
           <Controller
             name="description"
             control={control}
-            render={({field}) => (
+            render={({ field }) => (
               <TextField
                 value={field.value}
                 onChange={field.onChange}
@@ -299,7 +299,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
           <Controller
             name="categoryId"
             control={control}
-            render={({field}) => {
+            render={({ field }) => {
               const selectedOption = categoryOptions.find(opt => opt.id === field.value);
               return (
                 <TextSearch
@@ -330,8 +330,8 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
             <Button
               type="button"
               color={ColorButton.PRIMARY}
-              startIcon={<AddRoundedIcon/>}
-              onClick={() => appendDetail({ key: "", value: "" })}
+              startIcon={<AddRoundedIcon />}
+              onClick={() => prependDetail({ key: "", value: "" })}
             >
               Thêm thông tin
             </Button>
@@ -346,7 +346,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
                   <Controller
                     name={`productDetails.${index}.key` as const}
                     control={control}
-                    render={({field}) => (
+                    render={({ field }) => (
                       <TextField
                         value={field.value}
                         onChange={field.onChange}
@@ -362,7 +362,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
                     <Controller
                       name={`productDetails.${index}.value` as const}
                       control={control}
-                      render={({field}) => (
+                      render={({ field }) => (
                         <TextField
                           value={field.value}
                           onChange={field.onChange}
@@ -380,7 +380,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
                       className="p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-colors"
                       title="Xóa thông tin"
                     >
-                      <DeleteRoundedIcon fontSize="small"/>
+                      <DeleteRoundedIcon fontSize="small" />
                     </button>
                   </div>
                 </div>
@@ -394,7 +394,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
         <Controller
           name="imageUrls"
           control={control}
-          render={({field}) => (
+          render={({ field }) => (
             <InputImage
               label="Tải lên ảnh sản phẩm"
               onChange={field.onChange}
@@ -417,8 +417,8 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
             <Button
               type="button"
               color={ColorButton.PRIMARY}
-              startIcon={<AddRoundedIcon/>}
-              onClick={() => appendAttribute({attributeName: "", attributeValues: []})}
+              startIcon={<AddRoundedIcon />}
+              onClick={() => prependAttribute({ attributeName: "", attributeValues: [] })}
             >
               Thêm thuộc tính
             </Button>
@@ -440,14 +440,14 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
                       className="p-1 text-support-c800 hover:bg-support-c200 rounded-lg transition-colors"
                       title="Xóa thuộc tính"
                     >
-                      <DeleteRoundedIcon fontSize="small"/>
+                      <DeleteRoundedIcon fontSize="small" />
                     </button>
                   </div>
 
                   <Controller
                     name={`productAttributes.${index}.attributeName`}
                     control={control}
-                    render={({field}) => (
+                    render={({ field }) => (
                       <TextField
                         value={field.value}
                         onChange={field.onChange}
@@ -501,7 +501,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
                             onClick={() => handleRemoveAttributeValue(index, valueIndex)}
                             className="text-primary-c800 hover:text-support-c800 transition-colors cursor-pointer"
                           >
-                            <DeleteRoundedIcon fontSize="small"/>
+                            <DeleteRoundedIcon fontSize="small" />
                           </button>
                         </div>
                       ))}
@@ -526,8 +526,8 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
             <Button
               type="button"
               color={ColorButton.PRIMARY}
-              startIcon={<AddRoundedIcon/>}
-              onClick={() => appendVariant({price: 0, stockQuantity: 0, attributeValues: {}})}
+              startIcon={<AddRoundedIcon />}
+              onClick={() => prependVariant({ price: 0, stockQuantity: 0, attributeValues: {} })}
             >
               Thêm biến thể
             </Button>
@@ -545,7 +545,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
                       className="p-1 text-support-c800 hover:bg-support-c200 rounded-lg transition-colors"
                       title="Xóa biến thể"
                     >
-                      <DeleteRoundedIcon fontSize="small"/>
+                      <DeleteRoundedIcon fontSize="small" />
                     </button>
                   )}
                 </div>
@@ -554,7 +554,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
                   <Controller
                     name={`productVariants.${index}.price`}
                     control={control}
-                    render={({field}) => (
+                    render={({ field }) => (
                       <TextField
                         value={field.value.toString()}
                         label="Giá (VNĐ)"
@@ -570,7 +570,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
                   <Controller
                     name={`productVariants.${index}.stockQuantity`}
                     control={control}
-                    render={({field}) => (
+                    render={({ field }) => (
                       <TextField
                         value={field.value.toString()}
                         label="Số lượng"
@@ -589,7 +589,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
                   <Controller
                     name={`productVariants.${index}.isDefault`}
                     control={control}
-                    render={({field}) => (
+                    render={({ field }) => (
                       <CheckBox
                         checked={field.value || false}
                         onChange={(checked) => {
@@ -622,7 +622,7 @@ export default function CreateProductModal({isOpen, onClose, reload, shopId}: Cr
                           key={attrIndex}
                           label={attr.attributeName}
                           placeholder={`Chọn ${attr.attributeName}`}
-                          options={attr.attributeValues?.map(val => ({id: val, label: val})) || []}
+                          options={attr.attributeValues?.map(val => ({ id: val, label: val })) || []}
                           value={variantAttributeValues[index]?.[attr.attributeName] || ""}
                           onChange={(value) => {
                             setVariantAttributeValues(prev => ({

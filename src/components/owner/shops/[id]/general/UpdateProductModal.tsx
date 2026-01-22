@@ -1,26 +1,26 @@
 "use client";
-import {useCallback, useEffect, useState} from "react";
+import { useCallback, useEffect, useState } from "react";
 import Modal from "@/libs/Modal";
 import TextField from "@/libs/TextField";
 import InputImage from "@/libs/InputImage";
 import TextSearch from "@/libs/TextSearch";
 import Button from "@/libs/Button";
-import {z} from "zod";
-import {Controller, useFieldArray, useForm, useWatch} from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import useSWRMutation from "swr/mutation";
-import {useAxiosContext} from "@/components/provider/AxiosProvider";
-import {CATEGORY, PRODUCT} from "@/services/api";
-import {useDispatch} from "react-redux";
-import {AlertType, ColorButton} from "@/types/enum";
-import {openAlert} from "@/redux/slice/alertSlice";
+import { useAxiosContext } from "@/components/provider/AxiosProvider";
+import { CATEGORY, PRODUCT } from "@/services/api";
+import { useDispatch } from "react-redux";
+import { AlertType, ColorButton } from "@/types/enum";
+import { openAlert } from "@/redux/slice/alertSlice";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import useSWR from "swr";
 import DropdownSelect from "@/libs/DropdownSelect";
 import Loading from "@/components/modals/Loading";
 import CheckBox from "@/libs/CheckBox";
-import {ProductView} from "@/types/interface";
+import { ProductView } from "@/types/interface";
 
 const productAttributeSchema = z.object({
   productAttributeId: z.string().optional(),
@@ -75,11 +75,11 @@ interface UpdateProductModalProps {
   productData: ProductView;
 }
 
-export default function UpdateProductModal({isOpen, onClose, reload, productData}: UpdateProductModalProps) {
+export default function UpdateProductModal({ isOpen, onClose, reload, productData }: UpdateProductModalProps) {
   const dispatch = useDispatch();
-  const {patch, get} = useAxiosContext();
+  const { patch, get } = useAxiosContext();
 
-  const fetcher = (url: string, {arg}: { arg: FormData }) =>
+  const fetcher = (url: string, { arg }: { arg: FormData }) =>
     patch<BaseResponse<never>>(url, arg, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -100,14 +100,14 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
     [variantIndex: number]: { [attrName: string]: string }
   }>({});
 
-  const {isLoading: isLoadingCategories} = useSWR(
+  const { isLoading: isLoadingCategories } = useSWR(
     isOpen ? `${CATEGORY}/search?keyword=${searchKeyword}&pageNo=${pageNo}&pageSize=10` : null,
     categoryFetcher,
     {
       refreshInterval: 0,
       revalidateOnFocus: false,
       onSuccess: (data) => {
-        if(!data) return;
+        if (!data) return;
         if (pageNo === 0) {
           setAllCategories(data.data);
         } else {
@@ -136,13 +136,13 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
     label: cat.categoryName,
   }));
 
-  const {trigger, isMutating} = useSWRMutation(`${PRODUCT}/${productData.productId}`, fetcher);
+  const { trigger, isMutating } = useSWRMutation(`${PRODUCT}/${productData.productId}`, fetcher);
 
   const {
     control,
     handleSubmit,
     setValue,
-    formState: {errors},
+    formState: { errors },
   } = useForm<UpdateProductFormData>({
     resolver: zodResolver(updateProductSchema),
     defaultValues: {
@@ -167,24 +167,24 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
       })),
     },
   });
-  const {fields: attributeFields, append: appendAttribute, remove: removeAttribute} = useFieldArray({
+  const { fields: attributeFields, prepend: prependAttribute, remove: removeAttribute } = useFieldArray({
     control,
     name: "productAttributes",
   });
 
-  const {fields: variantFields, append: appendVariant, remove: removeVariant} = useFieldArray({
+  const { fields: variantFields, prepend: prependVariant, remove: removeVariant } = useFieldArray({
     control,
     name: "productVariants",
   });
 
-  const { fields: detailFields, append: appendDetail, remove: removeDetail } = useFieldArray({
+  const { fields: detailFields, prepend: prependDetail, remove: removeDetail } = useFieldArray({
     control,
     name: "productDetails",
   });
 
-  const imageUrls = useWatch({control, name: 'imageUrls'});
-  const productAttributes = useWatch({control, name: 'productAttributes'});
-  const productVariants = useWatch({control, name: 'productVariants'});
+  const imageUrls = useWatch({ control, name: 'imageUrls' });
+  const productAttributes = useWatch({ control, name: 'productAttributes' });
+  const productVariants = useWatch({ control, name: 'productVariants' });
 
   const attributes = useWatch({
     control,
@@ -200,9 +200,9 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
     // Allow adding new values to both new and existing attributes
     setValue(`productAttributes.${attrIndex}.productAttributeValues`, [
       ...currentValues,
-      {productAttributeValue: currentValue.trim()}
+      { productAttributeValue: currentValue.trim() }
     ]);
-    setTempAttributeValue(prev => ({...prev, [attrIndex]: ""}));
+    setTempAttributeValue(prev => ({ ...prev, [attrIndex]: "" }));
   };
 
   const handleRemoveAttributeValue = (attrIndex: number, valueIndex: number) => {
@@ -334,7 +334,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
       deletedImageIds: deletedImageIds,
       productDetails: productDetailsRecord
     };
-    formData.append('data', new Blob([JSON.stringify(productUpdateData)], {type: 'application/json'}));
+    formData.append('data', new Blob([JSON.stringify(productUpdateData)], { type: 'application/json' }));
 
     // Append only new image files
     const newImages = data.imageUrls.filter(img => img instanceof File);
@@ -374,7 +374,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
       attr.productAttributeValues.forEach(v => {
         valuesMap[v.productAttributeValueId] = v.productAttributeValue;
       });
-      attributeLookup[attr.productAttributeId] = {name: attr.productAttributeName, valuesMap};
+      attributeLookup[attr.productAttributeId] = { name: attr.productAttributeName, valuesMap };
     });
 
     productData.productVariants.forEach((variant, index) => {
@@ -406,7 +406,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
         isLoading={isMutating}
         maxWidth={"3xl"}
       >
-        {isMutating && <Loading/>}
+        {isMutating && <Loading />}
 
         {/* Basic Information */}
         <h4 className="font-bold text-primary-c900 mb-4">1. Thông tin cơ bản</h4>
@@ -416,7 +416,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
             <Controller
               name="name"
               control={control}
-              render={({field}) => (
+              render={({ field }) => (
                 <TextField
                   value={field.value}
                   onChange={field.onChange}
@@ -430,7 +430,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
             <Controller
               name="categoryId"
               control={control}
-              render={({field}) => {
+              render={({ field }) => {
                 const selectedOption = categoryOptions.find(opt => opt.id === field.value);
                 return (
                   <TextSearch
@@ -460,7 +460,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
           <Controller
             name="description"
             control={control}
-            render={({field}) => (
+            render={({ field }) => (
               <TextField
                 value={field.value}
                 onChange={field.onChange}
@@ -482,8 +482,8 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
             <Button
               type="button"
               color={ColorButton.PRIMARY}
-              startIcon={<AddRoundedIcon/>}
-              onClick={() => appendDetail({ key: "", value: "" })}
+              startIcon={<AddRoundedIcon />}
+              onClick={() => prependDetail({ key: "", value: "" })}
             >
               Thêm thông tin
             </Button>
@@ -498,7 +498,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                   <Controller
                     name={`productDetails.${index}.key` as const}
                     control={control}
-                    render={({field}) => (
+                    render={({ field }) => (
                       <TextField
                         value={field.value}
                         onChange={field.onChange}
@@ -514,7 +514,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                     <Controller
                       name={`productDetails.${index}.value` as const}
                       control={control}
-                      render={({field}) => (
+                      render={({ field }) => (
                         <TextField
                           value={field.value}
                           onChange={field.onChange}
@@ -532,7 +532,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                       className="p-2 text-support-c800 hover:bg-support-c200 rounded-lg transition-colors"
                       title="Xóa thông tin"
                     >
-                      <DeleteRoundedIcon fontSize="small"/>
+                      <DeleteRoundedIcon fontSize="small" />
                     </button>
                   </div>
                 </div>
@@ -547,7 +547,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
         <Controller
           name="imageUrls"
           control={control}
-          render={({field}) => (
+          render={({ field }) => (
             <InputImage
               label="Tải lên ảnh sản phẩm"
               onChange={field.onChange}
@@ -571,8 +571,8 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
             <Button
               type="button"
               color={ColorButton.PRIMARY}
-              startIcon={<AddRoundedIcon/>}
-              onClick={() => appendAttribute({productAttributeName: "", productAttributeValues: []})}
+              startIcon={<AddRoundedIcon />}
+              onClick={() => prependAttribute({ productAttributeName: "", productAttributeValues: [] })}
             >
               Thêm thuộc tính
             </Button>
@@ -590,7 +590,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
 
                 return (
                   <div key={field.id}
-                       className={`bg-white rounded-lg p-4 space-y-3 border ${isExistingAttribute ? 'border-grey-c300 bg-grey-c50' : 'border-grey-c200'}`}>
+                    className={`bg-white rounded-lg p-4 space-y-3 border ${isExistingAttribute ? 'border-grey-c300 bg-grey-c50' : 'border-grey-c200'}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <h5 className="font-medium text-primary-c900">Thuộc tính {index + 1}</h5>
@@ -607,7 +607,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                           className="p-1 text-support-c800 hover:bg-support-c200 rounded-lg transition-colors"
                           title="Xóa thuộc tính"
                         >
-                          <DeleteRoundedIcon fontSize="small"/>
+                          <DeleteRoundedIcon fontSize="small" />
                         </button>
                       )}
                     </div>
@@ -615,7 +615,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                     <Controller
                       name={`productAttributes.${index}.productAttributeName`}
                       control={control}
-                      render={({field}) => (
+                      render={({ field }) => (
                         <TextField
                           value={field.value}
                           onChange={field.onChange}
@@ -663,11 +663,10 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                           return (
                             <div
                               key={valueIndex}
-                              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${
-                                isExistingValue
+                              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${isExistingValue
                                   ? 'bg-grey-c200 text-grey-c700'
                                   : 'bg-primary-c100 text-primary-c800'
-                              }`}
+                                }`}
                             >
                               {value?.productAttributeValue || ''}
                               {!isExistingValue && (
@@ -676,7 +675,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                                   onClick={() => handleRemoveAttributeValue(index, valueIndex)}
                                   className="text-primary-c800 hover:text-support-c800 transition-colors cursor-pointer"
                                 >
-                                  <DeleteRoundedIcon fontSize="small"/>
+                                  <DeleteRoundedIcon fontSize="small" />
                                 </button>
                               )}
                             </div>
@@ -710,8 +709,8 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
             <Button
               type="button"
               color={ColorButton.PRIMARY}
-              startIcon={<AddRoundedIcon/>}
-              onClick={() => appendVariant({price: 0, stockQuantity: 0, attributeValues: {}, salePrice: undefined})}
+              startIcon={<AddRoundedIcon />}
+              onClick={() => prependVariant({ price: 0, stockQuantity: 0, attributeValues: {}, salePrice: undefined })}
             >
               Thêm biến thể
             </Button>
@@ -724,7 +723,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
 
               return (
                 <div key={field.id}
-                     className={`bg-white rounded-lg p-4 space-y-3 border ${isExistingVariant ? 'border-grey-c300 bg-grey-c50' : 'border-grey-c200'}`}>
+                  className={`bg-white rounded-lg p-4 space-y-3 border ${isExistingVariant ? 'border-grey-c300 bg-grey-c50' : 'border-grey-c200'}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <h5 className="font-medium text-primary-c900">Biến thể {index + 1}</h5>
@@ -741,7 +740,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                         className="p-1 text-support-c800 hover:bg-support-c200 rounded-lg transition-colors"
                         title="Xóa biến thể"
                       >
-                        <DeleteRoundedIcon fontSize="small"/>
+                        <DeleteRoundedIcon fontSize="small" />
                       </button>
                     )}
                   </div>
@@ -750,7 +749,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                     <Controller
                       name={`productVariants.${index}.price`}
                       control={control}
-                      render={({field}) => (
+                      render={({ field }) => (
                         <TextField
                           value={field.value.toString()}
                           label="Giá (VNĐ)"
@@ -766,7 +765,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                     <Controller
                       name={`productVariants.${index}.stockQuantity`}
                       control={control}
-                      render={({field}) => (
+                      render={({ field }) => (
                         <TextField
                           value={field.value.toString()}
                           label="Số lượng"
@@ -782,7 +781,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                     <Controller
                       name={`productVariants.${index}.salePrice`}
                       control={control}
-                      render={({field}) => (
+                      render={({ field }) => (
                         <TextField
                           value={field.value != null ? field.value.toString() : ''}
                           label="Giá sale (VNĐ)"
@@ -807,7 +806,7 @@ export default function UpdateProductModal({isOpen, onClose, reload, productData
                     <Controller
                       name={`productVariants.${index}.isDefault`}
                       control={control}
-                      render={({field}) => (
+                      render={({ field }) => (
                         <CheckBox
                           checked={field.value || false}
                           onChange={(checked) => {
