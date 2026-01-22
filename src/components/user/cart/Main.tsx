@@ -7,7 +7,7 @@ import { useAxiosContext } from '@/components/provider/AxiosProvider';
 import { CART, CART_VIEW } from "@/services/api";
 import useSWR from "swr";
 import { useDispatch } from "react-redux";
-import { AlertType } from "@/types/enum";
+import { AlertType, ProductVariantStatus, ShopStatus, ProductStatus } from "@/types/enum";
 import { openAlert } from "@/redux/slice/alertSlice";
 import Loading from "@/components/modals/Loading";
 import Chip, { ChipColor } from "@/libs/Chip";
@@ -182,17 +182,30 @@ export default function Main() {
     const shopItem = cartData.cartItems.find(item => item.cartItemId === cartItemId);
     if (!shopItem) return;
 
-    const shopProductCartItemIds = shopItem.productCartItems.map(pci => pci.productCartItemId);
-    const allShopItemsSelected = shopProductCartItemIds.every(id => selectedItems.has(id));
+    const validProductCartItems = shopItem.productCartItems.filter(pci => {
+      const productView = pci.productView;
+      const variant = productView.productVariants.find(v => v.productVariantId === pci.productVariantId) ?? productView.productVariants[0];
+      const isOutOfStock = variant?.productVariantStatus === ProductVariantStatus.OUT_OF_STOCK;
+      const isShopInactive = shopItem.shopView.shopStatus !== ShopStatus.ACTIVE;
+      const isProductInactive = productView.productStatus !== ProductStatus.ACTIVE;
+
+      return !isOutOfStock && !isShopInactive && !isProductInactive;
+    });
+
+    const validIds = validProductCartItems.map(pci => pci.productCartItemId);
+
+    if (validIds.length === 0) return;
+
+    const allValidSelected = validIds.every(id => selectedItems.has(id));
 
     setSelectedItems(prev => {
       const newSet = new Set(prev);
-      if (allShopItemsSelected) {
+      if (allValidSelected) {
         // Deselect all items in this shop
-        shopProductCartItemIds.forEach(id => newSet.delete(id));
+        validIds.forEach(id => newSet.delete(id));
       } else {
         // Select all items in this shop
-        shopProductCartItemIds.forEach(id => newSet.add(id));
+        validIds.forEach(id => newSet.add(id));
       }
       return newSet;
     });
@@ -202,8 +215,19 @@ export default function Main() {
     const shopItem = cartData.cartItems.find(item => item.cartItemId === cartItemId);
     if (!shopItem || shopItem.productCartItems.length === 0) return false;
 
-    const shopProductCartItemIds = shopItem.productCartItems.map(pci => pci.productCartItemId);
-    return shopProductCartItemIds.every(id => selectedItems.has(id));
+    const validProductCartItems = shopItem.productCartItems.filter(pci => {
+      const productView = pci.productView;
+      const variant = productView.productVariants.find(v => v.productVariantId === pci.productVariantId) ?? productView.productVariants[0];
+      const isOutOfStock = variant?.productVariantStatus === ProductVariantStatus.OUT_OF_STOCK;
+      const isShopInactive = shopItem.shopView.shopStatus !== ShopStatus.ACTIVE;
+      const isProductInactive = productView.productStatus !== ProductStatus.ACTIVE;
+
+      return !isOutOfStock && !isShopInactive && !isProductInactive;
+    });
+
+    if (validProductCartItems.length === 0) return false;
+
+    return validProductCartItems.every(pci => selectedItems.has(pci.productCartItemId));
   };
 
   const isFlashSaleValid = (flashSaleList?: FlashSaleProductView[] | null): boolean => {
@@ -323,7 +347,10 @@ export default function Main() {
                       const productView = pci.productView;
                       const variant = productView.productVariants.find(v => v.productVariantId === pci.productVariantId) ?? productView.productVariants[0];
                       const price = variant?.price || 0;
-                      const isOutOfStock = variant?.stockQuantity === 0;
+                      const isOutOfStock = variant?.productVariantStatus === ProductVariantStatus.OUT_OF_STOCK;
+                      const isShopInactive = item.shopView.shopStatus !== ShopStatus.ACTIVE;
+                      const isProductInactive = productView.productStatus !== ProductStatus.ACTIVE;
+                      const isUnavailable = isShopInactive || isProductInactive;
 
                       // Flash Sale logic (lấy phần tử đầu tiên trong mảng)
                       const flashSaleList = pci.flashSaleProductView;
@@ -351,7 +378,7 @@ export default function Main() {
                       return (
                         <div
                           key={pci.productCartItemId}
-                          className={`p-5 hover:bg-grey-c50 transition-colors duration-200 ${isOutOfStock ? 'opacity-60' : ''}`}
+                          className={`p-5 hover:bg-grey-c50 transition-colors duration-200 ${isOutOfStock || isUnavailable ? 'opacity-60' : ''}`}
                         >
                           <div className="flex gap-4">
                             {/* Checkbox */}
@@ -359,7 +386,7 @@ export default function Main() {
                               <CheckBox
                                 checked={selectedItems.has(pci.productCartItemId)}
                                 onChange={() => handleToggleItem(pci.productCartItemId)}
-                                disabled={isOutOfStock || pci.quantity > (variant?.stockQuantity || 0)}
+                                disabled={isOutOfStock || isUnavailable || pci.quantity > (variant?.stockQuantity || 0)}
                               />
                             </div>
 
@@ -373,10 +400,11 @@ export default function Main() {
                                 height={112}
                                 className="object-cover w-full h-full"
                               />
-                              {isOutOfStock && (
+                              {(isOutOfStock || isUnavailable) && (
                                 <div
                                   className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                                  <Chip label="Hết hàng" color={ChipColor.ERROR} />
+                                  <Chip label={isUnavailable ? "Không tồn tại" : "Hết hàng"}
+                                    color={ChipColor.ERROR} />
                                 </div>
                               )}
                             </div>
@@ -448,7 +476,7 @@ export default function Main() {
                                     <div className="flex items-center gap-3">
                                       <button
                                         onClick={() => handleChangeQuantity(item.cartItemId, pci.productCartItemId, -1)}
-                                        disabled={pci.quantity <= 1 || isOutOfStock}
+                                        disabled={pci.quantity <= 1 || isOutOfStock || isUnavailable}
                                         className="w-8 h-8 flex items-center justify-center rounded-md border border-grey-c300 bg-white text-grey-c700 hover:border-primary-c600 hover:text-primary-c600 hover:bg-primary-c50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-grey-c300 disabled:hover:bg-white disabled:hover:text-grey-c700 transition-all duration-200"
                                       >
                                         <RemoveRoundedIcon className="text-[18px]" />
@@ -460,7 +488,7 @@ export default function Main() {
 
                                       <button
                                         onClick={() => handleChangeQuantity(item.cartItemId, pci.productCartItemId, 1)}
-                                        disabled={pci.quantity >= (variant?.stockQuantity || 99) || isOutOfStock}
+                                        disabled={pci.quantity >= (variant?.stockQuantity || 99) || isOutOfStock || isUnavailable}
                                         className="w-8 h-8 flex items-center justify-center rounded-md border border-grey-c300 bg-white text-grey-c700 hover:border-primary-c600 hover:text-primary-c600 hover:bg-primary-c50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-grey-c300 disabled:hover:bg-white disabled:hover:text-grey-c700 transition-all duration-200"
                                       >
                                         <AddRoundedIcon className="text-[18px]" />
