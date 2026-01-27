@@ -254,12 +254,12 @@ export default function Main({ id }: Props) {
 
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-6">
       {(isLoading || isMutating) && <Loading />}
       <div className="flex flex-col gap-10">
-        <div className={"flex flex-row gap-10 flex-nowrap bg-white p-4"}>
-          <div className={"flex-1"}>
-            <div className={"aspect-square rounded-lg overflow-hidden mb-3"}>
+        <div className={"flex flex-row gap-10 flex-nowrap bg-white p-4 h-130"}>
+          <div className={"flex-1 flex items-center justify-center"}>
+            <div className={"aspect-square rounded-lg overflow-hidden h-120 mb-3 "}>
               {product.productImages.length > 0 ? (
                 <Carousel title={"Hình ảnh sản phẩm"} images={product.productImages.map(value => {
                   return { imageId: value.productImageId, imageUrl: value.imageUrl }
@@ -363,7 +363,7 @@ export default function Main({ id }: Props) {
                       onClick={() =>
                         handleAttributeSelect(attribute.productAttributeId, value.productAttributeValueId)
                       }
-                      className={`px-4 py-2 border-2 rounded-lg transition cursor-pointer font-semibold ${selectedAttributes[attribute.productAttributeId] === value.productAttributeValueId
+                      className={`px-4 py-2 text-sm border-2 rounded-lg transition cursor-pointer font-semibold ${selectedAttributes[attribute.productAttributeId] === value.productAttributeValueId
                         ? 'border-primary-c600 bg-primary-c100 text-primary-c800'
                         : 'border-grey-c300 hover:border-grey-c400'
                         }`}

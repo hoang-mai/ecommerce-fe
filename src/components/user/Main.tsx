@@ -61,8 +61,8 @@ export default function Main() {
   const productFetcher = ([url, page]: [string, number]) =>{
     const params = new URLSearchParams();
     params.append("pageNo", page.toString());
-    params.append("pageSize", "12");
-    if(showProductIds.length > 0) params.append("showProductIds", showProductIds.toString());
+    params.append("pageSize", "10");
+    if(showProductIds !=null && showProductIds.length > 0) params.append("showProductIds", showProductIds.toString());
     if(totalElements > 0) params.append("totalElements", totalElements.toString());
     const fullUrl = `${url}?${params.toString()}`;
     return get<BaseResponse<ProductViewHomePageDTO>>(fullUrl, {isToken: true}).then((res) => res.data);
@@ -96,8 +96,10 @@ export default function Main() {
       pageSize: 100,
     }
   });
-  const {data: categoriesResponse,error: errorCategory, isLoading: isLoadingCategory } = useSWR(urlCategory, fetcherCategory,
-  );
+  const {data: categoriesResponse,error: errorCategory, isLoading: isLoadingCategory } = useSWR(urlCategory, fetcherCategory,{
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  });
 
   const fetcherFlashSaleProduct = (url: string) => get<BaseResponse<PageResponse<FlashSaleProductView>>>(url).then((res) => res.data);
   const urlFlashSaleProduct = useBuildUrl({

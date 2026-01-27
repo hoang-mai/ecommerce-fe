@@ -249,7 +249,7 @@ export default function SelectProductVariantModal({isOpen, setIsOpen, product}: 
                     onClick={() =>
                       handleAttributeSelect(attribute.productAttributeId, value.productAttributeValueId)
                     }
-                    className={`px-4 py-2 border-2 rounded-lg transition cursor-pointer font-semibold ${
+                    className={`px-2 py-2 text-xs border-2 rounded-lg transition cursor-pointer font-semibold ${
                       selectedAttributes[attribute.productAttributeId] === value.productAttributeValueId
                         ? 'border-primary-c600 bg-primary-c100 text-primary-c800'
                         : 'border-grey-c300 hover:border-grey-c400'

@@ -265,7 +265,7 @@ export default function Main() {
 
   return (
     <div className={"overflow-y-auto min-h-0"}>
-      {(isLoading && isMutating) && <Loading />}
+      {(isLoading || isMutating) && <Loading />}
       <Title title="Quản lý đơn hàng" isDivide />
 
       {/* Filters */}

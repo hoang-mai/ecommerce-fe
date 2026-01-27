@@ -69,7 +69,11 @@ export default function Carousel(
       {showArrows && images.length > 1 && (
         <>
           <button
-            onClick={goToPrevious}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              goToPrevious();
+            }}
             className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-2 transition-all duration-200 opacity-0 group-hover:opacity-100"
             aria-label="Previous image"
           >
@@ -77,7 +81,11 @@ export default function Carousel(
           </button>
 
           <button
-            onClick={goToNext}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              goToNext();
+            }}
             className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-2 transition-all duration-200 opacity-0 group-hover:opacity-100"
             aria-label="Next image"
           >
@@ -92,7 +100,11 @@ export default function Carousel(
           {images.map((_, index) => (
             <button
               key={index}
-              onClick={() => goToSlide(index)}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                goToSlide(index)
+              }}
               className={`w-2 h-2 rounded-full transition-all duration-200 cursor-pointer ${
                 index === currentIndex ? "bg-primary-c500 scale-125" : "bg-primary-c500/50 hover:bg-primary-c500/70"
               }`}
