@@ -48,7 +48,7 @@ type LoginResponse = {
 export function Main() {
   const { post } = useAxiosContext();
   const fetcher = (url: string, {arg}: { arg: LoginFormData }) =>
-    post<BaseResponse<LoginResponse>>(url, arg, {withCredentials: true}).then(res => res.data);
+    post<BaseResponse<LoginResponse>>(url, arg).then(res => res.data);
   const [checked, setChecked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
@@ -82,6 +82,7 @@ export function Main() {
         localStorage.setItem('sessionState', res.data.sessionState);
         localStorage.setItem('scope', res.data.scope);
         window.dispatchEvent(new Event('authChanged'));
+        document.cookie = `accessToken=${res.data.accessToken}; path=/; max-age=${res.data.refreshExpiresIn}`;
         switch (getRoleFromJwtToken(res.data.accessToken)) {
           case Role.ADMIN:
             router.replace('/admin/dashboard');

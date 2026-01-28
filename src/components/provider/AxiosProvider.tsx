@@ -81,7 +81,7 @@ export const AxiosProvider: FC<{ children: ReactNode }> = ({children}) => {
         if (refreshToken && !isTokenExpired(refreshToken)) {
           try {
             const res = await axios.post<BaseResponse<RefreshTokenResponse>>(
-              `${process.env.NEXT_PUBLIC_API_URL}${REFRESH_TOKEN}`, {refreshToken}, {withCredentials: true}
+              `${process.env.NEXT_PUBLIC_API_URL}${REFRESH_TOKEN}`, {refreshToken}
             )
             if (res.data.data) {
               const accessToken = res.data.data.accessToken;
@@ -93,6 +93,7 @@ export const AxiosProvider: FC<{ children: ReactNode }> = ({children}) => {
               localStorage.setItem('sessionState', res.data.data.sessionState);
               localStorage.setItem('scope', res.data.data.scope);
               window.dispatchEvent(new Event('authChanged'));
+              document.cookie = `accessToken=${res.data.data.accessToken}; path=/; max-age=${res.data.data.refreshExpiresIn}`;
               config.headers.Authorization = `Bearer ${accessToken}`;
               return Promise.resolve(config);
             }
