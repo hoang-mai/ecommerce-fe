@@ -29,6 +29,7 @@ import {RootState} from "@/redux/store";
 import {usePushNotification} from "@/hooks/usePushNotification";
 import {NotificationView} from "@/types/interface";
 import NotificationDetailModal from "@/components/owner/notifications/NotificationDetailModal";
+import {clearAllCookie} from "@/services/cookie";
 export default function Information() {
   const chatState = useSelector((state: RootState) => state.chat);
   const { get, post } = useAxiosContext();
@@ -80,6 +81,7 @@ export default function Information() {
       if (isSubscribed) {
         unsubscribe();
       }
+      clearAllCookie();
       clearAllLocalStorage();
       window.dispatchEvent(new Event('authChanged'));
       router.replace('/login');
